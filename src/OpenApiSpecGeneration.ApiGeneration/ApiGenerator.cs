@@ -1,13 +1,14 @@
+using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
 
 namespace OpenApiSpecGeneration
 {
-    internal class ApiGenerator
+    public class ApiGenerator
     {
-        internal static IList<MemberDeclarationSyntax> Generate(OpenApiSpec spec)
+        public static IList<ClassDeclarationSyntax> Generate(OpenApiSpec spec)
         {
-            var members = new List<MemberDeclarationSyntax>();
+            var members = new List<ClassDeclarationSyntax>();
             foreach (var (name, openApiPath) in spec.paths)
             {
                 var normalisedName = CsharpNamingExtensions.PathToClassName(name);
@@ -18,7 +19,27 @@ namespace OpenApiSpecGeneration
                 {
                     var methodBody = SyntaxFactory.ParseStatement("");
 
+                    // var attributeArgument = SyntaxFactory.AttributeArgument(
+                    //     SyntaxFactory.LiteralExpression(SyntaxKind.StringLiteralExpression,
+                    //         SyntaxFactory.Token(SyntaxFactory.TriviaList(),
+                    //             SyntaxKind.StringLiteralToken,
+                    //             "some_param",
+                    //             "some_param",
+                    //             SyntaxFactory.TriviaList()
+                    //         )
+                    //     )
+                    // );
+
+                    // var attributes = SyntaxFactory.AttributeList(
+                    //     SyntaxFactory.SingletonSeparatedList<AttributeSyntax>(
+                    //         SyntaxFactory.Attribute(SyntaxFactory.IdentifierName("CustomAttribute"),
+                    //         SyntaxFactory.AttributeArgumentList(
+                    //             SyntaxFactory.SingletonSeparatedList<AttributeArgumentSyntax>(attributeArgument)))
+                    //     )
+                    // );
+
                     var methodDeclaration = SyntaxFactory.MethodDeclaration(SyntaxFactory.ParseTypeName("void"), CsharpNamingExtensions.FirstLetterToUpper(method))
+                        // .AddAttributeLists(attributes)
                         .AddModifiers(SyntaxFactory.Token(SyntaxKind.PublicKeyword))
                         .WithBody(SyntaxFactory.Block(methodBody));
 

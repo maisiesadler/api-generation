@@ -23,23 +23,24 @@ namespace OpenApiSpecGeneration
             }
 
             var members = ApiGenerator.Generate(openApiSpec);
-            var ns = SyntaxFactory.NamespaceDeclaration(SyntaxFactory.ParseName("CodeGen")).AddMembers(members.ToArray());
 
-            await using var streamWriter = new StreamWriter(@"output/generated.cs", false);
-            ns.NormalizeWhitespace().WriteTo(streamWriter);
+            foreach (var member in members)
+            {
+                var ns = SyntaxFactory.NamespaceDeclaration(SyntaxFactory.ParseName("CodeGen")).AddMembers(member);
+
+                await using var streamWriter = new StreamWriter($"output/{member.Identifier.Value}.cs", false);
+                ns.NormalizeWhitespace().WriteTo(streamWriter);
+            }
         }
     }
 
-    public class OpenApiSpec
-    {
-        public IReadOnlyDictionary<string, OpenApiPath> paths { get; init; } = new Dictionary<string, OpenApiPath>();
-    }
+    public record OpenApiSpec(IReadOnlyDictionary<string, OpenApiPath> paths);
 
     public class OpenApiPath : Dictionary<string, OpenApiMethod>
     {
     }
 
-    public class OpenApiMethod
+    public record OpenApiMethod
     {
         public IReadOnlyCollection<string> tags { get; init; } = Array.Empty<string>();
     }
