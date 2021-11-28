@@ -12,7 +12,13 @@ namespace OpenApiSpecGeneration
             foreach (var (name, openApiPath) in spec.paths)
             {
                 var normalisedName = CsharpNamingExtensions.PathToClassName(name);
+
+                var ctorBody = SyntaxFactory.ParseStatement("");
+                var ctor = SyntaxFactory.ConstructorDeclaration(normalisedName)
+                    .AddModifiers(SyntaxFactory.Token(SyntaxKind.PublicKeyword))
+                    .WithBody(SyntaxFactory.Block(ctorBody));
                 var @class = SyntaxFactory.ClassDeclaration(SyntaxFactory.Identifier(normalisedName))
+                    .AddMembers(ctor)
                     .AddModifiers(SyntaxFactory.Token(SyntaxKind.PublicKeyword));
 
                 foreach (var (method, openApiMethod) in openApiPath)
