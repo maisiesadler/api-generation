@@ -4,7 +4,7 @@ using Xunit;
 
 namespace OpenApiSpecGeneration.ApiGeneration.Test;
 
-public class ApiGeneratorTests
+public class GenerateControllersTests
 {
     [Fact]
     public void SimpleGetIsGeneratedAsMethod()
@@ -21,7 +21,7 @@ public class ApiGeneratorTests
         var spec = new OpenApiSpec(paths);
 
         // Act
-        var classDeclarationSyntaxes = ApiGenerator.Generate(spec);
+        var classDeclarationSyntaxes = ApiGenerator.GenerateControllers(spec);
 
         // Assert
         var classDeclarationSyntax = Assert.Single(classDeclarationSyntaxes);
@@ -53,7 +53,7 @@ public class ApiGeneratorTests
         var spec = new OpenApiSpec(paths);
 
         // Act
-        var classDeclarationSyntaxes = ApiGenerator.Generate(spec);
+        var classDeclarationSyntaxes = ApiGenerator.GenerateControllers(spec);
 
         // Assert
         Assert.Equal(2, classDeclarationSyntaxes.Count);
@@ -77,7 +77,7 @@ public class ApiGeneratorTests
         var spec = new OpenApiSpec(paths);
 
         // Act
-        var classDeclarationSyntaxes = ApiGenerator.Generate(spec);
+        var classDeclarationSyntaxes = ApiGenerator.GenerateControllers(spec);
 
         // Assert
         var classDeclarationSyntax = Assert.Single(classDeclarationSyntaxes);

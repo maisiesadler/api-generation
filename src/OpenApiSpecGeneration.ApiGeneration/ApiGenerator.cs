@@ -6,7 +6,7 @@ namespace OpenApiSpecGeneration
 {
     public class ApiGenerator
     {
-        public static IList<ClassDeclarationSyntax> Generate(OpenApiSpec spec)
+        public static IList<ClassDeclarationSyntax> GenerateControllers(OpenApiSpec spec)
         {
             var members = new List<ClassDeclarationSyntax>();
             foreach (var (name, openApiPath) in spec.paths)

@@ -22,7 +22,7 @@ namespace OpenApiSpecGeneration
                 return;
             }
 
-            var members = ApiGenerator.Generate(openApiSpec);
+            var members = ApiGenerator.GenerateControllers(openApiSpec);
 
             foreach (var member in members)
             {
