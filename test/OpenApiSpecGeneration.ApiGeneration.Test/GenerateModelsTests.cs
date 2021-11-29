@@ -34,7 +34,7 @@ public class GenerateModelsTests
         Assert.Equal("}", recordDeclarationSyntax.CloseBraceToken.Value);
         var memberDeclarationSyntax = Assert.Single(recordDeclarationSyntax.Members);
         var propertyDeclarationSyntax = Assert.IsType<PropertyDeclarationSyntax>(memberDeclarationSyntax);
-        Assert.Equal("id", propertyDeclarationSyntax.Identifier.Value);
+        Assert.Equal("Id", propertyDeclarationSyntax.Identifier.Value);
         var methodModifier = Assert.Single(propertyDeclarationSyntax.Modifiers);
         Assert.Equal("public", methodModifier.Value);
         var predefinedTypeSyntax = Assert.IsType<PredefinedTypeSyntax>(propertyDeclarationSyntax.Type);

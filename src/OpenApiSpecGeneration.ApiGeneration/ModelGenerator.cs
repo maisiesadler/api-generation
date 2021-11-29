@@ -1,4 +1,3 @@
-using System.Text.Json.Serialization;
 using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
 
@@ -21,7 +20,9 @@ namespace OpenApiSpecGeneration
                         )
                     );
 
-                    var property = SyntaxFactory.PropertyDeclaration(SyntaxFactory.ParseTypeName("int"), SyntaxFactory.Identifier(propertyName))
+                    var property = SyntaxFactory.PropertyDeclaration(
+                            SyntaxFactory.ParseTypeName("int"),
+                            SyntaxFactory.Identifier(CsharpNamingExtensions.FirstLetterToUpper(propertyName)))
                         .AddModifiers(SyntaxFactory.Token(SyntaxKind.PublicKeyword))
                         .AddAccessorListAccessors(
                             SyntaxFactory.AccessorDeclaration(SyntaxKind.GetAccessorDeclaration).WithSemicolonToken(SyntaxFactory.Token(SyntaxKind.SemicolonToken)),
