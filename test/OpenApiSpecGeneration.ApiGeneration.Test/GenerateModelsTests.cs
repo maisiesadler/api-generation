@@ -32,15 +32,14 @@ public class GenerateModelsTests
         var classModifier = Assert.Single(recordDeclarationSyntax.Modifiers);
         Assert.Equal("public", classModifier.Value);
 
-        Assert.NotNull(recordDeclarationSyntax.ParameterList);
-        Assert.Equal("(", recordDeclarationSyntax.ParameterList!.OpenParenToken.Value);
-        Assert.Equal(")", recordDeclarationSyntax.ParameterList!.CloseParenToken.Value);
-        Assert.Equal(";", recordDeclarationSyntax.SemicolonToken.Value);
-        var parameterSyntax = Assert.Single(recordDeclarationSyntax.ParameterList!.Parameters);
-        Assert.Equal("id", parameterSyntax.Identifier.Value);
-        // var methodModifier = Assert.Single(parameterSyntax.Modifiers);
-        // Assert.Equal("public", methodModifier.Value);
-        var predefinedTypeSyntax = Assert.IsType<PredefinedTypeSyntax>(parameterSyntax.Type);
+        Assert.Equal("{", recordDeclarationSyntax.OpenBraceToken.Value);
+        Assert.Equal("}", recordDeclarationSyntax.CloseBraceToken.Value);
+        var memberDeclarationSyntax = Assert.Single(recordDeclarationSyntax.Members);
+        var propertyDeclarationSyntax = Assert.IsType<PropertyDeclarationSyntax>(memberDeclarationSyntax);
+        Assert.Equal("id", propertyDeclarationSyntax.Identifier.Value);
+        var methodModifier = Assert.Single(propertyDeclarationSyntax.Modifiers);
+        Assert.Equal("public", methodModifier.Value);
+        var predefinedTypeSyntax = Assert.IsType<PredefinedTypeSyntax>(propertyDeclarationSyntax.Type);
         Assert.Equal("int", predefinedTypeSyntax.Keyword.Value);
     }
 
