@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
 using Xunit;
@@ -72,6 +73,55 @@ public class GenerateModelsTests
         var argument = Assert.Single(attributeSyntax.ArgumentList!.Arguments);
         var literalExpressionSyntax = Assert.IsType<LiteralExpressionSyntax>(argument.Expression);
         Assert.Equal("\"id\"", literalExpressionSyntax.Token.Value);
+    }
+
+    [Theory]
+    [InlineData("integer", "int")]
+    [InlineData("string", "string")]
+    [InlineData("boolean", "bool")]
+    public void SupportedPropertyTypesConvertedCorrectly(string openApiType, string expectedCsharpType)
+    {
+        // Arrange
+        var toDoItemProperties = new Dictionary<string, OpenApiComponentProperty>
+        {
+            { "id", new OpenApiComponentProperty(openApiType, default, default) },
+        };
+        var componentSchemas = new Dictionary<string, OpenApiComponentSchema>
+        {
+            { "ToDoItem", new OpenApiComponentSchema("object", toDoItemProperties) }
+        };
+        var components = new OpenApiComponent(componentSchemas);
+        var spec = new OpenApiSpec(new Dictionary<string, OpenApiPath>(), components);
+
+        // Act
+        var recordDeclarationSyntaxes = ApiGenerator.GenerateModels(spec);
+
+        // Assert
+        var recordDeclarationSyntax = Assert.Single(recordDeclarationSyntaxes);
+        var memberDeclarationSyntax = Assert.Single(recordDeclarationSyntax.Members);
+        var propertyDeclarationSyntax = Assert.IsType<PropertyDeclarationSyntax>(memberDeclarationSyntax);
+        var predefinedTypeSyntax = Assert.IsType<PredefinedTypeSyntax>(propertyDeclarationSyntax.Type);
+        Assert.Equal(expectedCsharpType, predefinedTypeSyntax.Keyword.Value);
+    }
+
+    [Fact]
+    public void NotSupportedPropertyTypesThrows()
+    {
+        // Arrange
+        var toDoItemProperties = new Dictionary<string, OpenApiComponentProperty>
+        {
+            { "id", new OpenApiComponentProperty("pizza", default, default) },
+        };
+        var componentSchemas = new Dictionary<string, OpenApiComponentSchema>
+        {
+            { "ToDoItem", new OpenApiComponentSchema("object", toDoItemProperties) }
+        };
+        var components = new OpenApiComponent(componentSchemas);
+        var spec = new OpenApiSpec(new Dictionary<string, OpenApiPath>(), components);
+
+        // Act & Assert
+        var exception = Assert.Throws<InvalidOperationException>(() => ApiGenerator.GenerateModels(spec));
+        Assert.Equal("Unknown openapi type 'pizza'", exception.Message);
     }
 
     // public void PathSchema()

@@ -21,7 +21,7 @@ namespace OpenApiSpecGeneration
                     );
 
                     var property = SyntaxFactory.PropertyDeclaration(
-                            SyntaxFactory.ParseTypeName("int"),
+                            ParseTypeSyntax(openApiProperty.type),
                             SyntaxFactory.Identifier(CsharpNamingExtensions.FirstLetterToUpper(propertyName)))
                         .AddModifiers(SyntaxFactory.Token(SyntaxKind.PublicKeyword))
                         .AddAccessorListAccessors(
@@ -51,6 +51,17 @@ namespace OpenApiSpecGeneration
             }
 
             return members;
+        }
+
+        private static TypeSyntax ParseTypeSyntax(string openApiType)
+        {
+            return openApiType switch
+            {
+                "integer" => SyntaxFactory.ParseTypeName("int"),
+                "string" => SyntaxFactory.ParseTypeName("string"),
+                "boolean" => SyntaxFactory.ParseTypeName("bool"),
+                _ => throw new InvalidOperationException($"Unknown openapi type '{openApiType}'"),
+            };
         }
 
         private static AttributeSyntax JsonPropertyNameAttributeSyntax(string propertyName)
