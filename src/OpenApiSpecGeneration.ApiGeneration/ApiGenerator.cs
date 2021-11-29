@@ -58,57 +58,6 @@ namespace OpenApiSpecGeneration
         }
 
         public static IList<RecordDeclarationSyntax> GenerateModels(OpenApiSpec spec)
-        {
-            var members = new List<RecordDeclarationSyntax>();
-            foreach (var (name, openApiComponentSchema) in spec.components.schemas)
-            {
-                var parameters = new List<ParameterSyntax>();
-
-                foreach (var (propertyName, openApiProperty) in openApiComponentSchema.properties)
-                {
-                    // var parameter = SyntaxFactory.PropertyDeclaration(SyntaxFactory.ParseTypeName("int"), SyntaxFactory.Identifier(propertyName))
-                    //     .AddModifiers(SyntaxFactory.Token(SyntaxKind.PublicKeyword))
-                    //     .AddAccessorListAccessors(
-                    //         SyntaxFactory.AccessorDeclaration(SyntaxKind.GetAccessorDeclaration).WithSemicolonToken(SyntaxFactory.Token(SyntaxKind.SemicolonToken)),
-                    //         SyntaxFactory.AccessorDeclaration(SyntaxKind.SetAccessorDeclaration).WithSemicolonToken(SyntaxFactory.Token(SyntaxKind.SemicolonToken)));
-                    var parameter = SyntaxFactory.Parameter(
-                        default,
-                        default,
-                        SyntaxFactory.ParseTypeName("int"), // TypeSyntax? type,
-                        SyntaxFactory.Identifier(propertyName),
-                        default
-                    );
-
-                    parameters.Add(parameter);
-                }
-
-                var tokens = parameters.Skip(1).Select(_ => SyntaxFactory.Token(SyntaxKind.CommaToken));
-
-                var recordDeclaration = SyntaxFactory.RecordDeclaration(
-                    attributeLists: default,
-                    modifiers: SyntaxFactory.TokenList(SyntaxFactory.Token(SyntaxKind.PublicKeyword)),
-                    keyword: SyntaxFactory.Token(SyntaxKind.RecordKeyword),
-                    identifier: SyntaxFactory.Identifier(name),
-                    typeParameterList: default,
-                    parameterList: SyntaxFactory.ParameterList(
-                        SyntaxFactory.Token(SyntaxKind.OpenParenToken),
-                        SyntaxFactory.SeparatedList<ParameterSyntax>(parameters, tokens),
-                        SyntaxFactory.Token(SyntaxKind.CloseParenToken)
-                    ),
-                    baseList: null,
-                    constraintClauses: default,
-                    openBraceToken: default,
-                    // members: SyntaxFactory.SeparatedList<MemberDeclarationSyntax>(
-
-                    // ),
-                    members: default,
-                    closeBraceToken: default,
-                    semicolonToken: SyntaxFactory.Token(SyntaxKind.SemicolonToken));
-
-                members.Add(recordDeclaration);
-            }
-
-            return members;
-        }
+            => ModelGenerator.GenerateModels(spec);
     }
 }
