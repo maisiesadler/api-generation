@@ -11,6 +11,9 @@ namespace OpenApiSpecGeneration
             var path = Directory.GetCurrentDirectory();
             await using var fileStream = File.OpenRead(Path.Combine(path, "definition.json"));
 
+            var outputDirectory = "example";
+            SetupOutputDirectory(outputDirectory);
+
             var openApiSpec = await JsonSerializer.DeserializeAsync<OpenApiSpec>(fileStream, new JsonSerializerOptions
             {
                 PropertyNameCaseInsensitive = true
@@ -28,7 +31,7 @@ namespace OpenApiSpecGeneration
             {
                 var ns = SyntaxFactory.NamespaceDeclaration(SyntaxFactory.ParseName("CodeGen")).AddMembers(member);
 
-                await using var streamWriter = new StreamWriter($"output/{member.Identifier.Value}.cs", false);
+                await using var streamWriter = new StreamWriter($"{outputDirectory}/{member.Identifier.Value}.cs", false);
                 ns.NormalizeWhitespace().WriteTo(streamWriter);
             }
 
@@ -38,7 +41,7 @@ namespace OpenApiSpecGeneration
             {
                 var ns = SyntaxFactory.NamespaceDeclaration(SyntaxFactory.ParseName("CodeGen.Models")).AddMembers(model);
 
-                await using var streamWriter = new StreamWriter($"output/models/{model.Identifier.Value}.cs", false);
+                await using var streamWriter = new StreamWriter($"{outputDirectory}/models/{model.Identifier.Value}.cs", false);
                 ns.NormalizeWhitespace().WriteTo(streamWriter);
             }
 
@@ -48,9 +51,18 @@ namespace OpenApiSpecGeneration
             {
                 var ns = SyntaxFactory.NamespaceDeclaration(SyntaxFactory.ParseName("CodeGen.Interactors")).AddMembers(interactor);
 
-                await using var streamWriter = new StreamWriter($"output/interactors/{interactor.Identifier.Value}.cs", false);
+                await using var streamWriter = new StreamWriter($"{outputDirectory}/interactors/{interactor.Identifier.Value}.cs", false);
                 ns.NormalizeWhitespace().WriteTo(streamWriter);
             }
+        }
+
+        private static void SetupOutputDirectory(string location)
+        {
+            if (Directory.Exists(location))
+                Directory.Delete(location, true);
+            Directory.CreateDirectory(location);
+            Directory.CreateDirectory($"{location}/models");
+            Directory.CreateDirectory($"{location}/interactors");
         }
     }
 
