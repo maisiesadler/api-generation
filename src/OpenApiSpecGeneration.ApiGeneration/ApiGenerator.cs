@@ -59,5 +59,8 @@ namespace OpenApiSpecGeneration
 
         public static IList<RecordDeclarationSyntax> GenerateModels(OpenApiSpec spec)
             => ModelGenerator.GenerateModels(spec);
+
+        public static IList<InterfaceDeclarationSyntax> GenerateInteractors(OpenApiSpec spec)
+            => InteractorGenerator.GenerateInteractors(spec);
     }
 }

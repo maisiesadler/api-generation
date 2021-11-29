@@ -41,6 +41,16 @@ namespace OpenApiSpecGeneration
                 await using var streamWriter = new StreamWriter($"output/models/{model.Identifier.Value}.cs", false);
                 ns.NormalizeWhitespace().WriteTo(streamWriter);
             }
+
+            var interactors = ApiGenerator.GenerateInteractors(openApiSpec);
+
+            foreach (var interactor in interactors)
+            {
+                var ns = SyntaxFactory.NamespaceDeclaration(SyntaxFactory.ParseName("CodeGen.Interactors")).AddMembers(interactor);
+
+                await using var streamWriter = new StreamWriter($"output/interactors/{interactor.Identifier.Value}.cs", false);
+                ns.NormalizeWhitespace().WriteTo(streamWriter);
+            }
         }
     }
 
