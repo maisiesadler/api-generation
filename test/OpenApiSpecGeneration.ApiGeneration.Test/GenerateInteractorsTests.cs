@@ -44,7 +44,10 @@ public class GenerateInteractorsTests
         var methodDeclarationSyntax = Assert.IsType<MethodDeclarationSyntax>(memberDeclarationSyntax);
         Assert.Equal("Execute", methodDeclarationSyntax.Identifier.Value);
         Assert.Empty(methodDeclarationSyntax.Modifiers);
-        var identifierNameSyntax = Assert.IsType<IdentifierNameSyntax>(methodDeclarationSyntax.ReturnType);
+        var genericNameSyntax = Assert.IsType<GenericNameSyntax>(methodDeclarationSyntax.ReturnType);
+        Assert.Equal("Task", genericNameSyntax.Identifier.Value);
+        var typeArgument = Assert.Single(genericNameSyntax.TypeArgumentList.Arguments);
+        var identifierNameSyntax = Assert.IsType<IdentifierNameSyntax>(typeArgument);
         Assert.Equal("ToDoItem", identifierNameSyntax.Identifier.Value);
     }
 }

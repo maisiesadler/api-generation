@@ -61,7 +61,10 @@ namespace OpenApiSpecGeneration
             var content = response.Value.content.First();
             var component = content.Value.schema.items["$ref"];
             var componentName = component.Split("/").Last();
-            returnType = SyntaxFactory.ParseTypeName(componentName);
+            var arg = SyntaxFactory.ParseTypeName(componentName);
+            returnType = SyntaxFactory.GenericName(SyntaxFactory.Identifier("Task"),
+                SyntaxFactory.TypeArgumentList(SyntaxFactory.SingletonSeparatedList<TypeSyntax>(arg))
+            );
             return true;
         }
 
