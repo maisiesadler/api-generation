@@ -1,6 +1,4 @@
 using System.Collections.Generic;
-using Microsoft.CodeAnalysis;
-using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
 using Xunit;
 
@@ -41,6 +39,39 @@ public class GenerateModelsTests
         Assert.Equal("public", methodModifier.Value);
         var predefinedTypeSyntax = Assert.IsType<PredefinedTypeSyntax>(propertyDeclarationSyntax.Type);
         Assert.Equal("int", predefinedTypeSyntax.Keyword.Value);
+    }
+
+    [Fact]
+    public void ModelHasJsonPropertyNameAttribute()
+    {
+        // Arrange
+        var toDoItemProperties = new Dictionary<string, OpenApiComponentProperty>
+        {
+            { "id", new OpenApiComponentProperty("integer", default, default) },
+        };
+        var componentSchemas = new Dictionary<string, OpenApiComponentSchema>
+        {
+            { "ToDoItem", new OpenApiComponentSchema("object", toDoItemProperties) }
+        };
+        var components = new OpenApiComponent(componentSchemas);
+        var spec = new OpenApiSpec(new Dictionary<string, OpenApiPath>(), components);
+
+        // Act
+        var recordDeclarationSyntaxes = ApiGenerator.GenerateModels(spec);
+
+        // Assert
+        var recordDeclarationSyntax = Assert.Single(recordDeclarationSyntaxes);
+        var memberDeclarationSyntax = Assert.Single(recordDeclarationSyntax.Members);
+        var attributeListSyntax = Assert.Single(memberDeclarationSyntax.AttributeLists);
+        var attributeSyntax = Assert.Single(attributeListSyntax.Attributes);
+        var identifierNameSyntax = Assert.IsType<IdentifierNameSyntax>(attributeSyntax.Name);
+        Assert.Equal("JsonPropertyName", identifierNameSyntax.Identifier.Value);
+        Assert.NotNull(attributeSyntax.ArgumentList);
+        Assert.Equal("(", attributeSyntax.ArgumentList!.OpenParenToken.Value);
+        Assert.Equal(")", attributeSyntax.ArgumentList!.CloseParenToken.Value);
+        var argument = Assert.Single(attributeSyntax.ArgumentList!.Arguments);
+        var literalExpressionSyntax = Assert.IsType<LiteralExpressionSyntax>(argument.Expression);
+        Assert.Equal("\"id\"", literalExpressionSyntax.Token.Value);
     }
 
     // public void PathSchema()

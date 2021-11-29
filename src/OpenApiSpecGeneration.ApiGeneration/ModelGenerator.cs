@@ -1,4 +1,4 @@
-using Microsoft.CodeAnalysis;
+using System.Text.Json.Serialization;
 using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
 
@@ -11,30 +11,24 @@ namespace OpenApiSpecGeneration
             var members = new List<RecordDeclarationSyntax>();
             foreach (var (name, openApiComponentSchema) in spec.components.schemas)
             {
-                var parameters = new List<ParameterSyntax>();
                 var properties = new List<MemberDeclarationSyntax>();
 
                 foreach (var (propertyName, openApiProperty) in openApiComponentSchema.properties)
                 {
+                    var attributes = SyntaxFactory.AttributeList(
+                        SyntaxFactory.SingletonSeparatedList<AttributeSyntax>(
+                            JsonPropertyNameAttributeSyntax(propertyName)
+                        )
+                    );
+
                     var property = SyntaxFactory.PropertyDeclaration(SyntaxFactory.ParseTypeName("int"), SyntaxFactory.Identifier(propertyName))
                         .AddModifiers(SyntaxFactory.Token(SyntaxKind.PublicKeyword))
                         .AddAccessorListAccessors(
                             SyntaxFactory.AccessorDeclaration(SyntaxKind.GetAccessorDeclaration).WithSemicolonToken(SyntaxFactory.Token(SyntaxKind.SemicolonToken)),
-                            SyntaxFactory.AccessorDeclaration(SyntaxKind.SetAccessorDeclaration).WithSemicolonToken(SyntaxFactory.Token(SyntaxKind.SemicolonToken)));
+                            SyntaxFactory.AccessorDeclaration(SyntaxKind.InitAccessorDeclaration).WithSemicolonToken(SyntaxFactory.Token(SyntaxKind.SemicolonToken)))
+                        .AddAttributeLists(attributes);
                     properties.Add(property);
-
-                    var parameter = SyntaxFactory.Parameter(
-                        default,
-                        default,
-                        SyntaxFactory.ParseTypeName("int"), // TypeSyntax? type,
-                        SyntaxFactory.Identifier(propertyName),
-                        default
-                    );
-
-                    parameters.Add(parameter);
                 }
-
-                var tokens = parameters.Skip(1).Select(_ => SyntaxFactory.Token(SyntaxKind.CommaToken));
 
                 var recordDeclaration = SyntaxFactory.RecordDeclaration(
                     attributeLists: default,
@@ -52,16 +46,32 @@ namespace OpenApiSpecGeneration
                     closeBraceToken: SyntaxFactory.Token(SyntaxKind.CloseBraceToken),
                     semicolonToken: default);
 
-                // var recordDeclaration = SyntaxFactory.RecordDeclaration(SyntaxFactory.Token(SyntaxKind.RecordKeyword), SyntaxFactory.Identifier(name))
-                //     .AddModifiers(SyntaxFactory.Token(SyntaxKind.PublicKeyword))
-                //     .AddModifiers(SyntaxFactory.Token(SyntaxKind.OpenBracketToken))
-                //     .AddMembers(properties.ToArray())
-                //     .AddModifiers(SyntaxFactory.Token(SyntaxKind.OpenBracketToken));
-
                 members.Add(recordDeclaration);
             }
 
             return members;
+        }
+
+        private static AttributeSyntax JsonPropertyNameAttributeSyntax(string propertyName)
+        {
+            var quotedPropertyName = $"\"{propertyName}\"";
+            var attributeArgument = SyntaxFactory.AttributeArgument(
+                SyntaxFactory.LiteralExpression(SyntaxKind.StringLiteralExpression,
+                    SyntaxFactory.Token(SyntaxFactory.TriviaList(),
+                        SyntaxKind.StringLiteralToken,
+                        quotedPropertyName,
+                        quotedPropertyName,
+                        SyntaxFactory.TriviaList()
+                    )
+                )
+            );
+    
+            return SyntaxFactory.Attribute(
+                SyntaxFactory.IdentifierName("JsonPropertyName"),
+                SyntaxFactory.AttributeArgumentList(
+                    SyntaxFactory.SingletonSeparatedList<AttributeArgumentSyntax>(attributeArgument)
+                )
+            );
         }
     }
 }
