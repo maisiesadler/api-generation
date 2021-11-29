@@ -18,7 +18,7 @@ public class GenerateControllersTests
         {
             { "/api/test", apiTestPath },
         };
-        var spec = new OpenApiSpec(paths);
+        var spec = new OpenApiSpec(paths, new OpenApiComponent(new Dictionary<string, OpenApiComponentSchema>()));
 
         // Act
         var classDeclarationSyntaxes = ApiGenerator.GenerateControllers(spec);
@@ -50,7 +50,7 @@ public class GenerateControllersTests
             { "/api/test", apiTestPath },
             { "/api/test/{id}", apiTestPath },
         };
-        var spec = new OpenApiSpec(paths);
+        var spec = new OpenApiSpec(paths, new OpenApiComponent(new Dictionary<string, OpenApiComponentSchema>()));
 
         // Act
         var classDeclarationSyntaxes = ApiGenerator.GenerateControllers(spec);
@@ -74,7 +74,7 @@ public class GenerateControllersTests
         {
             { "/api/test", apiTestPath },
         };
-        var spec = new OpenApiSpec(paths);
+        var spec = new OpenApiSpec(paths, new OpenApiComponent(new Dictionary<string, OpenApiComponentSchema>()));
 
         // Act
         var classDeclarationSyntaxes = ApiGenerator.GenerateControllers(spec);

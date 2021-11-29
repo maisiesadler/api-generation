@@ -31,10 +31,20 @@ namespace OpenApiSpecGeneration
                 await using var streamWriter = new StreamWriter($"output/{member.Identifier.Value}.cs", false);
                 ns.NormalizeWhitespace().WriteTo(streamWriter);
             }
+
+            var models = ApiGenerator.GenerateModels(openApiSpec);
+
+            foreach (var model in models)
+            {
+                var ns = SyntaxFactory.NamespaceDeclaration(SyntaxFactory.ParseName("CodeGen.Models")).AddMembers(model);
+
+                await using var streamWriter = new StreamWriter($"output/models/{model.Identifier.Value}.cs", false);
+                ns.NormalizeWhitespace().WriteTo(streamWriter);
+            }
         }
     }
 
-    public record OpenApiSpec(IReadOnlyDictionary<string, OpenApiPath> paths);
+    public record OpenApiSpec(IReadOnlyDictionary<string, OpenApiPath> paths, OpenApiComponent components);
 
     public class OpenApiPath : Dictionary<string, OpenApiMethod>
     {
@@ -43,5 +53,16 @@ namespace OpenApiSpecGeneration
     public record OpenApiMethod
     {
         public IReadOnlyCollection<string> tags { get; init; } = Array.Empty<string>();
+        public IReadOnlyDictionary<string, OpenApiResponse> responses { get; init; } = new Dictionary<string, OpenApiResponse>();
     }
+
+    public record OpenApiResponse(string description, IReadOnlyDictionary<string, OpenApiContent> content);
+
+    public record OpenApiContent(OpenApiContentSchema schema);
+
+    public record OpenApiContentSchema(string type, IReadOnlyDictionary<string, string> items);
+
+    public record OpenApiComponent(IReadOnlyDictionary<string, OpenApiComponentSchema> schemas);
+    public record OpenApiComponentSchema(string type, IReadOnlyDictionary<string, OpenApiComponentProperty> properties);
+    public record OpenApiComponentProperty(string type, string? format, bool? nullable);
 }
