@@ -45,7 +45,7 @@ namespace OpenApiSpecGeneration
                     // );
 
                     var methodDeclaration = SyntaxFactory.MethodDeclaration(SyntaxFactory.ParseTypeName("void"), CsharpNamingExtensions.FirstLetterToUpper(method))
-                        .AddAttributeLists(attributes)
+                        // .AddAttributeLists(attributes)
                         .AddModifiers(SyntaxFactory.Token(SyntaxKind.PublicKeyword))
                         .WithBody(SyntaxFactory.Block(methodBody));
 
