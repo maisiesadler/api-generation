@@ -21,7 +21,7 @@ namespace OpenApiSpecGeneration
 
                     var methods = new[] { methodDeclaration };
 
-                    var interfaceName = $"I{CsharpNamingExtensions.FirstLetterToUpper(method)}{CsharpNamingExtensions.PathToClassName(apiPath)}Interactor";
+                    var interfaceName = CsharpNamingExtensions.PathToInteractorType(apiPath, method);
 
                     var interfaceDeclaration = SyntaxFactory.InterfaceDeclaration(
                         attributeLists: default,

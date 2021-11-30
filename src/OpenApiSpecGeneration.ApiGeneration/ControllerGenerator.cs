@@ -49,8 +49,8 @@ namespace OpenApiSpecGeneration
         {
             var parameterSyntax = methods.Select(method =>
             {
-                var propertyName = $"{method}{CsharpNamingExtensions.PathToClassName(apiPath)}Interactor";
-                var propertyType = $"I{CsharpNamingExtensions.FirstLetterToUpper(method)}{CsharpNamingExtensions.PathToClassName(apiPath)}Interactor";
+                var propertyType = CsharpNamingExtensions.PathToInteractorType(apiPath, method);
+                var propertyName = CsharpNamingExtensions.InterfaceToPropertyName(propertyType);
                 return SyntaxFactory.Parameter(
                     default,
                     default,
