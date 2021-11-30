@@ -89,6 +89,42 @@ public class GenerateControllersTests
     }
 
     [Fact]
+    public void PublicConstructorHasInteractorAsParameter()
+    {
+        // Arrange
+        var openApiContentSchema = new OpenApiContentSchema("array", new Dictionary<string, string>
+        {
+            { "$ref", "#/components/schemas/ToDoItem" },
+        });
+        var openApiResponse = new OpenApiResponse("Success", new Dictionary<string, OpenApiContent>
+        {
+            { "text/plain", new OpenApiContent(openApiContentSchema) }
+        });
+        var openApiResponses = new Dictionary<string, OpenApiResponse> { { "200", openApiResponse } };
+        var apiTestPath = new OpenApiPath
+        {
+            { "get", new OpenApiMethod { responses = openApiResponses } },
+        };
+        var paths = new Dictionary<string, OpenApiPath>
+        {
+            { "/api/test", apiTestPath },
+        };
+        var spec = new OpenApiSpec(paths, new OpenApiComponent(new Dictionary<string, OpenApiComponentSchema>()));
+
+        // Act
+        var classDeclarationSyntaxes = ApiGenerator.GenerateControllers(spec);
+
+        // Assert
+        var classDeclarationSyntax = Assert.Single(classDeclarationSyntaxes);
+        var memberDeclarationSyntax = classDeclarationSyntax.Members.First();
+        var methodDeclarationSyntax = Assert.IsType<ConstructorDeclarationSyntax>(memberDeclarationSyntax);
+        var ctorParameter = Assert.Single(methodDeclarationSyntax.ParameterList.Parameters);
+        Assert.Equal("getApiTestInteractor", ctorParameter.Identifier.Value);
+        var parameterType = Assert.IsType<IdentifierNameSyntax>(ctorParameter.Type);
+        Assert.Equal("IGetApiTestInteractor", parameterType.Identifier.Value);
+    }
+
+    [Fact]
     public void ControllerHasApiControllerAttribute()
     {
         // Arrange

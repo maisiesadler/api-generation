@@ -12,15 +12,8 @@ namespace OpenApiSpecGeneration
             foreach (var (apiPath, openApiPath) in spec.paths)
             {
                 var normalisedName = CsharpNamingExtensions.PathToClassName(apiPath);
-
-                var ctorBody = SyntaxFactory.ParseStatement("");
-                var ctor = SyntaxFactory.ConstructorDeclaration(normalisedName)
-                    .AddModifiers(SyntaxFactory.Token(SyntaxKind.PublicKeyword))
-                    .WithBody(SyntaxFactory.Block(ctorBody));
-                var @class = SyntaxFactory.ClassDeclaration(SyntaxFactory.Identifier(normalisedName))
-                    .AddMembers(ctor)
-                    .AddModifiers(SyntaxFactory.Token(SyntaxKind.PublicKeyword))
-                    .AddAttributeLists(GetControllerAttributeList(apiPath));
+                var classMethods = new List<MethodDeclarationSyntax>();
+                var methods = new List<string>();
 
                 foreach (var (method, openApiMethod) in openApiPath)
                 {
@@ -31,12 +24,49 @@ namespace OpenApiSpecGeneration
                         .WithBody(SyntaxFactory.Block(methodBody))
                         .AddAttributeLists(GetMethodAttributeList(method));
 
-                    @class = @class.AddMembers(methodDeclaration);
+                    classMethods.Add(methodDeclaration);
+                    methods.Add(method);
                 }
+
+                var ctor = CreateConstructor(normalisedName, apiPath, methods);
+
+                var @class = SyntaxFactory.ClassDeclaration(SyntaxFactory.Identifier(normalisedName))
+                    .AddMembers(ctor)
+                    .AddMembers(classMethods.ToArray())
+                    .AddModifiers(SyntaxFactory.Token(SyntaxKind.PublicKeyword))
+                    .AddAttributeLists(GetControllerAttributeList(apiPath));
+
                 members.Add(@class);
             }
 
             return members;
+        }
+
+        private static ConstructorDeclarationSyntax CreateConstructor(
+            string normalisedName,
+            string apiPath,
+            List<string> methods)
+        {
+            var parameterSyntax = methods.Select(method =>
+            {
+                var propertyName = $"{method}{CsharpNamingExtensions.PathToClassName(apiPath)}Interactor";
+                var propertyType = $"I{CsharpNamingExtensions.FirstLetterToUpper(method)}{CsharpNamingExtensions.PathToClassName(apiPath)}Interactor";
+                return SyntaxFactory.Parameter(
+                    default,
+                    default,
+                    SyntaxFactory.ParseTypeName(propertyType),
+                    SyntaxFactory.Identifier(propertyName),
+                    default
+                );
+            });
+
+            var ctorBody = SyntaxFactory.ParseStatement("");
+            var ctor = SyntaxFactory.ConstructorDeclaration(normalisedName)
+                .AddParameterListParameters(parameterSyntax.ToArray())
+                .AddModifiers(SyntaxFactory.Token(SyntaxKind.PublicKeyword))
+                .WithBody(SyntaxFactory.Block(ctorBody));
+
+            return ctor;
         }
 
         private static AttributeListSyntax[] GetControllerAttributeList(string route)
@@ -72,7 +102,7 @@ namespace OpenApiSpecGeneration
 
         private static AttributeListSyntax[] GetMethodAttributeList(string method)
         {
-            var attributeNmae = RouteAttributeName(method); 
+            var attributeNmae = RouteAttributeName(method);
             return new[] {
                 SyntaxFactory.AttributeList(
                     SyntaxFactory.SingletonSeparatedList<AttributeSyntax>(

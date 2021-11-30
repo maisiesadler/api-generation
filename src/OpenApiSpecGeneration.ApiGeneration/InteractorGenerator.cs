@@ -9,7 +9,7 @@ namespace OpenApiSpecGeneration
         internal static IList<InterfaceDeclarationSyntax> GenerateInteractors(OpenApiSpec spec)
         {
             var members = new List<InterfaceDeclarationSyntax>();
-            foreach (var (name, openApiPath) in spec.paths)
+            foreach (var (apiPath, openApiPath) in spec.paths)
             {
                 foreach (var (method, openApiMethod) in openApiPath)
                 {
@@ -21,7 +21,7 @@ namespace OpenApiSpecGeneration
 
                     var methods = new[] { methodDeclaration };
 
-                    var interfaceName = $"I{CsharpNamingExtensions.FirstLetterToUpper(method)}{CsharpNamingExtensions.PathToClassName(name)}Interactor";
+                    var interfaceName = $"I{CsharpNamingExtensions.FirstLetterToUpper(method)}{CsharpNamingExtensions.PathToClassName(apiPath)}Interactor";
 
                     var interfaceDeclaration = SyntaxFactory.InterfaceDeclaration(
                         attributeLists: default,

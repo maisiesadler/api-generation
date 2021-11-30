@@ -7,7 +7,7 @@ namespace Example
     [Route("/api/Todo")]
     public class ApiTodo
     {
-        public ApiTodo()
+        public ApiTodo(IGetApiTodoInteractor getApiTodoInteractor, IPostApiTodoInteractor postApiTodoInteractor)
         {
         }
 

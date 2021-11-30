@@ -7,7 +7,7 @@ namespace Example
     [Route("/api/Todo/{id}")]
     public class ApiTodoId
     {
-        public ApiTodoId()
+        public ApiTodoId(IGetApiTodoIdInteractor getApiTodoIdInteractor, IPutApiTodoIdInteractor putApiTodoIdInteractor, IDeleteApiTodoIdInteractor deleteApiTodoIdInteractor)
         {
         }
 
