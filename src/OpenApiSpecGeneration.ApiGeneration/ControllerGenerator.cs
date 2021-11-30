@@ -12,26 +12,31 @@ namespace OpenApiSpecGeneration
             foreach (var (apiPath, openApiPath) in spec.paths)
             {
                 var normalisedName = CsharpNamingExtensions.PathToClassName(apiPath);
+
                 var classMethods = new List<MethodDeclarationSyntax>();
-                var methods = new List<string>();
+                var parameters = new List<ParameterSyntax>();
+                var fields = new List<MemberDeclarationSyntax>();
 
                 foreach (var (method, openApiMethod) in openApiPath)
                 {
-                    var methodBody = SyntaxFactory.ParseStatement("");
+                    var propertyType = CsharpNamingExtensions.PathToInteractorType(apiPath, method);
+                    var propertyName = CsharpNamingExtensions.InterfaceToPropertyName(propertyType);
 
+                    var methodBody = SyntaxFactory.ParseStatement("");
                     var methodDeclaration = SyntaxFactory.MethodDeclaration(SyntaxFactory.ParseTypeName("void"), CsharpNamingExtensions.FirstLetterToUpper(method))
                         .AddModifiers(SyntaxFactory.Token(SyntaxKind.PublicKeyword))
                         .WithBody(SyntaxFactory.Block(methodBody))
                         .AddAttributeLists(GetMethodAttributeList(method));
 
                     classMethods.Add(methodDeclaration);
-                    methods.Add(method);
+                    fields.Add(CreateField(propertyType, propertyName));
+                    parameters.Add(CreateConstructorParameter(propertyType, propertyName));
                 }
 
-                var ctor = CreateConstructor(normalisedName, apiPath, methods);
+                var ctor = CreateConstructor(normalisedName, parameters);
 
                 var @class = SyntaxFactory.ClassDeclaration(SyntaxFactory.Identifier(normalisedName))
-                    .AddMembers(CreateFields(apiPath, methods).ToArray())
+                    .AddMembers(fields.ToArray())
                     .AddMembers(ctor)
                     .AddMembers(classMethods.ToArray())
                     .AddModifiers(SyntaxFactory.Token(SyntaxKind.PublicKeyword))
@@ -43,58 +48,46 @@ namespace OpenApiSpecGeneration
             return members;
         }
 
-        private static IEnumerable<MemberDeclarationSyntax> CreateFields(
-            string apiPath,
-            List<string> methods)
+        private static MemberDeclarationSyntax CreateField(string propertyType, string propertyName)
         {
-            foreach (var method in methods)
-            {
-                var propertyType = CsharpNamingExtensions.PathToInteractorType(apiPath, method);
-                var propertyName = CsharpNamingExtensions.InterfaceToPropertyName(propertyType);
-                var fieldTokens = SyntaxFactory.TokenList(
-                    SyntaxFactory.Token(SyntaxKind.PrivateKeyword),
-                    SyntaxFactory.Token(SyntaxKind.ReadOnlyKeyword)
-                );
+            var fieldTokens = SyntaxFactory.TokenList(
+                SyntaxFactory.Token(SyntaxKind.PrivateKeyword),
+                SyntaxFactory.Token(SyntaxKind.ReadOnlyKeyword)
+            );
 
-                var variableDeclaration = SyntaxFactory.VariableDeclaration(SyntaxFactory.ParseTypeName(propertyType))
-                    .AddVariables(SyntaxFactory.VariableDeclarator($"_{propertyName}"));
+            var variableDeclaration = SyntaxFactory.VariableDeclaration(SyntaxFactory.ParseTypeName(propertyType))
+                .AddVariables(SyntaxFactory.VariableDeclarator($"_{propertyName}"));
 
-                var field = SyntaxFactory.FieldDeclaration(
-                    default,
-                    fieldTokens,
-                    variableDeclaration,
-                    SyntaxFactory.Token(SyntaxKind.SemicolonToken)
-                );
+            var field = SyntaxFactory.FieldDeclaration(
+                default,
+                fieldTokens,
+                variableDeclaration,
+                SyntaxFactory.Token(SyntaxKind.SemicolonToken)
+            );
 
-                yield return field;
-            }
+            return field;
         }
 
-        private static ConstructorDeclarationSyntax CreateConstructor(
-            string normalisedName,
-            string apiPath,
-            List<string> methods)
+        private static ConstructorDeclarationSyntax CreateConstructor(string normalisedName, List<ParameterSyntax> parameters)
         {
-            var parameterSyntax = methods.Select(method =>
-            {
-                var propertyType = CsharpNamingExtensions.PathToInteractorType(apiPath, method);
-                var propertyName = CsharpNamingExtensions.InterfaceToPropertyName(propertyType);
-                return SyntaxFactory.Parameter(
-                    default,
-                    default,
-                    SyntaxFactory.ParseTypeName(propertyType),
-                    SyntaxFactory.Identifier(propertyName),
-                    default
-                );
-            });
-
             var ctorBody = SyntaxFactory.ParseStatement("");
             var ctor = SyntaxFactory.ConstructorDeclaration(normalisedName)
-                .AddParameterListParameters(parameterSyntax.ToArray())
+                .AddParameterListParameters(parameters.ToArray())
                 .AddModifiers(SyntaxFactory.Token(SyntaxKind.PublicKeyword))
                 .WithBody(SyntaxFactory.Block(ctorBody));
 
             return ctor;
+        }
+
+        private static ParameterSyntax CreateConstructorParameter(string propertyType, string propertyName)
+        {
+            return SyntaxFactory.Parameter(
+                default,
+                default,
+                SyntaxFactory.ParseTypeName(propertyType),
+                SyntaxFactory.Identifier(propertyName),
+                default
+            );
         }
 
         private static AttributeListSyntax[] GetControllerAttributeList(string route)
@@ -139,6 +132,7 @@ namespace OpenApiSpecGeneration
                 ),
             };
         }
+
         private static string RouteAttributeName(string method)
         {
             return method switch
