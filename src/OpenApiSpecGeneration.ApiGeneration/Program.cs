@@ -1,6 +1,7 @@
 ﻿using System.Text.Json;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
+using Microsoft.CodeAnalysis.CSharp.Syntax;
 
 namespace OpenApiSpecGeneration
 {
@@ -11,7 +12,8 @@ namespace OpenApiSpecGeneration
             var path = Directory.GetCurrentDirectory();
             await using var fileStream = File.OpenRead(Path.Combine(path, "definition.json"));
 
-            var outputDirectory = "example";
+            var outputDirectory = "example/generated";
+            var @namespace = "Example";
             SetupOutputDirectory(outputDirectory);
 
             var openApiSpec = await JsonSerializer.DeserializeAsync<OpenApiSpec>(fileStream, new JsonSerializerOptions
@@ -29,31 +31,51 @@ namespace OpenApiSpecGeneration
 
             foreach (var member in members)
             {
-                var ns = SyntaxFactory.NamespaceDeclaration(SyntaxFactory.ParseName("CodeGen")).AddMembers(member);
+                var usings = SyntaxFactory.UsingDirective(SyntaxFactory.IdentifierName($"{@namespace}.Models"));
+                var ns = SyntaxFactory.NamespaceDeclaration(SyntaxFactory.ParseName($"{@namespace}"))
+                    .AddMembers(member)
+                    .AddUsings();
 
-                await using var streamWriter = new StreamWriter($"{outputDirectory}/{member.Identifier.Value}.cs", false);
-                ns.NormalizeWhitespace().WriteTo(streamWriter);
+                await WriteToFile($"{outputDirectory}/{member.Identifier.Value}.cs", usings, ns);
             }
 
             var models = ApiGenerator.GenerateModels(openApiSpec);
 
             foreach (var model in models)
             {
-                var ns = SyntaxFactory.NamespaceDeclaration(SyntaxFactory.ParseName("CodeGen.Models")).AddMembers(model);
+                var usings = SyntaxFactory.UsingDirective(SyntaxFactory.IdentifierName("System.Text.Json.Serialization"));
+                var ns = SyntaxFactory.NamespaceDeclaration(SyntaxFactory.ParseName($"{@namespace}.Models")).AddMembers(model);
 
-                await using var streamWriter = new StreamWriter($"{outputDirectory}/models/{model.Identifier.Value}.cs", false);
-                ns.NormalizeWhitespace().WriteTo(streamWriter);
+                await WriteToFile($"{outputDirectory}/models/{model.Identifier.Value}.cs", usings, ns);
             }
 
             var interactors = ApiGenerator.GenerateInteractors(openApiSpec);
 
             foreach (var interactor in interactors)
             {
-                var ns = SyntaxFactory.NamespaceDeclaration(SyntaxFactory.ParseName("CodeGen.Interactors")).AddMembers(interactor);
+                var usings = SyntaxFactory.UsingDirective(SyntaxFactory.IdentifierName($"{@namespace}.Models"));
+                var ns = SyntaxFactory.NamespaceDeclaration(SyntaxFactory.ParseName($"{@namespace}.Interactors"))
+                    .AddMembers(interactor);
 
-                await using var streamWriter = new StreamWriter($"{outputDirectory}/interactors/{interactor.Identifier.Value}.cs", false);
-                ns.NormalizeWhitespace().WriteTo(streamWriter);
+                await WriteToFile($"{outputDirectory}/interactors/{interactor.Identifier.Value}.cs", usings, ns);
             }
+        }
+
+        private static async Task WriteToFile(
+            string fileName,
+            UsingDirectiveSyntax? usingDirectiveSyntax,
+            NamespaceDeclarationSyntax namespaceDeclarationSyntax)
+        {
+            await using var streamWriter = new StreamWriter(fileName);
+
+            if (usingDirectiveSyntax != null)
+            {
+                usingDirectiveSyntax.NormalizeWhitespace().WriteTo(streamWriter);
+                streamWriter.WriteLine();
+                streamWriter.WriteLine();
+            }
+
+            namespaceDeclarationSyntax.NormalizeWhitespace().WriteTo(streamWriter);
         }
 
         private static void SetupOutputDirectory(string location)
