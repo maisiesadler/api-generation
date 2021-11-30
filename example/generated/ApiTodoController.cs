@@ -11,10 +11,12 @@ namespace Example
         {
         }
 
+        [HttpGet]
         public void Get()
         {
         }
 
+        [HttpPost]
         public void Post()
         {
         }

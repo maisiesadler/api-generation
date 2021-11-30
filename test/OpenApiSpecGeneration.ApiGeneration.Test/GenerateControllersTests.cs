@@ -128,4 +128,40 @@ public class GenerateControllersTests
         var literalExpressionSyntax = Assert.IsType<LiteralExpressionSyntax>(routeAttributeArgument.Expression);
         Assert.Equal("\"/api/test\"", literalExpressionSyntax.Token.Value);
     }
+
+    [Theory]
+    [InlineData("get", "Get", "HttpGet")]
+    [InlineData("post", "Post", "HttpPost")]
+    [InlineData("put", "Put", "HttpPut")]
+    [InlineData("delete", "Delete", "HttpDelete")]
+    public void MethodHasRouteAttribute(string method, string expectedMethodName, string expectedRouteAttribute)
+    {
+        // Arrange
+        var apiTestPath = new OpenApiPath
+        {
+            { method, new OpenApiMethod {} },
+        };
+        var paths = new Dictionary<string, OpenApiPath>
+        {
+            { "/api/test", apiTestPath },
+        };
+        var spec = new OpenApiSpec(paths, new OpenApiComponent(new Dictionary<string, OpenApiComponentSchema>()));
+
+        // Act
+        var classDeclarationSyntaxes = ApiGenerator.GenerateControllers(spec);
+
+        // Assert
+        var classDeclarationSyntax = Assert.Single(classDeclarationSyntaxes);
+        Assert.Equal(2, classDeclarationSyntax.Members.Count);
+        var memberDeclarationSyntax = classDeclarationSyntax.Members[1];
+        var methodDeclarationSyntax = Assert.IsType<MethodDeclarationSyntax>(memberDeclarationSyntax);
+        Assert.Equal(expectedMethodName, methodDeclarationSyntax.Identifier.Value);
+
+        var methodAttributeListSyntax = Assert.Single(methodDeclarationSyntax.AttributeLists);
+
+        var methodAttributeSyntax = Assert.Single(methodAttributeListSyntax.Attributes);
+        var methodIdentifierNameSyntax = Assert.IsType<IdentifierNameSyntax>(methodAttributeSyntax.Name);
+        Assert.Equal(expectedRouteAttribute, methodIdentifierNameSyntax.Identifier.Value);
+        Assert.Null(methodAttributeSyntax.ArgumentList);
+    }
 }

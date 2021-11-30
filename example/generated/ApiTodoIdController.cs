@@ -11,14 +11,17 @@ namespace Example
         {
         }
 
+        [HttpGet]
         public void Get()
         {
         }
 
+        [HttpPut]
         public void Put()
         {
         }
 
+        [HttpDelete]
         public void Delete()
         {
         }

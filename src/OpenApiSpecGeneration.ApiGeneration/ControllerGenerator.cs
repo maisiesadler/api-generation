@@ -28,7 +28,8 @@ namespace OpenApiSpecGeneration
 
                     var methodDeclaration = SyntaxFactory.MethodDeclaration(SyntaxFactory.ParseTypeName("void"), CsharpNamingExtensions.FirstLetterToUpper(method))
                         .AddModifiers(SyntaxFactory.Token(SyntaxKind.PublicKeyword))
-                        .WithBody(SyntaxFactory.Block(methodBody));
+                        .WithBody(SyntaxFactory.Block(methodBody))
+                        .AddAttributeLists(GetMethodAttributeList(method));
 
                     @class = @class.AddMembers(methodDeclaration);
                 }
@@ -66,6 +67,29 @@ namespace OpenApiSpecGeneration
                         SyntaxFactory.Attribute(SyntaxFactory.IdentifierName("Route"), routeArgumentList)
                     )
                 )
+            };
+        }
+
+        private static AttributeListSyntax[] GetMethodAttributeList(string method)
+        {
+            var attributeNmae = RouteAttributeName(method); 
+            return new[] {
+                SyntaxFactory.AttributeList(
+                    SyntaxFactory.SingletonSeparatedList<AttributeSyntax>(
+                        SyntaxFactory.Attribute(SyntaxFactory.IdentifierName(attributeNmae))
+                    )
+                ),
+            };
+        }
+        private static string RouteAttributeName(string method)
+        {
+            return method switch
+            {
+                "get" => "HttpGet",
+                "post" => "HttpPost",
+                "put" => "HttpPut",
+                "delete" => "HttpDelete",
+                _ => throw new InvalidOperationException($"Unknown method '{method}'"),
             };
         }
     }
