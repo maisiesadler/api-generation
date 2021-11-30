@@ -1,4 +1,6 @@
-namespace CodeGen.Models
+using System.Text.Json.Serialization;
+
+namespace Example.Models
 {
     public record ToDoItem
     {

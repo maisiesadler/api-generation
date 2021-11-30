@@ -1,4 +1,6 @@
-namespace CodeGen
+using Example.Models;
+
+namespace Example
 {
     public class ApiTodoId
     {
