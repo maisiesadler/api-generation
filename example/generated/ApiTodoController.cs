@@ -11,6 +11,8 @@ namespace Example
         private readonly IPostApiTodoInteractor _postApiTodoInteractor;
         public ApiTodo(IGetApiTodoInteractor getApiTodoInteractor, IPostApiTodoInteractor postApiTodoInteractor)
         {
+            _getApiTodoInteractor = getApiTodoInteractor;
+            _postApiTodoInteractor = postApiTodoInteractor;
         }
 
         [HttpGet]

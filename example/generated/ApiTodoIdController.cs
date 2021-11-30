@@ -12,6 +12,9 @@ namespace Example
         private readonly IDeleteApiTodoIdInteractor _deleteApiTodoIdInteractor;
         public ApiTodoId(IGetApiTodoIdInteractor getApiTodoIdInteractor, IPutApiTodoIdInteractor putApiTodoIdInteractor, IDeleteApiTodoIdInteractor deleteApiTodoIdInteractor)
         {
+            _getApiTodoIdInteractor = getApiTodoIdInteractor;
+            _putApiTodoIdInteractor = putApiTodoIdInteractor;
+            _deleteApiTodoIdInteractor = deleteApiTodoIdInteractor;
         }
 
         [HttpGet]

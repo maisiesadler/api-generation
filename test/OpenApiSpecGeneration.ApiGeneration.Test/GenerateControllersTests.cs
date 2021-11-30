@@ -161,6 +161,44 @@ public class GenerateControllersTests
     }
 
     [Fact]
+    public void PublicConstructorHasInteractorsSetsPrivateFields()
+    {
+        // Arrange
+        var openApiContentSchema = new OpenApiContentSchema("array", new Dictionary<string, string>
+        {
+            { "$ref", "#/components/schemas/ToDoItem" },
+        });
+        var openApiResponse = new OpenApiResponse("Success", new Dictionary<string, OpenApiContent>
+        {
+            { "text/plain", new OpenApiContent(openApiContentSchema) }
+        });
+        var openApiResponses = new Dictionary<string, OpenApiResponse> { { "200", openApiResponse } };
+        var apiTestPath = new OpenApiPath
+        {
+            { "get", new OpenApiMethod { responses = openApiResponses } },
+        };
+        var paths = new Dictionary<string, OpenApiPath>
+        {
+            { "/api/test", apiTestPath },
+        };
+        var spec = new OpenApiSpec(paths, new OpenApiComponent(new Dictionary<string, OpenApiComponentSchema>()));
+
+        // Act
+        var classDeclarationSyntaxes = ApiGenerator.GenerateControllers(spec);
+
+        // Assert
+        var classDeclarationSyntax = Assert.Single(classDeclarationSyntaxes);
+        var constructorDeclarationSyntax = Assert.Single(classDeclarationSyntax.Members.GetMembersOfType<ConstructorDeclarationSyntax>());
+        var statementSyntax = Assert.Single(constructorDeclarationSyntax.Body!.Statements);
+        var expressionStatementSyntax = Assert.IsType<ExpressionStatementSyntax>(statementSyntax);
+        var assignmentExpressionSyntax = Assert.IsType<AssignmentExpressionSyntax>(expressionStatementSyntax.Expression);
+        var left = Assert.IsType<IdentifierNameSyntax>(assignmentExpressionSyntax.Left);
+        var right = Assert.IsType<IdentifierNameSyntax>(assignmentExpressionSyntax.Right);
+        Assert.Equal("_getApiTestInteractor", left.Identifier.Value);
+        Assert.Equal("getApiTestInteractor", right.Identifier.Value);
+    }
+
+    [Fact]
     public void ControllerHasApiControllerAttribute()
     {
         // Arrange
@@ -234,4 +272,28 @@ public class GenerateControllersTests
         Assert.Equal(expectedRouteAttribute, methodIdentifierNameSyntax.Identifier.Value);
         Assert.Null(methodAttributeSyntax.ArgumentList);
     }
+
+    // [Fact]
+    // public void MethodBodyCallsInteractor()
+    // {
+    //     // Arrange
+    //     var apiTestPath = new OpenApiPath
+    //     {
+    //         { "get", new OpenApiMethod {} },
+    //     };
+    //     var paths = new Dictionary<string, OpenApiPath>
+    //     {
+    //         { "/api/test", apiTestPath },
+    //     };
+    //     var spec = new OpenApiSpec(paths, new OpenApiComponent(new Dictionary<string, OpenApiComponentSchema>()));
+
+    //     // Act
+    //     var classDeclarationSyntaxes = ApiGenerator.GenerateControllers(spec);
+
+    //     // Assert
+    //     var classDeclarationSyntax = Assert.Single(classDeclarationSyntaxes);
+    //     var methodDeclarationSyntax = Assert.Single(classDeclarationSyntax.Members.GetMembersOfType<MethodDeclarationSyntax>());
+    //     var statementSyntax = Assert.Single(methodDeclarationSyntax.Body!.Statements);
+    //     // statementSyntax.
+    // }
 }

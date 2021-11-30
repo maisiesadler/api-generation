@@ -14,6 +14,7 @@ namespace OpenApiSpecGeneration
                 var normalisedName = CsharpNamingExtensions.PathToClassName(apiPath);
 
                 var classMethods = new List<MethodDeclarationSyntax>();
+                var assignments = new List<StatementSyntax>();
                 var parameters = new List<ParameterSyntax>();
                 var fields = new List<MemberDeclarationSyntax>();
 
@@ -30,10 +31,11 @@ namespace OpenApiSpecGeneration
 
                     classMethods.Add(methodDeclaration);
                     fields.Add(CreateField(propertyType, propertyName));
+                    assignments.Add(CreateAssignment(propertyName));
                     parameters.Add(CreateConstructorParameter(propertyType, propertyName));
                 }
 
-                var ctor = CreateConstructor(normalisedName, parameters);
+                var ctor = CreateConstructor(normalisedName, parameters, assignments);
 
                 var @class = SyntaxFactory.ClassDeclaration(SyntaxFactory.Identifier(normalisedName))
                     .AddMembers(fields.ToArray())
@@ -68,15 +70,25 @@ namespace OpenApiSpecGeneration
             return field;
         }
 
-        private static ConstructorDeclarationSyntax CreateConstructor(string normalisedName, List<ParameterSyntax> parameters)
+        private static ConstructorDeclarationSyntax CreateConstructor(
+            string normalisedName,
+            List<ParameterSyntax> parameters,
+            List<StatementSyntax> assignments)
         {
-            var ctorBody = SyntaxFactory.ParseStatement("");
             var ctor = SyntaxFactory.ConstructorDeclaration(normalisedName)
                 .AddParameterListParameters(parameters.ToArray())
                 .AddModifiers(SyntaxFactory.Token(SyntaxKind.PublicKeyword))
-                .WithBody(SyntaxFactory.Block(ctorBody));
+                .WithBody(SyntaxFactory.Block(assignments));
 
             return ctor;
+        }
+
+        private static StatementSyntax CreateAssignment(string propertyName)
+        {
+            var fieldIdentifier = SyntaxFactory.IdentifierName($"_{propertyName}");
+            var propertyIdentifier = SyntaxFactory.IdentifierName(propertyName);
+            var assignment = SyntaxFactory.AssignmentExpression(SyntaxKind.SimpleAssignmentExpression, fieldIdentifier, propertyIdentifier);
+            return SyntaxFactory.ExpressionStatement(assignment);
         }
 
         private static ParameterSyntax CreateConstructorParameter(string propertyType, string propertyName)
