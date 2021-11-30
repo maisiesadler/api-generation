@@ -13,18 +13,13 @@ namespace OpenApiSpecGeneration
             {
                 foreach (var (method, openApiMethod) in openApiPath)
                 {
-                    if (!TryGetReturnType(openApiMethod.responses, out var returnType))
-                    {
-                        // todo: warn?
-                        continue;
-                    }
-                    var methods = new List<MemberDeclarationSyntax>();
+                    var returnType = GetReturnTypeSyntax(openApiMethod.responses);
                     var methodDeclaration = SyntaxFactory.MethodDeclaration(
                             returnType,
                             SyntaxFactory.Identifier("Execute"))
                         .WithSemicolonToken(SyntaxFactory.Token(SyntaxKind.SemicolonToken));
 
-                    methods.Add(methodDeclaration);
+                    var methods = new[] { methodDeclaration };
 
                     var interfaceName = $"I{CsharpNamingExtensions.FirstLetterToUpper(method)}{CsharpNamingExtensions.PathToClassName(name)}Interactor";
 
@@ -37,9 +32,7 @@ namespace OpenApiSpecGeneration
                         baseList: null,
                         constraintClauses: default,
                         openBraceToken: SyntaxFactory.Token(SyntaxKind.OpenBraceToken),
-                        members: SyntaxFactory.List<MemberDeclarationSyntax>(
-                            methods.ToArray()
-                        ),
+                        members: SyntaxFactory.List<MemberDeclarationSyntax>(methods),
                         closeBraceToken: SyntaxFactory.Token(SyntaxKind.CloseBraceToken),
                         semicolonToken: default);
 
@@ -50,44 +43,33 @@ namespace OpenApiSpecGeneration
             return members;
         }
 
-        private static bool TryGetReturnType(
+        private static TypeSyntax GetReturnTypeSyntax(
+            IReadOnlyDictionary<string, OpenApiResponse> responses)
+        {
+            if (TryGetFirstReturnTypeComponentName(responses, out var componentName))
+            {
+                var arg = SyntaxFactory.ParseTypeName(componentName);
+                return SyntaxFactory.GenericName(SyntaxFactory.Identifier("Task"),
+                    SyntaxFactory.TypeArgumentList(SyntaxFactory.SingletonSeparatedList<TypeSyntax>(arg))
+                );
+            }
+
+            return SyntaxFactory.ParseTypeName("Task");
+        }
+
+        private static bool TryGetFirstReturnTypeComponentName(
             IReadOnlyDictionary<string, OpenApiResponse> responses,
-            [NotNullWhen(true)] out TypeSyntax? returnType)
+            [NotNullWhen(true)] out string? returnType)
         {
             returnType = null;
             if (!responses.Any()) return false;
             var response = responses.First();
             if (!response.Value.content.Any()) return false;
             var content = response.Value.content.First();
-            var component = content.Value.schema.items["$ref"];
-            var componentName = component.Split("/").Last();
-            var arg = SyntaxFactory.ParseTypeName(componentName);
-            returnType = SyntaxFactory.GenericName(SyntaxFactory.Identifier("Task"),
-                SyntaxFactory.TypeArgumentList(SyntaxFactory.SingletonSeparatedList<TypeSyntax>(arg))
-            );
+            if (!content.Value.schema.items.TryGetValue("$ref", out var component)) return false;
+
+            returnType = component.Split("/").Last();
             return true;
-        }
-
-        private static AttributeSyntax JsonPropertyNameAttributeSyntax(string propertyName)
-        {
-            var quotedPropertyName = $"\"{propertyName}\"";
-            var attributeArgument = SyntaxFactory.AttributeArgument(
-                SyntaxFactory.LiteralExpression(SyntaxKind.StringLiteralExpression,
-                    SyntaxFactory.Token(SyntaxFactory.TriviaList(),
-                        SyntaxKind.StringLiteralToken,
-                        quotedPropertyName,
-                        quotedPropertyName,
-                        SyntaxFactory.TriviaList()
-                    )
-                )
-            );
-
-            return SyntaxFactory.Attribute(
-                SyntaxFactory.IdentifierName("JsonPropertyName"),
-                SyntaxFactory.AttributeArgumentList(
-                    SyntaxFactory.SingletonSeparatedList<AttributeArgumentSyntax>(attributeArgument)
-                )
-            );
         }
     }
 }
