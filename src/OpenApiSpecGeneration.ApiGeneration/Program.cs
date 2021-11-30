@@ -31,7 +31,10 @@ namespace OpenApiSpecGeneration
 
             foreach (var member in members)
             {
-                var usings = SyntaxFactory.UsingDirective(SyntaxFactory.IdentifierName($"{@namespace}.Models"));
+                var usings = SyntaxFactory.List<UsingDirectiveSyntax>(new[]{
+                    SyntaxFactory.UsingDirective(SyntaxFactory.IdentifierName($"Microsoft.AspNetCore.Mvc")),
+                    SyntaxFactory.UsingDirective(SyntaxFactory.IdentifierName($"{@namespace}.Models")),
+                });
                 var ns = SyntaxFactory.NamespaceDeclaration(SyntaxFactory.ParseName($"{@namespace}"))
                     .AddMembers(member)
                     .AddUsings();
@@ -43,7 +46,9 @@ namespace OpenApiSpecGeneration
 
             foreach (var model in models)
             {
-                var usings = SyntaxFactory.UsingDirective(SyntaxFactory.IdentifierName("System.Text.Json.Serialization"));
+                var usings = SyntaxFactory.List<UsingDirectiveSyntax>(new[]{
+                    SyntaxFactory.UsingDirective(SyntaxFactory.IdentifierName("System.Text.Json.Serialization")),
+                });
                 var ns = SyntaxFactory.NamespaceDeclaration(SyntaxFactory.ParseName($"{@namespace}.Models")).AddMembers(model);
 
                 await WriteToFile($"{outputDirectory}/models/{model.Identifier.Value}.cs", usings, ns);
@@ -53,7 +58,9 @@ namespace OpenApiSpecGeneration
 
             foreach (var interactor in interactors)
             {
-                var usings = SyntaxFactory.UsingDirective(SyntaxFactory.IdentifierName($"{@namespace}.Models"));
+                var usings = SyntaxFactory.List<UsingDirectiveSyntax>(new[]{
+                    SyntaxFactory.UsingDirective(SyntaxFactory.IdentifierName($"{@namespace}.Models")),
+                });
                 var ns = SyntaxFactory.NamespaceDeclaration(SyntaxFactory.ParseName($"{@namespace}.Interactors"))
                     .AddMembers(interactor);
 
@@ -63,15 +70,18 @@ namespace OpenApiSpecGeneration
 
         private static async Task WriteToFile(
             string fileName,
-            UsingDirectiveSyntax? usingDirectiveSyntax,
+            SyntaxList<UsingDirectiveSyntax>? usingDirectiveSyntax,
             NamespaceDeclarationSyntax namespaceDeclarationSyntax)
         {
             await using var streamWriter = new StreamWriter(fileName);
 
             if (usingDirectiveSyntax != null)
             {
-                usingDirectiveSyntax.NormalizeWhitespace().WriteTo(streamWriter);
-                streamWriter.WriteLine();
+                foreach (var directive in usingDirectiveSyntax)
+                {
+                    directive.NormalizeWhitespace().WriteTo(streamWriter);
+                    streamWriter.WriteLine();
+                }
                 streamWriter.WriteLine();
             }
 
