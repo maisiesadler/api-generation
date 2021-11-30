@@ -39,7 +39,7 @@ namespace OpenApiSpecGeneration
                     .AddMembers(member)
                     .AddUsings();
 
-                await WriteToFile($"{outputDirectory}/{member.Identifier.Value}.cs", usings, ns);
+                await WriteToFile($"{outputDirectory}/{member.Identifier.Value}Controller.cs", usings, ns);
             }
 
             var models = ApiGenerator.GenerateModels(openApiSpec);
