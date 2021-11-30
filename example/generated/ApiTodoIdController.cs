@@ -7,6 +7,9 @@ namespace Example
     [Route("/api/Todo/{id}")]
     public class ApiTodoId
     {
+        private readonly IGetApiTodoIdInteractor _getApiTodoIdInteractor;
+        private readonly IPutApiTodoIdInteractor _putApiTodoIdInteractor;
+        private readonly IDeleteApiTodoIdInteractor _deleteApiTodoIdInteractor;
         public ApiTodoId(IGetApiTodoIdInteractor getApiTodoIdInteractor, IPutApiTodoIdInteractor putApiTodoIdInteractor, IDeleteApiTodoIdInteractor deleteApiTodoIdInteractor)
         {
         }

@@ -31,6 +31,7 @@ namespace OpenApiSpecGeneration
                 var ctor = CreateConstructor(normalisedName, apiPath, methods);
 
                 var @class = SyntaxFactory.ClassDeclaration(SyntaxFactory.Identifier(normalisedName))
+                    .AddMembers(CreateFields(apiPath, methods).ToArray())
                     .AddMembers(ctor)
                     .AddMembers(classMethods.ToArray())
                     .AddModifiers(SyntaxFactory.Token(SyntaxKind.PublicKeyword))
@@ -40,6 +41,33 @@ namespace OpenApiSpecGeneration
             }
 
             return members;
+        }
+
+        private static IEnumerable<MemberDeclarationSyntax> CreateFields(
+            string apiPath,
+            List<string> methods)
+        {
+            foreach (var method in methods)
+            {
+                var propertyType = CsharpNamingExtensions.PathToInteractorType(apiPath, method);
+                var propertyName = CsharpNamingExtensions.InterfaceToPropertyName(propertyType);
+                var fieldTokens = SyntaxFactory.TokenList(
+                    SyntaxFactory.Token(SyntaxKind.PrivateKeyword),
+                    SyntaxFactory.Token(SyntaxKind.ReadOnlyKeyword)
+                );
+
+                var variableDeclaration = SyntaxFactory.VariableDeclaration(SyntaxFactory.ParseTypeName(propertyType))
+                    .AddVariables(SyntaxFactory.VariableDeclarator($"_{propertyName}"));
+
+                var field = SyntaxFactory.FieldDeclaration(
+                    default,
+                    fieldTokens,
+                    variableDeclaration,
+                    SyntaxFactory.Token(SyntaxKind.SemicolonToken)
+                );
+
+                yield return field;
+            }
         }
 
         private static ConstructorDeclarationSyntax CreateConstructor(
