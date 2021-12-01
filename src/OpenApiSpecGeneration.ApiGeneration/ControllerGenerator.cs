@@ -73,9 +73,30 @@ namespace OpenApiSpecGeneration
 
         private static BlockSyntax CreateMethodBody(string propertyName)
         {
-            var methodBody = SyntaxFactory.ParseStatement($"return await _{propertyName}.Execute();");
+            var memberAccessExpressionSyntax = SyntaxFactory.MemberAccessExpression(
+                SyntaxKind.SimpleMemberAccessExpression,
+                SyntaxFactory.IdentifierName($"_{propertyName}"),
+                SyntaxFactory.Token(SyntaxKind.DotToken),
+                SyntaxFactory.IdentifierName("Execute")
+            );
 
-            var statements = new List<StatementSyntax> { methodBody };
+            var invocationExpressionSyntax = SyntaxFactory.InvocationExpression(
+                memberAccessExpressionSyntax,
+                SyntaxFactory.ArgumentList()
+            );
+
+            var awaitExpressionSyntax = SyntaxFactory.AwaitExpression(
+                SyntaxFactory.Token(SyntaxKind.AwaitKeyword),
+                invocationExpressionSyntax
+            );
+
+            var returnStatementSyntax = SyntaxFactory.ReturnStatement(
+                SyntaxFactory.Token(SyntaxKind.ReturnKeyword),
+                awaitExpressionSyntax,
+                SyntaxFactory.Token(SyntaxKind.SemicolonToken)
+            );
+
+            var statements = new List<StatementSyntax> { returnStatementSyntax };
 
             return SyntaxFactory.Block(statements);
         }
