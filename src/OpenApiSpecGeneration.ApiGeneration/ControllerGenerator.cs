@@ -90,13 +90,41 @@ namespace OpenApiSpecGeneration
                 invocationExpressionSyntax
             );
 
+            var variableDeclarator = SyntaxFactory.VariableDeclarator(
+                SyntaxFactory.Identifier("result"),
+                default,
+                SyntaxFactory.EqualsValueClause(
+                    SyntaxFactory.Token(SyntaxKind.EqualsToken),
+                    awaitExpressionSyntax
+                )
+            );
+
+            // var executeStateent = SyntaxFactory.ParseStatement($"var result = await _{propertyName}.Execute();");
+            var executeStatement = SyntaxFactory.LocalDeclarationStatement(
+                SyntaxFactory.VariableDeclaration(
+                    SyntaxFactory.IdentifierName("var"),
+                    SyntaxFactory.SingletonSeparatedList(variableDeclarator)
+                )
+            );
+
+            var returnInvocationExpressionSyntax = SyntaxFactory.InvocationExpression(
+                SyntaxFactory.IdentifierName("Ok"),
+                SyntaxFactory.ArgumentList(
+                    SyntaxFactory.Token(SyntaxKind.OpenParenToken),
+                    SyntaxFactory.SingletonSeparatedList<ArgumentSyntax>(
+                        SyntaxFactory.Argument(SyntaxFactory.IdentifierName("result"))
+                    ),
+                    SyntaxFactory.Token(SyntaxKind.CloseParenToken))
+            );
+
+            // return Ok(result);
             var returnStatementSyntax = SyntaxFactory.ReturnStatement(
                 SyntaxFactory.Token(SyntaxKind.ReturnKeyword),
-                awaitExpressionSyntax,
+                returnInvocationExpressionSyntax,
                 SyntaxFactory.Token(SyntaxKind.SemicolonToken)
             );
 
-            var statements = new List<StatementSyntax> { returnStatementSyntax };
+            var statements = new List<StatementSyntax> { executeStatement, returnStatementSyntax };
 
             return SyntaxFactory.Block(statements);
         }

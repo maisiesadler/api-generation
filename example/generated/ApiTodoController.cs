@@ -19,13 +19,15 @@ namespace Example
         [HttpGet]
         public async Task<IActionResult> Get()
         {
-            return await _getApiTodoInteractor.Execute();
+            var result = await _getApiTodoInteractor.Execute();
+            return Ok(result);
         }
 
         [HttpPost]
         public async Task<IActionResult> Post()
         {
-            return await _postApiTodoInteractor.Execute();
+            var result = await _postApiTodoInteractor.Execute();
+            return Ok(result);
         }
     }
 }
