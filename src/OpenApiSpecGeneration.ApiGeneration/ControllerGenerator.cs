@@ -23,8 +23,10 @@ namespace OpenApiSpecGeneration
                     var propertyName = CsharpNamingExtensions.InterfaceToPropertyName(propertyType);
 
                     var methodBody = SyntaxFactory.ParseStatement($"return await _{propertyName}.Execute();");
-                    var methodDeclaration = SyntaxFactory.MethodDeclaration(SyntaxFactory.ParseTypeName("void"), CsharpNamingExtensions.FirstLetterToUpper(method))
-                        .AddModifiers(SyntaxFactory.Token(SyntaxKind.PublicKeyword))
+                    var methodDeclaration = SyntaxFactory.MethodDeclaration(SyntaxFactory.ParseTypeName("Task<IActionResult>"), CsharpNamingExtensions.FirstLetterToUpper(method))
+                        .AddModifiers(
+                            SyntaxFactory.Token(SyntaxKind.PublicKeyword),
+                            SyntaxFactory.Token(SyntaxKind.AsyncKeyword))
                         .WithBody(SyntaxFactory.Block(methodBody))
                         .AddAttributeLists(GetMethodAttributeList(method));
 

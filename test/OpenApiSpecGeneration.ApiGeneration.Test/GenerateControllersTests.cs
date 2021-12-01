@@ -8,12 +8,12 @@ namespace OpenApiSpecGeneration.ApiGeneration.Test;
 public class GenerateControllersTests
 {
     [Fact]
-    public void SimpleGetIsGeneratedAsMethod()
+    public void ClassSignatureIsCorrect()
     {
         // Arrange
         var apiTestPath = new OpenApiPath
         {
-            { "get", new OpenApiMethod { tags = new List<string> { "peas" } } },
+            { "get", new OpenApiMethod {} },
         };
         var paths = new Dictionary<string, OpenApiPath>
         {
@@ -29,11 +29,39 @@ public class GenerateControllersTests
         Assert.Equal("ApiTest", classDeclarationSyntax.Identifier.Value);
         var classModifier = Assert.Single(classDeclarationSyntax.Modifiers);
         Assert.Equal("public", classModifier.Value);
+    }
+
+    [Fact]
+    public void MethodSignatureIsCorrect()
+    {
+        // Arrange
+        var apiTestPath = new OpenApiPath
+        {
+            { "get", new OpenApiMethod {} },
+        };
+        var paths = new Dictionary<string, OpenApiPath>
+        {
+            { "/api/test", apiTestPath },
+        };
+        var spec = new OpenApiSpec(paths, new OpenApiComponent(new Dictionary<string, OpenApiComponentSchema>()));
+
+        // Act
+        var classDeclarationSyntaxes = ApiGenerator.GenerateControllers(spec);
+
+        // Assert
+        var classDeclarationSyntax = Assert.Single(classDeclarationSyntaxes);
 
         var methodDeclarationSyntax = Assert.Single(classDeclarationSyntax.Members.GetMembersOfType<MethodDeclarationSyntax>());
         Assert.Equal("Get", methodDeclarationSyntax.Identifier.Value);
-        var methodModifier = Assert.Single(methodDeclarationSyntax.Modifiers);
-        Assert.Equal("public", methodModifier.Value);
+        Assert.Equal(2, methodDeclarationSyntax.Modifiers.Count);
+        Assert.Equal("public", methodDeclarationSyntax.Modifiers[0].Value);
+        Assert.Equal("async", methodDeclarationSyntax.Modifiers[1].Value);
+
+        var genericNameSyntax = Assert.IsType<GenericNameSyntax>(methodDeclarationSyntax.ReturnType);
+        Assert.Equal("Task", genericNameSyntax.Identifier.Value);
+        var argument = Assert.Single(genericNameSyntax.TypeArgumentList.Arguments);
+        var identifierNameSyntax = Assert.IsType<IdentifierNameSyntax>(argument);
+        Assert.Equal("IActionResult", identifierNameSyntax.Identifier.Value);
     }
 
     [Fact]

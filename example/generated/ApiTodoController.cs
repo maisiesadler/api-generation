@@ -17,13 +17,13 @@ namespace Example
         }
 
         [HttpGet]
-        public void Get()
+        public async Task<IActionResult> Get()
         {
             return await _getApiTodoInteractor.Execute();
         }
 
         [HttpPost]
-        public void Post()
+        public async Task<IActionResult> Post()
         {
             return await _postApiTodoInteractor.Execute();
         }
