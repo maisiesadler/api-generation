@@ -22,12 +22,12 @@ namespace OpenApiSpecGeneration
                     var propertyType = CsharpNamingExtensions.PathToInteractorType(apiPath, method);
                     var propertyName = CsharpNamingExtensions.InterfaceToPropertyName(propertyType);
 
-                    var methodBody = SyntaxFactory.ParseStatement($"return await _{propertyName}.Execute();");
+                    var methodBody = CreateMethodBody(propertyName);
                     var methodDeclaration = SyntaxFactory.MethodDeclaration(SyntaxFactory.ParseTypeName("Task<IActionResult>"), CsharpNamingExtensions.FirstLetterToUpper(method))
                         .AddModifiers(
                             SyntaxFactory.Token(SyntaxKind.PublicKeyword),
                             SyntaxFactory.Token(SyntaxKind.AsyncKeyword))
-                        .WithBody(SyntaxFactory.Block(methodBody))
+                        .WithBody(methodBody)
                         .AddAttributeLists(GetMethodAttributeList(method));
 
                     classMethods.Add(methodDeclaration);
@@ -69,6 +69,15 @@ namespace OpenApiSpecGeneration
             );
 
             return field;
+        }
+
+        private static BlockSyntax CreateMethodBody(string propertyName)
+        {
+            var methodBody = SyntaxFactory.ParseStatement($"return await _{propertyName}.Execute();");
+
+            var statements = new List<StatementSyntax> { methodBody };
+
+            return SyntaxFactory.Block(statements);
         }
 
         private static ConstructorDeclarationSyntax CreateConstructor(

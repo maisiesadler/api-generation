@@ -322,6 +322,7 @@ public class GenerateControllersTests
         var classDeclarationSyntax = Assert.Single(classDeclarationSyntaxes);
         var methodDeclarationSyntax = Assert.Single(classDeclarationSyntax.Members.GetMembersOfType<MethodDeclarationSyntax>());
         var statementSyntax = Assert.Single(methodDeclarationSyntax.Body!.Statements);
+
         var returnStatementSyntax = Assert.IsType<ReturnStatementSyntax>(statementSyntax);
         var awaitExpressionSyntax = Assert.IsType<AwaitExpressionSyntax>(returnStatementSyntax.Expression);
         Assert.Equal("return", returnStatementSyntax.ReturnKeyword.Value);
