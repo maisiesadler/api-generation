@@ -1,4 +1,3 @@
-using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
 
@@ -23,7 +22,7 @@ namespace OpenApiSpecGeneration
                     var propertyType = CsharpNamingExtensions.PathToInteractorType(apiPath, method);
                     var propertyName = CsharpNamingExtensions.InterfaceToPropertyName(propertyType);
 
-                    var methodBody = SyntaxFactory.ParseStatement("");
+                    var methodBody = SyntaxFactory.ParseStatement($"return await _{propertyName}.Execute();");
                     var methodDeclaration = SyntaxFactory.MethodDeclaration(SyntaxFactory.ParseTypeName("void"), CsharpNamingExtensions.FirstLetterToUpper(method))
                         .AddModifiers(SyntaxFactory.Token(SyntaxKind.PublicKeyword))
                         .WithBody(SyntaxFactory.Block(methodBody))

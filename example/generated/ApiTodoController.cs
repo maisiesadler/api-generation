@@ -19,11 +19,13 @@ namespace Example
         [HttpGet]
         public void Get()
         {
+            return await _getApiTodoInteractor.Execute();
         }
 
         [HttpPost]
         public void Post()
         {
+            return await _postApiTodoInteractor.Execute();
         }
     }
 }

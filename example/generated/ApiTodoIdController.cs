@@ -21,16 +21,19 @@ namespace Example
         [HttpGet]
         public void Get()
         {
+            return await _getApiTodoIdInteractor.Execute();
         }
 
         [HttpPut]
         public void Put()
         {
+            return await _putApiTodoIdInteractor.Execute();
         }
 
         [HttpDelete]
         public void Delete()
         {
+            return await _deleteApiTodoIdInteractor.Execute();
         }
     }
 }
