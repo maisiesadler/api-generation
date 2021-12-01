@@ -1,0 +1,1 @@
+- [ ] Namespace generation in each generator?
