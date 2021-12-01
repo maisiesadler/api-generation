@@ -22,7 +22,8 @@ namespace OpenApiSpecGeneration
                     var propertyType = CsharpNamingExtensions.PathToInteractorType(apiPath, method);
                     var propertyName = CsharpNamingExtensions.InterfaceToPropertyName(propertyType);
 
-                    var methodBody = CreateMethodBody(propertyName);
+                    var hasReturnType = ReturnTypeExtensions.HasReturnType(openApiMethod.responses);
+                    var methodBody = CreateMethodBody(propertyName, hasReturnType);
                     var methodDeclaration = SyntaxFactory.MethodDeclaration(SyntaxFactory.ParseTypeName("Task<IActionResult>"), CsharpNamingExtensions.FirstLetterToUpper(method))
                         .AddModifiers(
                             SyntaxFactory.Token(SyntaxKind.PublicKeyword),
@@ -72,7 +73,7 @@ namespace OpenApiSpecGeneration
             return field;
         }
 
-        private static BlockSyntax CreateMethodBody(string propertyName)
+        private static BlockSyntax CreateMethodBody(string propertyName, bool hasReturnType)
         {
             var memberAccessExpressionSyntax = SyntaxFactory.MemberAccessExpression(
                 SyntaxKind.SimpleMemberAccessExpression,
@@ -91,43 +92,69 @@ namespace OpenApiSpecGeneration
                 invocationExpressionSyntax
             );
 
-            var variableDeclarator = SyntaxFactory.VariableDeclarator(
-                SyntaxFactory.Identifier("result"),
-                default,
-                SyntaxFactory.EqualsValueClause(
-                    SyntaxFactory.Token(SyntaxKind.EqualsToken),
-                    awaitExpressionSyntax
-                )
-            );
+            if (!hasReturnType)
+            {
+                var expressionStatementSyntax = SyntaxFactory.ExpressionStatement(awaitExpressionSyntax);
 
-            // var executeStateent = SyntaxFactory.ParseStatement($"var result = await _{propertyName}.Execute();");
-            var executeStatement = SyntaxFactory.LocalDeclarationStatement(
-                SyntaxFactory.VariableDeclaration(
-                    SyntaxFactory.IdentifierName("var"),
-                    SyntaxFactory.SingletonSeparatedList(variableDeclarator)
-                )
-            );
+                var returnInvocationExpressionSyntax = SyntaxFactory.InvocationExpression(
+                    SyntaxFactory.IdentifierName("Ok"),
+                    SyntaxFactory.ArgumentList(
+                        SyntaxFactory.Token(SyntaxKind.OpenParenToken),
+                        SyntaxFactory.SeparatedList<ArgumentSyntax>(),
+                        SyntaxFactory.Token(SyntaxKind.CloseParenToken))
+                );
 
-            var returnInvocationExpressionSyntax = SyntaxFactory.InvocationExpression(
-                SyntaxFactory.IdentifierName("Ok"),
-                SyntaxFactory.ArgumentList(
-                    SyntaxFactory.Token(SyntaxKind.OpenParenToken),
-                    SyntaxFactory.SingletonSeparatedList<ArgumentSyntax>(
-                        SyntaxFactory.Argument(SyntaxFactory.IdentifierName("result"))
-                    ),
-                    SyntaxFactory.Token(SyntaxKind.CloseParenToken))
-            );
+                // return Ok();
+                var returnStatementSyntax = SyntaxFactory.ReturnStatement(
+                    SyntaxFactory.Token(SyntaxKind.ReturnKeyword),
+                    returnInvocationExpressionSyntax,
+                    SyntaxFactory.Token(SyntaxKind.SemicolonToken)
+                );
 
-            // return Ok(result);
-            var returnStatementSyntax = SyntaxFactory.ReturnStatement(
-                SyntaxFactory.Token(SyntaxKind.ReturnKeyword),
-                returnInvocationExpressionSyntax,
-                SyntaxFactory.Token(SyntaxKind.SemicolonToken)
-            );
+                var statements = new List<StatementSyntax> { expressionStatementSyntax, returnStatementSyntax };
 
-            var statements = new List<StatementSyntax> { executeStatement, returnStatementSyntax };
+                return SyntaxFactory.Block(statements);
+            }
+            else
+            {
+                var variableDeclarator = SyntaxFactory.VariableDeclarator(
+                    SyntaxFactory.Identifier("result"),
+                    default,
+                    SyntaxFactory.EqualsValueClause(
+                        SyntaxFactory.Token(SyntaxKind.EqualsToken),
+                        awaitExpressionSyntax
+                    )
+                );
 
-            return SyntaxFactory.Block(statements);
+                // var executeStatement = SyntaxFactory.ParseStatement($"var result = await _{propertyName}.Execute();");
+                var executeStatement = SyntaxFactory.LocalDeclarationStatement(
+                    SyntaxFactory.VariableDeclaration(
+                        SyntaxFactory.IdentifierName("var"),
+                        SyntaxFactory.SingletonSeparatedList(variableDeclarator)
+                    )
+                );
+
+                var returnInvocationExpressionSyntax = SyntaxFactory.InvocationExpression(
+                    SyntaxFactory.IdentifierName("Ok"),
+                    SyntaxFactory.ArgumentList(
+                        SyntaxFactory.Token(SyntaxKind.OpenParenToken),
+                        SyntaxFactory.SingletonSeparatedList<ArgumentSyntax>(
+                            SyntaxFactory.Argument(SyntaxFactory.IdentifierName("result"))
+                        ),
+                        SyntaxFactory.Token(SyntaxKind.CloseParenToken))
+                );
+
+                // return Ok(result);
+                var returnStatementSyntax = SyntaxFactory.ReturnStatement(
+                    SyntaxFactory.Token(SyntaxKind.ReturnKeyword),
+                    returnInvocationExpressionSyntax,
+                    SyntaxFactory.Token(SyntaxKind.SemicolonToken)
+                );
+
+                var statements = new List<StatementSyntax> { executeStatement, returnStatementSyntax };
+
+                return SyntaxFactory.Block(statements);
+            }
         }
 
         private static ConstructorDeclarationSyntax CreateConstructor(

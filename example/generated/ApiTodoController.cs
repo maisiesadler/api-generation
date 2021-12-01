@@ -26,8 +26,8 @@ namespace Example
         [HttpPost]
         public async Task<IActionResult> Post()
         {
-            var result = await _postApiTodoInteractor.Execute();
-            return Ok(result);
+            await _postApiTodoInteractor.Execute();
+            return Ok();
         }
     }
 }

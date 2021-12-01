@@ -21,22 +21,22 @@ namespace Example
         [HttpGet]
         public async Task<IActionResult> Get()
         {
-            var result = await _getApiTodoIdInteractor.Execute();
-            return Ok(result);
+            await _getApiTodoIdInteractor.Execute();
+            return Ok();
         }
 
         [HttpPut]
         public async Task<IActionResult> Put()
         {
-            var result = await _putApiTodoIdInteractor.Execute();
-            return Ok(result);
+            await _putApiTodoIdInteractor.Execute();
+            return Ok();
         }
 
         [HttpDelete]
         public async Task<IActionResult> Delete()
         {
-            var result = await _deleteApiTodoIdInteractor.Execute();
-            return Ok(result);
+            await _deleteApiTodoIdInteractor.Execute();
+            return Ok();
         }
     }
 }

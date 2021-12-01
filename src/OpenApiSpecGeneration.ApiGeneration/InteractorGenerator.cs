@@ -13,7 +13,7 @@ namespace OpenApiSpecGeneration
             {
                 foreach (var (method, openApiMethod) in openApiPath)
                 {
-                    var returnType = GetReturnTypeSyntax(openApiMethod.responses);
+                    var returnType = ReturnTypeExtensions.GetReturnTypeSyntax(openApiMethod.responses);
                     var methodDeclaration = SyntaxFactory.MethodDeclaration(
                             returnType,
                             SyntaxFactory.Identifier("Execute"))
@@ -41,35 +41,6 @@ namespace OpenApiSpecGeneration
             }
 
             return members;
-        }
-
-        private static TypeSyntax GetReturnTypeSyntax(
-            IReadOnlyDictionary<string, OpenApiResponse> responses)
-        {
-            if (TryGetFirstReturnTypeComponentName(responses, out var componentName))
-            {
-                var arg = SyntaxFactory.ParseTypeName(componentName);
-                return SyntaxFactory.GenericName(SyntaxFactory.Identifier("Task"),
-                    SyntaxFactory.TypeArgumentList(SyntaxFactory.SingletonSeparatedList<TypeSyntax>(arg))
-                );
-            }
-
-            return SyntaxFactory.ParseTypeName("Task");
-        }
-
-        private static bool TryGetFirstReturnTypeComponentName(
-            IReadOnlyDictionary<string, OpenApiResponse> responses,
-            [NotNullWhen(true)] out string? returnType)
-        {
-            returnType = null;
-            if (!responses.Any()) return false;
-            var response = responses.First();
-            if (!response.Value.content.Any()) return false;
-            var content = response.Value.content.First();
-            if (!content.Value.schema.items.TryGetValue("$ref", out var component)) return false;
-
-            returnType = component.Split("/").Last();
-            return true;
         }
     }
 }
