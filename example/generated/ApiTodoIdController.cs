@@ -6,7 +6,7 @@ namespace Example
 {
     [ApiController]
     [Route("/api/Todo/{id}")]
-    public class ApiTodoId
+    public class ApiTodoId : ControllerBase
     {
         private readonly IGetApiTodoIdInteractor _getApiTodoIdInteractor;
         private readonly IPutApiTodoIdInteractor _putApiTodoIdInteractor;

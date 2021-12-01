@@ -39,6 +39,7 @@ namespace OpenApiSpecGeneration
                 var ctor = CreateConstructor(normalisedName, parameters, assignments);
 
                 var @class = SyntaxFactory.ClassDeclaration(SyntaxFactory.Identifier(normalisedName))
+                    .AddBaseListTypes(SyntaxFactory.SimpleBaseType(SyntaxFactory.IdentifierName("ControllerBase")))
                     .AddMembers(fields.ToArray())
                     .AddMembers(ctor)
                     .AddMembers(classMethods.ToArray())

@@ -29,6 +29,12 @@ public class GenerateControllersTests
         Assert.Equal("ApiTest", classDeclarationSyntax.Identifier.Value);
         var classModifier = Assert.Single(classDeclarationSyntax.Modifiers);
         Assert.Equal("public", classModifier.Value);
+
+        Assert.NotNull(classDeclarationSyntax.BaseList);
+        Assert.Equal(":", classDeclarationSyntax.BaseList!.ColonToken.Value);
+        var baseType = Assert.Single(classDeclarationSyntax.BaseList.Types);
+        var baseTypeIdentifier = Assert.IsType<IdentifierNameSyntax>(baseType.Type);
+        Assert.Equal("ControllerBase", baseTypeIdentifier.Identifier.Value);
     }
 
     [Fact]
