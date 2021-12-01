@@ -12,3 +12,8 @@ Creates
 The application can then implement the interactor with any custom logic.
 
 When the tool runs new files will be generated in the application.
+
+## To Run
+
+- Generate example project using `dotnet run --project src/OpenApiSpecGeneration.ApiGeneration` or using the script `./run.sh`
+- Run example project using `dotnet run --project example/`
