@@ -37,18 +37,10 @@ namespace OpenApiSpecGeneration
                 await WriteToFile(outputDirectory, file);
             }
 
-            // var interactors = ApiGenerator.GenerateInteractors(openApiSpec);
-
-            // foreach (var interactor in interactors)
-            // {
-            //     var usings = SyntaxFactory.List<UsingDirectiveSyntax>(new[]{
-            //         SyntaxFactory.UsingDirective(SyntaxFactory.IdentifierName($"{@namespace}.Models")),
-            //     });
-            //     var ns = SyntaxFactory.NamespaceDeclaration(SyntaxFactory.ParseName($"{@namespace}.Interactors"))
-            //         .AddMembers(interactor);
-
-            //     await WriteToFile($"{outputDirectory}/interactors/{interactor.Identifier.Value}.cs", usings, ns);
-            // }
+            foreach (var file in FileGenerator.GenerateInteractors(@namespace, openApiSpec))
+            {
+                await WriteToFile(outputDirectory, file);
+            }
         }
 
         private static async Task WriteToFile(

@@ -10,7 +10,7 @@ namespace OpenApiSpecGeneration
         public static IEnumerable<RecordDeclarationSyntax> GenerateModels(OpenApiSpec spec)
             => ModelGenerator.GenerateModels(spec);
 
-        public static IList<InterfaceDeclarationSyntax> GenerateInteractors(OpenApiSpec spec)
+        public static IEnumerable<InterfaceDeclarationSyntax> GenerateInteractors(OpenApiSpec spec)
             => InteractorGenerator.GenerateInteractors(spec);
     }
 }
