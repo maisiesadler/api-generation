@@ -7,7 +7,7 @@ namespace OpenApiSpecGeneration
         public static IEnumerable<ClassDeclarationSyntax> GenerateControllers(OpenApiSpec spec)
             => ControllerGenerator.GenerateControllers(spec);
 
-        public static IList<RecordDeclarationSyntax> GenerateModels(OpenApiSpec spec)
+        public static IEnumerable<RecordDeclarationSyntax> GenerateModels(OpenApiSpec spec)
             => ModelGenerator.GenerateModels(spec);
 
         public static IList<InterfaceDeclarationSyntax> GenerateInteractors(OpenApiSpec spec)

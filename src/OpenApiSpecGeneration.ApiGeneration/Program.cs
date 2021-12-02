@@ -32,17 +32,10 @@ namespace OpenApiSpecGeneration
                 await WriteToFile(outputDirectory, file);
             }
 
-            var models = ApiGenerator.GenerateModels(openApiSpec);
-
-            // foreach (var model in models)
-            // {
-            //     var usings = SyntaxFactory.List<UsingDirectiveSyntax>(new[]{
-            //         SyntaxFactory.UsingDirective(SyntaxFactory.IdentifierName("System.Text.Json.Serialization")),
-            //     });
-            //     var ns = SyntaxFactory.NamespaceDeclaration(SyntaxFactory.ParseName($"{@namespace}.Models")).AddMembers(model);
-
-            //     await WriteToFile($"{outputDirectory}/models/{model.Identifier.Value}.cs", usings, ns);
-            // }
+            foreach (var file in FileGenerator.GenerateModels(@namespace, openApiSpec))
+            {
+                await WriteToFile(outputDirectory, file);
+            }
 
             // var interactors = ApiGenerator.GenerateInteractors(openApiSpec);
 

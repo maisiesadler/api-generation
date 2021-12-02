@@ -1,5 +1,4 @@
 using System.Collections.Generic;
-using System.Linq;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
 using Xunit;
 
@@ -8,7 +7,7 @@ namespace OpenApiSpecGeneration.ApiGeneration.Test;
 public class GenerateControllerFileTests
 {
     [Fact]
-    public void ClassSignatureIsCorrect()
+    public void ControllerFileNamespacesAndFileNameCorrect()
     {
         // Arrange
         var apiTestPath = new OpenApiPath

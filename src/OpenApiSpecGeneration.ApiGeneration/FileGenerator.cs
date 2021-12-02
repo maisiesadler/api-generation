@@ -20,8 +20,18 @@ namespace OpenApiSpecGeneration
                 return new WritableFile($"{c.Identifier.Value}Controller.cs", usings, ns);
             });
 
-        // public static IList<RecordDeclarationSyntax> GenerateModels(OpenApiSpec spec)
-        //     => ModelGenerator.GenerateModels(spec);
+        public static IEnumerable<WritableFile> GenerateModels(string @namespace, OpenApiSpec spec)
+            => ModelGenerator.GenerateModels(spec)
+                .Select(model =>
+                {
+                    var usings = SyntaxFactory.List<UsingDirectiveSyntax>(new[]{
+                        SyntaxFactory.UsingDirective(SyntaxFactory.IdentifierName($"System.Text.Json.Serialization")),
+                    });
+                    var ns = SyntaxFactory.NamespaceDeclaration(SyntaxFactory.ParseName($"{@namespace}.Models"))
+                        .AddMembers(model);
+
+                    return new WritableFile($"/models/{model.Identifier.Value}.cs", usings, ns);
+                });
 
         // public static IList<InterfaceDeclarationSyntax> GenerateInteractors(OpenApiSpec spec)
         //     => InteractorGenerator.GenerateInteractors(spec);
