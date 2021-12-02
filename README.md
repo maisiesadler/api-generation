@@ -1,6 +1,6 @@
 # API Generation 🤖
 
-This project uses [roslyn](https://github.com/dotnet/roslyn) allows creation of an API from an open api specification.
+This project uses [roslyn](https://github.com/dotnet/roslyn) to create an API from open api specification.
 
 This ensures that the application is always returning models that match the defined API specification.
 
