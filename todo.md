@@ -1,1 +1,2 @@
-- [ ] Namespace generation in each generator?
+- [X] Namespace generation in each generator?
+- [ ] Tidy ControllerGenerator.CreateMethodBody
