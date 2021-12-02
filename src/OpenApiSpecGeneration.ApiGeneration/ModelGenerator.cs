@@ -5,7 +5,7 @@ namespace OpenApiSpecGeneration
 {
     internal class ModelGenerator
     {
-        internal static IList<RecordDeclarationSyntax> GenerateModels(OpenApiSpec spec)
+        internal static IEnumerable<RecordDeclarationSyntax> GenerateModels(OpenApiSpec spec)
         {
             var members = new List<RecordDeclarationSyntax>();
             foreach (var (name, openApiComponentSchema) in spec.components.schemas)

@@ -27,58 +27,31 @@ namespace OpenApiSpecGeneration
                 return;
             }
 
-            var members = ApiGenerator.GenerateControllers(openApiSpec);
-
-            foreach (var member in members)
+            foreach (var file in FileGenerator.GenerateControllers(@namespace, openApiSpec))
             {
-                var usings = SyntaxFactory.List<UsingDirectiveSyntax>(new[]{
-                    SyntaxFactory.UsingDirective(SyntaxFactory.IdentifierName($"Microsoft.AspNetCore.Mvc")),
-                    SyntaxFactory.UsingDirective(SyntaxFactory.IdentifierName($"{@namespace}.Interactors")),
-                    SyntaxFactory.UsingDirective(SyntaxFactory.IdentifierName($"{@namespace}.Models")),
-                });
-                var ns = SyntaxFactory.NamespaceDeclaration(SyntaxFactory.ParseName($"{@namespace}"))
-                    .AddMembers(member)
-                    .AddUsings();
-
-                await WriteToFile($"{outputDirectory}/{member.Identifier.Value}Controller.cs", usings, ns);
+                await WriteToFile(outputDirectory, file);
             }
 
-            var models = ApiGenerator.GenerateModels(openApiSpec);
-
-            foreach (var model in models)
+            foreach (var file in FileGenerator.GenerateModels(@namespace, openApiSpec))
             {
-                var usings = SyntaxFactory.List<UsingDirectiveSyntax>(new[]{
-                    SyntaxFactory.UsingDirective(SyntaxFactory.IdentifierName("System.Text.Json.Serialization")),
-                });
-                var ns = SyntaxFactory.NamespaceDeclaration(SyntaxFactory.ParseName($"{@namespace}.Models")).AddMembers(model);
-
-                await WriteToFile($"{outputDirectory}/models/{model.Identifier.Value}.cs", usings, ns);
+                await WriteToFile(outputDirectory, file);
             }
 
-            var interactors = ApiGenerator.GenerateInteractors(openApiSpec);
-
-            foreach (var interactor in interactors)
+            foreach (var file in FileGenerator.GenerateInteractors(@namespace, openApiSpec))
             {
-                var usings = SyntaxFactory.List<UsingDirectiveSyntax>(new[]{
-                    SyntaxFactory.UsingDirective(SyntaxFactory.IdentifierName($"{@namespace}.Models")),
-                });
-                var ns = SyntaxFactory.NamespaceDeclaration(SyntaxFactory.ParseName($"{@namespace}.Interactors"))
-                    .AddMembers(interactor);
-
-                await WriteToFile($"{outputDirectory}/interactors/{interactor.Identifier.Value}.cs", usings, ns);
+                await WriteToFile(outputDirectory, file);
             }
         }
 
         private static async Task WriteToFile(
-            string fileName,
-            SyntaxList<UsingDirectiveSyntax>? usingDirectiveSyntax,
-            NamespaceDeclarationSyntax namespaceDeclarationSyntax)
+            string outputDirectory,
+            WritableFile writableFile)
         {
-            await using var streamWriter = new StreamWriter(fileName);
+            await using var streamWriter = new StreamWriter($"{outputDirectory}/{writableFile.fileLocation}");
 
-            if (usingDirectiveSyntax != null)
+            if (writableFile.usingDirectiveSyntax != null)
             {
-                foreach (var directive in usingDirectiveSyntax)
+                foreach (var directive in writableFile.usingDirectiveSyntax)
                 {
                     directive.NormalizeWhitespace().WriteTo(streamWriter);
                     streamWriter.WriteLine();
@@ -86,7 +59,7 @@ namespace OpenApiSpecGeneration
                 streamWriter.WriteLine();
             }
 
-            namespaceDeclarationSyntax.NormalizeWhitespace().WriteTo(streamWriter);
+            writableFile.namespaceDeclarationSyntax.NormalizeWhitespace().WriteTo(streamWriter);
         }
 
         private static void SetupOutputDirectory(string location)
@@ -98,6 +71,11 @@ namespace OpenApiSpecGeneration
             Directory.CreateDirectory($"{location}/interactors");
         }
     }
+
+    public record WritableFile(
+        string fileLocation,
+        SyntaxList<UsingDirectiveSyntax>? usingDirectiveSyntax,
+        NamespaceDeclarationSyntax namespaceDeclarationSyntax);
 
     public record OpenApiSpec(IReadOnlyDictionary<string, OpenApiPath> paths, OpenApiComponent components);
 

@@ -5,7 +5,7 @@ namespace OpenApiSpecGeneration
 {
     internal class ControllerGenerator
     {
-        internal static IList<ClassDeclarationSyntax> GenerateControllers(OpenApiSpec spec)
+        internal static IEnumerable<ClassDeclarationSyntax> GenerateControllers(OpenApiSpec spec)
         {
             var members = new List<ClassDeclarationSyntax>();
             foreach (var (apiPath, openApiPath) in spec.paths)
@@ -47,10 +47,8 @@ namespace OpenApiSpecGeneration
                     .AddModifiers(SyntaxFactory.Token(SyntaxKind.PublicKeyword))
                     .AddAttributeLists(GetControllerAttributeList(apiPath));
 
-                members.Add(@class);
+                yield return @class;
             }
-
-            return members;
         }
 
         private static MemberDeclarationSyntax CreateField(string propertyType, string propertyName)

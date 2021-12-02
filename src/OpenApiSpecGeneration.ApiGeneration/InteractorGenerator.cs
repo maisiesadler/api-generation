@@ -6,7 +6,7 @@ namespace OpenApiSpecGeneration
 {
     internal class InteractorGenerator
     {
-        internal static IList<InterfaceDeclarationSyntax> GenerateInteractors(OpenApiSpec spec)
+        internal static IEnumerable<InterfaceDeclarationSyntax> GenerateInteractors(OpenApiSpec spec)
         {
             var members = new List<InterfaceDeclarationSyntax>();
             foreach (var (apiPath, openApiPath) in spec.paths)

@@ -86,7 +86,7 @@ public class GenerateControllersTests
         var spec = new OpenApiSpec(paths, new OpenApiComponent(new Dictionary<string, OpenApiComponentSchema>()));
 
         // Act
-        var classDeclarationSyntaxes = ApiGenerator.GenerateControllers(spec);
+        var classDeclarationSyntaxes = ApiGenerator.GenerateControllers(spec).ToList();
 
         // Assert
         Assert.Equal(2, classDeclarationSyntaxes.Count);
