@@ -6,7 +6,7 @@ url: "https://maisiesadler.co.uk"
 github_username: maisiesadler
 author: Maisie Sadler
 
-remote_theme: pages-themes/minimal@v0.2.0
+theme: jekyll-theme-cayman
 plugins:
  - jekyll-feed
  - jekyll-remote-theme
