@@ -1,4 +1,7 @@
-# API Generation 🤖
+---
+layout: default
+title: API Generation 🤖
+---
 
 This project uses [roslyn](https://github.com/dotnet/roslyn) to create an API from open api specification.
 
