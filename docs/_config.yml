@@ -1,7 +1,6 @@
-title: Maisie Sadler
+title: API Generation 🤖
 description: >-
-  Software Engineer working for TrueLayer in London.
-logo: /assets/img/logo.png
+  Generate dotnet APIs, mocks and clients from openapi specs.
 url: "https://www.maisiesadler.co.uk/"
 github_username: maisiesadler
 author: Maisie Sadler
