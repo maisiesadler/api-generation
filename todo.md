@@ -1,2 +1,5 @@
 - [X] Namespace generation in each generator?
 - [ ] Tidy ControllerGenerator.CreateMethodBody
+- [ ] Path and query string params
+- [ ] Read body
+- [ ] Read headers
