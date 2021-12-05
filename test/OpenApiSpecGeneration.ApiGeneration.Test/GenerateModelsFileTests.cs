@@ -34,8 +34,8 @@ public class GenerateModelsFileTests
         Assert.Equal("MyNamespace", leftNamespaceIdentifier.Identifier.Value);
         var rightNamespaceIdentifier = Assert.IsType<IdentifierNameSyntax>(namespaceIdentifier.Right);
         Assert.Equal("Models", rightNamespaceIdentifier.Identifier.Value);
-        Assert.Equal(1, writableFile.usingDirectiveSyntax!.Value.Count);
-        var usingName0 = Assert.IsType<IdentifierNameSyntax>(writableFile.usingDirectiveSyntax!.Value[0].Name);
+        var singleUsing = Assert.Single(writableFile.usingDirectiveSyntax!.Value);
+        var usingName0 = Assert.IsType<IdentifierNameSyntax>(singleUsing.Name);
         Assert.Equal("System.Text.Json.Serialization", usingName0.Identifier.Value);
     }
 }

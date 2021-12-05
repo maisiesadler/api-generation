@@ -19,8 +19,8 @@ namespace OpenApiSpecGeneration
             return SyntaxFactory.ParseTypeName("Task");
         }
 
-        internal static bool HasReturnType(IReadOnlyDictionary<string, OpenApiResponse> responses)
-            => TryGetFirstReturnTypeComponentName(responses, out var _);
+        internal static bool HasReturnType(IReadOnlyDictionary<string, OpenApiResponse>? responses)
+            => responses != null && TryGetFirstReturnTypeComponentName(responses, out var _);
 
         private static bool TryGetFirstReturnTypeComponentName(
             IReadOnlyDictionary<string, OpenApiResponse> responses,
