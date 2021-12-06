@@ -2,7 +2,7 @@ using System.Diagnostics.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
 
-namespace OpenApiSpecGeneration
+namespace OpenApiSpecGeneration.Interactor
 {
     internal class InteractorGenerator
     {
