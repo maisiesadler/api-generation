@@ -1,6 +1,7 @@
 using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
 using OpenApiSpecGeneration.Controller;
+using OpenApiSpecGeneration.Model;
 
 namespace OpenApiSpecGeneration
 {

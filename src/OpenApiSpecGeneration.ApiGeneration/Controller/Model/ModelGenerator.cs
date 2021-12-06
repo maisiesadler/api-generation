@@ -1,7 +1,7 @@
 using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
 
-namespace OpenApiSpecGeneration
+namespace OpenApiSpecGeneration.Model
 {
     internal class ModelGenerator
     {
