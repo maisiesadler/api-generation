@@ -67,11 +67,6 @@ I'd like my tests to test as much as possible and be easy to work with, I didn't
 
 Now I can generate some code from code I wanted to be able to generate the controllers, interactors and models to create an API.
 
-- hard to work out what to test for if i don't know what i'm working with
-- first generate something, work out what is useful and create tests
-
-- work like this for a bit start to understand what needs to be created
-
 #### First the models
 
 TDD approach is to write a test to describe the thing you're implementing and then only add the code required for that feature. In this case I wasn't sure what the roslyn types should look like so there was a bit of back and forth between trying stuff/debugging the types and being able to write the asserts.
@@ -99,6 +94,8 @@ var model = Assert.Single(models);
 ```
 
 Once I could generate _something_ I started to dig into what actually needed to be created and padding out the asserts.
+
+![The model](./images/single-record.png)
 
 I worked iteratively like this while implementing different bits of the model, adding attributes for `JsonPropertyName`, adding the namespace, etc. Even though the roslyn models look strange at first they are pretty consistent and you do get a feel for what they might look like and where to look for the right values.
 
