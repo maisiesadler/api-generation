@@ -3,7 +3,7 @@ layout: default
 title: API Generation 🤖
 ---
 
-This project uses [roslyn](https://github.com/dotnet/roslyn) to create an API from open api specification.
+Generate dotnet APIs, mocks and clients from openapi specifications.
 
 This ensures that the application is always returning models that match the defined API specification.
 
@@ -20,3 +20,13 @@ When the tool runs new files will be generated in the application.
 
 - Generate example project using `dotnet run --project src/OpenApiSpecGeneration.ApiGeneration` or using the script `./run.sh`
 - Run example project using `dotnet run --project example/`
+
+## How it works
+
+This project uses [roslyn](https://github.com/dotnet/roslyn) to create an API from open api specification.
+
+## Use it
+
+
+
+
