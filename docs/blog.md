@@ -97,6 +97,16 @@ Once I could generate _something_ I started to dig into what actually needed to 
 
 ![The model](./images/single-record.png)
 
+Then adding more to the asserts:
+
+```csharp
+// Assert
+var model = Assert.Single(models);
+Assert.Equal("ToDoItem", model.Identifier.Value);
+var classModifier = Assert.Single(recordDeclarationSyntax.Modifiers);
+Assert.Equal("public", classModifier.Value);
+```
+
 I worked iteratively like this while implementing different bits of the model, adding attributes for `JsonPropertyName`, adding the namespace, etc. Even though the roslyn models look strange at first they are pretty consistent and you do get a feel for what they might look like and where to look for the right values.
 
 I also set up an example project so I would know when the types I was creating actually generated something that compiled and could be worked with. This was created using `dotnet new webapi` and removing the default WeatherController. The generated code is all under `./generated` and is deleted and recreated each time the tool runs.
