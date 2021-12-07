@@ -1,3 +1,4 @@
+using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
 using OpenApiSpecGeneration.Controller;
@@ -49,4 +50,9 @@ namespace OpenApiSpecGeneration
                     return new WritableFile($"/interactors/{interactor.Identifier.Value}.cs", usings, ns);
                 });
     }
+
+    public record WritableFile(
+        string fileLocation,
+        SyntaxList<UsingDirectiveSyntax>? usingDirectiveSyntax,
+        NamespaceDeclarationSyntax namespaceDeclarationSyntax);
 }
