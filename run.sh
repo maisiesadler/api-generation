@@ -1,2 +1,2 @@
-dotnet run --project src/OpenApiSpecGeneration.ApiGeneration
+dotnet run --project src/OpenApiSpecGeneration.ApiGeneration.Console
 
