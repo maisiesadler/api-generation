@@ -12,7 +12,7 @@ public class GenerateControllerFileTests
         // Arrange
         var apiTestPath = new OpenApiPath
         {
-            { "get", new OpenApiMethod {} },
+            get = new OpenApiMethod {},
         };
         var paths = new Dictionary<string, OpenApiPath>
         {

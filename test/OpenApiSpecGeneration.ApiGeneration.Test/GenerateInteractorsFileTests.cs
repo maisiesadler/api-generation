@@ -19,7 +19,7 @@ public class GenerateInteractorsFileTests
         var openApiResponses = new Dictionary<string, OpenApiResponse> { { "200", openApiResponse } };
         var apiTestPath = new OpenApiPath
         {
-            { "get", new OpenApiMethod { responses = openApiResponses } },
+            get = new OpenApiMethod { responses = openApiResponses },
         };
         var paths = new Dictionary<string, OpenApiPath>
         {
