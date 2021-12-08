@@ -11,7 +11,7 @@ namespace OpenApiSpecGeneration.Interactor
             var members = new List<InterfaceDeclarationSyntax>();
             foreach (var (apiPath, openApiPath) in spec.paths)
             {
-                foreach (var (method, openApiMethod) in openApiPath)
+                foreach (var (method, openApiMethod) in openApiPath.GetMethods())
                 {
                     var returnType = ReturnTypeExtensions.GetReturnTypeSyntax(openApiMethod.responses);
                     var methodDeclaration = SyntaxFactory.MethodDeclaration(

@@ -17,7 +17,7 @@ namespace OpenApiSpecGeneration.Controller
                 var parameters = new List<ParameterSyntax>();
                 var fields = new List<MemberDeclarationSyntax>();
 
-                foreach (var (method, openApiMethod) in openApiPath)
+                foreach (var (method, openApiMethod) in openApiPath.GetMethods())
                 {
                     var propertyType = CsharpNamingExtensions.PathToInteractorType(apiPath, method);
                     var propertyName = CsharpNamingExtensions.InterfaceToPropertyName(propertyType);

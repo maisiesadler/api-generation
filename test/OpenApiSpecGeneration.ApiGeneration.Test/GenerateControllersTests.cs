@@ -13,7 +13,7 @@ public class GenerateControllersTests
         // Arrange
         var apiTestPath = new OpenApiPath
         {
-            { "get", new OpenApiMethod {} },
+            get = new OpenApiMethod { },
         };
         var paths = new Dictionary<string, OpenApiPath>
         {
@@ -43,7 +43,7 @@ public class GenerateControllersTests
         // Arrange
         var apiTestPath = new OpenApiPath
         {
-            { "get", new OpenApiMethod {} },
+            get = new OpenApiMethod { },
         };
         var paths = new Dictionary<string, OpenApiPath>
         {
@@ -76,7 +76,7 @@ public class GenerateControllersTests
         // Arrange
         var apiTestPath = new OpenApiPath
         {
-            { "get", new OpenApiMethod { tags = new List<string> { "peas" } } },
+            get = new OpenApiMethod { tags = new List<string> { "peas" } },
         };
         var paths = new Dictionary<string, OpenApiPath>
         {
@@ -101,7 +101,7 @@ public class GenerateControllersTests
         // Arrange
         var apiTestPath = new OpenApiPath
         {
-            { "get", new OpenApiMethod { tags = new List<string> { "peas" } } },
+            get = new OpenApiMethod { tags = new List<string> { "peas" } },
         };
         var paths = new Dictionary<string, OpenApiPath>
         {
@@ -135,7 +135,7 @@ public class GenerateControllersTests
         var openApiResponses = new Dictionary<string, OpenApiResponse> { { "200", openApiResponse } };
         var apiTestPath = new OpenApiPath
         {
-            { "get", new OpenApiMethod { responses = openApiResponses } },
+            get = new OpenApiMethod { responses = openApiResponses },
         };
         var paths = new Dictionary<string, OpenApiPath>
         {
@@ -170,7 +170,7 @@ public class GenerateControllersTests
         var openApiResponses = new Dictionary<string, OpenApiResponse> { { "200", openApiResponse } };
         var apiTestPath = new OpenApiPath
         {
-            { "get", new OpenApiMethod { responses = openApiResponses } },
+            get = new OpenApiMethod { responses = openApiResponses },
         };
         var paths = new Dictionary<string, OpenApiPath>
         {
@@ -209,7 +209,7 @@ public class GenerateControllersTests
         var openApiResponses = new Dictionary<string, OpenApiResponse> { { "200", openApiResponse } };
         var apiTestPath = new OpenApiPath
         {
-            { "get", new OpenApiMethod { responses = openApiResponses } },
+            get = new OpenApiMethod { responses = openApiResponses },
         };
         var paths = new Dictionary<string, OpenApiPath>
         {
@@ -238,7 +238,7 @@ public class GenerateControllersTests
         // Arrange
         var apiTestPath = new OpenApiPath
         {
-            { "get", new OpenApiMethod { tags = new List<string> { "peas" } } },
+            get = new OpenApiMethod { tags = new List<string> { "peas" } },
         };
         var paths = new Dictionary<string, OpenApiPath>
         {
@@ -281,10 +281,11 @@ public class GenerateControllersTests
     public void MethodHasRouteAttribute(string method, string expectedMethodName, string expectedRouteAttribute)
     {
         // Arrange
-        var apiTestPath = new OpenApiPath
-        {
-            { method, new OpenApiMethod {} },
-        };
+        var apiTestPath = new OpenApiPath();
+        if (method == "get") apiTestPath.get = new OpenApiMethod();
+        else if (method == "post") apiTestPath.post = new OpenApiMethod();
+        else if (method == "put") apiTestPath.put = new OpenApiMethod();
+        else if (method == "delete") apiTestPath.delete = new OpenApiMethod();
         var paths = new Dictionary<string, OpenApiPath>
         {
             { "/api/test", apiTestPath },
@@ -322,7 +323,7 @@ public class GenerateControllersTests
         var openApiResponses = new Dictionary<string, OpenApiResponse> { { "200", openApiResponse } };
         var apiTestPath = new OpenApiPath
         {
-            { "get", new OpenApiMethod { responses = openApiResponses } },
+            get = new OpenApiMethod { responses = openApiResponses },
         };
         var paths = new Dictionary<string, OpenApiPath>
         {
@@ -380,7 +381,7 @@ public class GenerateControllersTests
         // Arrange
         var apiTestPath = new OpenApiPath
         {
-            { "get", new OpenApiMethod {} },
+            get = new OpenApiMethod { },
         };
         var paths = new Dictionary<string, OpenApiPath>
         {

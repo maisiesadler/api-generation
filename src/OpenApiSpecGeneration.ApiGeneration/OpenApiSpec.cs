@@ -1,8 +1,12 @@
 namespace OpenApiSpecGeneration
 {
     public record OpenApiSpec(IReadOnlyDictionary<string, OpenApiPath> paths, OpenApiComponent components);
-    public class OpenApiPath : Dictionary<string, OpenApiMethod>
+    public class OpenApiPath
     {
+        public OpenApiMethod? get { get; set; }
+        public OpenApiMethod? put { get; set; }
+        public OpenApiMethod? post { get; set; }
+        public OpenApiMethod? delete { get; set; }
     }
 
     public record OpenApiMethod
