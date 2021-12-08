@@ -6,10 +6,11 @@ At TrueLayer we maintain open api specifications for all of our services and the
 
 Could we generate a c# API from an openapi specification?
 
-## The dream
+## The Idea
 
-I wanted to take an open api specification and generate models and controllers that match that spec.
-I wanted it so you didn't have to edit the generated files, so they can be deleted and regenerated, and that the generated files compile without extra code.
+So I wanted to take an open api specification and generate models and controllers that match that spec.
+
+Ideally the generated files could be deleted and regenerated so they would need to compile without extra code.
 The generated code shouldn't depend on the tool, in case it isn't maintained or the API simply wants to diverge from it.
 
 The idea I had was that each route could have an interface that matched it, the controller would then resolve the interface and return the model.
@@ -17,6 +18,7 @@ The idea I had was that each route could have an interface that matched it, the 
 Controller method:
 
 ```csharp
+[HttpGet]
 public async Task<ThingModel> Get()
 {
     return await _getThingInteractor.Execute();
@@ -32,7 +34,9 @@ public interface IGetThingInteractor
 }
 ```
 
-- easier to use than writing the API yourself so that people actually use it
+This interface could then be implemented in the service.
+
+The other requirement was that the tool needed to be easier to use than writing the API yourself so that people actually use it.
 
 ### Benefits
 
@@ -93,11 +97,11 @@ var models = ApiGenerator.GenerateModels(spec);
 var model = Assert.Single(models);
 ```
 
-Once I could generate _something_ I started to dig into what actually needed to be created and padding out the asserts.
+I didn't know how to get the name yet so a quick debug,
 
 ![The model](./images/single-record.png)
 
-Then adding more to the asserts:
+Then filling out the asserts...
 
 ```csharp
 // Assert
@@ -107,6 +111,22 @@ var classModifier = Assert.Single(recordDeclarationSyntax.Modifiers);
 Assert.Equal("public", classModifier.Value);
 ```
 
-I worked iteratively like this while implementing different bits of the model, adding attributes for `JsonPropertyName`, adding the namespace, etc. Even though the roslyn models look strange at first they are pretty consistent and you do get a feel for what they might look like and where to look for the right values.
+I worked iteratively like this while implementing different bits of the model, adding attributes for `JsonPropertyName`, adding the namespace, etc until I got a feel for what the roslyn models look like. They're a bit strange at first but they do start to make sense, honest.
 
 I also set up an example project so I would know when the types I was creating actually generated something that compiled and could be worked with. This was created using `dotnet new webapi` and removing the default WeatherController. The generated code is all under `./generated` and is deleted and recreated each time the tool runs.
+
+#### Making decisions
+
+One of the aims of this would be that it keeps code consistent across projects and so that means the generated code is opnionated and I was making a lot of decisions about what the code looks like along the way.
+
+##### `class` or `record`
+
+Well records are only available since C# 9, which is only supported by .NET 5 and higher. Best practice for models (IMO) would be records with init only setters.
+If this is something to use for projects at work then there should be no problems there - if we're not there yet we will be there soon.
+If this will be an open source library used by the masses then I should probably opt for class.
+
+I decided that it's unlikely that'll be the case and I should support best practices for the specific use case. It can always be added in as an option later.
+
+### Other Considerations
+
+- [Jimmy-proof](https://blog.codinghorror.com/new-programming-jargon/#10)

@@ -17,3 +17,13 @@ When the tool runs new files will be generated in the application.
 
 - Generate example project using `dotnet run --project src/OpenApiSpecGeneration.ApiGeneration` or using the script `./run.sh`
 - Run example project using `dotnet run --project example/`
+
+## Contributing
+
+## What's supported
+
+### Reading open api specs
+- [X] From file in JSON format
+- [ ] From file in YAML format
+
+### Creating APIs from one open api spec
