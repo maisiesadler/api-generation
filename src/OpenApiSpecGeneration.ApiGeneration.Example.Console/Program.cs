@@ -3,7 +3,7 @@ using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
 
-namespace OpenApiSpecGeneration.Console
+namespace OpenApiSpecGeneration.ApiGeneration.Example.Console
 {
     internal class Program
     {
