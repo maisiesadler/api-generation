@@ -1,7 +1,6 @@
 ﻿using System.Text.Json;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
-using Microsoft.CodeAnalysis.CSharp.Syntax;
 
 namespace OpenApiSpecGeneration.ApiGeneration.Redoc.Console
 {
@@ -10,7 +9,7 @@ namespace OpenApiSpecGeneration.ApiGeneration.Redoc.Console
         private static async Task Main()
         {
             var path = Directory.GetCurrentDirectory();
-            await using var fileStream = File.OpenRead(Path.Combine(path, "dist.yaml"));
+            await using var fileStream = File.OpenRead(Path.Combine(path, "dist.json"));
 
             var outputDirectory = "redoc-example/generated";
             var @namespace = "Example";

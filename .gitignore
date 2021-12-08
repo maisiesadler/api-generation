@@ -3,3 +3,5 @@ bin
 obj
 output
 .DS_Store
+node_modules
+dist.json
