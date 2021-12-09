@@ -1,3 +1,3 @@
 dotnet run --project src/OpenApiSpecGeneration.ApiGeneration.Console \
-    generate -o pizza
+    generate -i definition.json -o example/generated -n Example
 

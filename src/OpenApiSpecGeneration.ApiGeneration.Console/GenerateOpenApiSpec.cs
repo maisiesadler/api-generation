@@ -9,15 +9,26 @@ namespace OpenApiSpecGeneration.Console;
 
 public class GenerateOpenApiSpecSettings : CommandSettings
 {
-    [CommandOption("-o|--output")]
-    [Description("Output format")]
-    public string Name { get; set; } = string.Empty;
+    [CommandOption("-i|--input")]
+    [Description("Input file name")]
+    public string InputFileName { get; init; } = string.Empty;
 
-    // [CommandOption("-o|--output")]
-    // [Description("Output format")]
-    // [TypeConverter(typeof(OutputFormatConverter))]
-    // [DefaultValue(OutputFormat.ResultOnly)]
-    // public OutputFormat OutputFormat { get; set; }
+    [CommandOption("-o|--output")]
+    [Description("Output directory")]
+    public string OutputDirectory { get; init; } = string.Empty;
+
+    [CommandOption("-n|--namespace")]
+    [Description("Namespace of generated files")]
+    public string Namespace { get; init; } = string.Empty;
+
+    public override ValidationResult Validate()
+    {
+        if (string.IsNullOrWhiteSpace(InputFileName)) return ValidationResult.Error("InputFileName missing");
+        if (string.IsNullOrWhiteSpace(OutputDirectory)) return ValidationResult.Error("OutputDirectory missing");
+        if (string.IsNullOrWhiteSpace(Namespace)) return ValidationResult.Error("Namespace missing");
+
+        return ValidationResult.Success();
+    }
 }
 
 public class GenerateOpenApiSpec : AsyncCommand<GenerateOpenApiSpecSettings>
@@ -30,12 +41,12 @@ public class GenerateOpenApiSpec : AsyncCommand<GenerateOpenApiSpecSettings>
     {
         try
         {
-            var path = Directory.GetCurrentDirectory();
-            await using var fileStream = File.OpenRead(Path.Combine(path, "definition.json"));
+            AnsiConsole.MarkupLine("Reading from [yellow]{0}[/] and writing to [yellow]{1}[/] with namespace [yellow]{2}[/]", settings.InputFileName, settings.OutputDirectory, settings.Namespace);
 
-            var outputDirectory = "example/generated";
-            var @namespace = "Example";
-            SetupOutputDirectory(outputDirectory);
+            var path = Directory.GetCurrentDirectory();
+            await using var fileStream = File.OpenRead(Path.Combine(path, settings.InputFileName));
+
+            SetupOutputDirectory(settings.OutputDirectory);
 
             var openApiSpec = await JsonSerializer.DeserializeAsync<OpenApiSpec>(fileStream, new JsonSerializerOptions
             {
@@ -48,20 +59,22 @@ public class GenerateOpenApiSpec : AsyncCommand<GenerateOpenApiSpecSettings>
                 return 1;
             }
 
-            foreach (var file in FileGenerator.GenerateControllers(@namespace, openApiSpec))
+            foreach (var file in FileGenerator.GenerateControllers(settings.Namespace, openApiSpec))
             {
-                await WriteToFile(outputDirectory, file);
+                await WriteToFile(settings.OutputDirectory, file);
             }
 
-            foreach (var file in FileGenerator.GenerateModels(@namespace, openApiSpec))
+            foreach (var file in FileGenerator.GenerateModels(settings.Namespace, openApiSpec))
             {
-                await WriteToFile(outputDirectory, file);
+                await WriteToFile(settings.OutputDirectory, file);
             }
 
-            foreach (var file in FileGenerator.GenerateInteractors(@namespace, openApiSpec))
+            foreach (var file in FileGenerator.GenerateInteractors(settings.Namespace, openApiSpec))
             {
-                await WriteToFile(outputDirectory, file);
+                await WriteToFile(settings.OutputDirectory, file);
             }
+
+            AnsiConsole.MarkupLine("[green]Done :magic_wand:[/]");
         }
         catch (Exception ex)
         {
