@@ -12,7 +12,7 @@ public class GenerateModelsFileTests
         // Arrange
         var toDoItemProperties = new Dictionary<string, OpenApiComponentProperty>
         {
-            { "id", new OpenApiComponentProperty("integer", default, default) },
+            { "id", new OpenApiComponentProperty("integer", default, default, default) },
         };
         var componentSchemas = new Dictionary<string, OpenApiComponentSchema>
         {

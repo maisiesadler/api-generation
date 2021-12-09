@@ -31,7 +31,9 @@ namespace OpenApiSpecGeneration
             var response = responses.First();
             if (!response.Value.content.Any()) return false;
             var content = response.Value.content.First();
-            if (!content.Value.schema.items.TryGetValue("$ref", out var component)) return false;
+            var component = string.Empty;
+            if (!content.Value?.schema?.items?.TryGetValue("$ref", out component) == true) return false;
+            if (component == null) return false;
 
             returnType = component.Split("/").Last();
             return true;
