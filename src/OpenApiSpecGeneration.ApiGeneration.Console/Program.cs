@@ -1,74 +1,27 @@
-﻿using System.Text.Json;
-using Microsoft.CodeAnalysis;
-using Microsoft.CodeAnalysis.CSharp;
-using Microsoft.CodeAnalysis.CSharp.Syntax;
+﻿using Microsoft.Extensions.DependencyInjection;
+using Spectre.Console.Cli;
 
 namespace OpenApiSpecGeneration.Console
 {
     internal class Program
     {
-        private static async Task Main()
+        private static async Task Main(string[] args)
         {
-            var path = Directory.GetCurrentDirectory();
-            await using var fileStream = File.OpenRead(Path.Combine(path, "definition.json"));
+            var services = BuildServiceCollection();
 
-            var outputDirectory = "example/generated";
-            var @namespace = "Example";
-            SetupOutputDirectory(outputDirectory);
-
-            var openApiSpec = await JsonSerializer.DeserializeAsync<OpenApiSpec>(fileStream, new JsonSerializerOptions
+            var app = new CommandApp(new TypeRegistrar(services));
+            app.Configure(config =>
             {
-                PropertyNameCaseInsensitive = true
+                config.AddCommand<GenerateOpenApiSpec>("generate");
             });
 
-            if (openApiSpec == null)
-            {
-                System.Console.WriteLine("Could not read file");
-                return;
-            }
-
-            foreach (var file in FileGenerator.GenerateControllers(@namespace, openApiSpec))
-            {
-                await WriteToFile(outputDirectory, file);
-            }
-
-            foreach (var file in FileGenerator.GenerateModels(@namespace, openApiSpec))
-            {
-                await WriteToFile(outputDirectory, file);
-            }
-
-            foreach (var file in FileGenerator.GenerateInteractors(@namespace, openApiSpec))
-            {
-                await WriteToFile(outputDirectory, file);
-            }
+            await app.RunAsync(args);
         }
 
-        private static async Task WriteToFile(
-            string outputDirectory,
-            WritableFile writableFile)
+        private static IServiceCollection BuildServiceCollection()
         {
-            await using var streamWriter = new StreamWriter($"{outputDirectory}/{writableFile.fileLocation}");
-
-            if (writableFile.usingDirectiveSyntax != null)
-            {
-                foreach (var directive in writableFile.usingDirectiveSyntax)
-                {
-                    directive.NormalizeWhitespace().WriteTo(streamWriter);
-                    streamWriter.WriteLine();
-                }
-                streamWriter.WriteLine();
-            }
-
-            writableFile.namespaceDeclarationSyntax.NormalizeWhitespace().WriteTo(streamWriter);
-        }
-
-        private static void SetupOutputDirectory(string location)
-        {
-            if (Directory.Exists(location))
-                Directory.Delete(location, true);
-            Directory.CreateDirectory(location);
-            Directory.CreateDirectory($"{location}/models");
-            Directory.CreateDirectory($"{location}/interactors");
+            var services = new ServiceCollection();
+            return services;
         }
     }
 }

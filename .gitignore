@@ -4,3 +4,6 @@ obj
 output
 .DS_Store
 node_modules
+dist.yaml
+dist.json
+example-2
