@@ -11,6 +11,8 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "test", "test", "{D376CA18-0
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "OpenApiSpecGeneration.ApiGeneration.Test", "test\OpenApiSpecGeneration.ApiGeneration.Test\OpenApiSpecGeneration.ApiGeneration.Test.csproj", "{CF61D025-61D1-4357-965E-511D53957181}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "OpenApiSpecGeneration.ApiGeneration.Console", "src\OpenApiSpecGeneration.ApiGeneration.Console\OpenApiSpecGeneration.ApiGeneration.Console.csproj", "{9EBBA454-CACD-4CE9-96B4-7900197E1293}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -28,9 +30,14 @@ Global
 		{CF61D025-61D1-4357-965E-511D53957181}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{CF61D025-61D1-4357-965E-511D53957181}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{CF61D025-61D1-4357-965E-511D53957181}.Release|Any CPU.Build.0 = Release|Any CPU
+		{9EBBA454-CACD-4CE9-96B4-7900197E1293}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{9EBBA454-CACD-4CE9-96B4-7900197E1293}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{9EBBA454-CACD-4CE9-96B4-7900197E1293}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{9EBBA454-CACD-4CE9-96B4-7900197E1293}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(NestedProjects) = preSolution
 		{C3D0A7D2-0D5E-4A2D-9780-28C6F471CB61} = {39A11155-8149-4DE6-8219-A27EC702A3F4}
 		{CF61D025-61D1-4357-965E-511D53957181} = {D376CA18-06DA-4FE4-AFFA-BF9982270B7F}
+		{9EBBA454-CACD-4CE9-96B4-7900197E1293} = {39A11155-8149-4DE6-8219-A27EC702A3F4}
 	EndGlobalSection
 EndGlobal
