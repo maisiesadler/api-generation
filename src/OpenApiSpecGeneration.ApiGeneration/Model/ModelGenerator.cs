@@ -14,71 +14,43 @@ namespace OpenApiSpecGeneration.Model
         {
             foreach (var (name, openApiComponentSchema) in spec.components.schemas)
             {
-                var (record, subtypes) = TryGenerateRecord(name, openApiComponentSchema.properties);
+                var (record, subtypes) = TryGenerateRecord(name, GetProperties(openApiComponentSchema.properties));
                 yield return record;
 
                 foreach (var (subtypename, subtype) in subtypes)
                 {
-                    yield return TryGenerateSubtypeRecord(subtypename, subtype);
+                    var (subtypeRecord, _) = TryGenerateRecord(subtypename, GetProperties(subtype));
+                    yield return subtypeRecord;
                 }
             }
         }
 
-        private static RecordDeclarationSyntax TryGenerateSubtypeRecord(
-            string subTypeName,
-            OpenApiComponentPropertyType subType)
+        private static IEnumerable<(string propertyName, string propertyType, OpenApiComponentPropertyType? items)>
+            GetProperties(IReadOnlyDictionary<string, OpenApiComponentProperty> openApiProperties)
         {
-            var properties = new List<MemberDeclarationSyntax>();
-
-            foreach (var (propertyName, openApiProperty) in subType.properties)
+            foreach (var (propertyName, openApiProperty) in openApiProperties)
             {
-                var attributes = SyntaxFactory.AttributeList(
-                    SyntaxFactory.SingletonSeparatedList<AttributeSyntax>(
-                        JsonPropertyNameAttributeSyntax(propertyName)
-                    )
-                );
-
-                var (typeSyntax, _) = ParseTypeSyntax(propertyName, openApiProperty.type);
-
-                var property = SyntaxFactory.PropertyDeclaration(
-                        typeSyntax,
-                        SyntaxFactory.Identifier(CsharpNamingExtensions.FirstLetterToUpper(propertyName)))
-                    .AddModifiers(SyntaxFactory.Token(SyntaxKind.PublicKeyword))
-                    .AddAccessorListAccessors(
-                        SyntaxFactory.AccessorDeclaration(SyntaxKind.GetAccessorDeclaration).WithSemicolonToken(SyntaxFactory.Token(SyntaxKind.SemicolonToken)),
-                        SyntaxFactory.AccessorDeclaration(SyntaxKind.InitAccessorDeclaration).WithSemicolonToken(SyntaxFactory.Token(SyntaxKind.SemicolonToken)))
-                    .AddAttributeLists(attributes);
-
-                properties.Add(property);
+                yield return (propertyName, openApiProperty.type, openApiProperty.items);
             }
+        }
 
-            var record = SyntaxFactory.RecordDeclaration(
-                attributeLists: default,
-                modifiers: SyntaxFactory.TokenList(SyntaxFactory.Token(SyntaxKind.PublicKeyword)),
-                keyword: SyntaxFactory.Token(SyntaxKind.RecordKeyword),
-                identifier: SyntaxFactory.Identifier(subTypeName),
-                typeParameterList: default,
-                parameterList: default,
-                baseList: null,
-                constraintClauses: default,
-                openBraceToken: SyntaxFactory.Token(SyntaxKind.OpenBraceToken),
-                members: SyntaxFactory.List<MemberDeclarationSyntax>(
-                    properties.ToArray()
-                ),
-                closeBraceToken: SyntaxFactory.Token(SyntaxKind.CloseBraceToken),
-                semicolonToken: default);
-
-            return record;
+        private static IEnumerable<(string propertyName, string propertyType, OpenApiComponentPropertyType? items)>
+            GetProperties(OpenApiComponentPropertyType openApiComponentPropertyType)
+        {
+            foreach (var (propertyName, openApiProperty) in openApiComponentPropertyType.properties)
+            {
+                yield return (propertyName, openApiProperty.type, default);
+            }
         }
 
         private static (RecordDeclarationSyntax, IList<(string, OpenApiComponentPropertyType)>) TryGenerateRecord(
             string name,
-            IReadOnlyDictionary<string, OpenApiComponentProperty> openApiProperties)
+            IEnumerable<(string propertyName, string propertyType, OpenApiComponentPropertyType? items)> openApiProperties)
         {
             var properties = new List<MemberDeclarationSyntax>();
             var subTypes = new List<(string, OpenApiComponentPropertyType)>();
 
-            foreach (var (propertyName, openApiProperty) in openApiProperties)
+            foreach (var (propertyName, propertyType, items) in openApiProperties)
             {
                 var attributes = SyntaxFactory.AttributeList(
                     SyntaxFactory.SingletonSeparatedList<AttributeSyntax>(
@@ -87,7 +59,7 @@ namespace OpenApiSpecGeneration.Model
                 );
 
                 var potentialSubtypeName = name + CsharpNamingExtensions.FirstLetterToUpper(propertyName) + "SubType";
-                var (typeSyntax, createSubType) = ParseTypeSyntax(potentialSubtypeName, openApiProperty.type);
+                var (typeSyntax, createSubType) = ParseTypeSyntax(potentialSubtypeName, propertyType);
 
                 var property = SyntaxFactory.PropertyDeclaration(
                         typeSyntax,
@@ -100,9 +72,9 @@ namespace OpenApiSpecGeneration.Model
 
                 properties.Add(property);
 
-                if (createSubType && openApiProperty.items != null)
+                if (createSubType && items != null)
                 {
-                    subTypes.Add((potentialSubtypeName, openApiProperty.items));
+                    subTypes.Add((potentialSubtypeName, items));
                 }
             }
 
