@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
 using Xunit;
 
@@ -13,7 +14,7 @@ public class GenerateModelsTests
         // Arrange
         var toDoItemProperties = new Dictionary<string, OpenApiComponentProperty>
         {
-            { "id", new OpenApiComponentProperty("integer", default, default) },
+            { "id", new OpenApiComponentProperty("integer", default, default, default) },
         };
         var componentSchemas = new Dictionary<string, OpenApiComponentSchema>
         {
@@ -48,7 +49,7 @@ public class GenerateModelsTests
         // Arrange
         var toDoItemProperties = new Dictionary<string, OpenApiComponentProperty>
         {
-            { "id", new OpenApiComponentProperty("integer", default, default) },
+            { "id", new OpenApiComponentProperty("integer",default,  default, default) },
         };
         var componentSchemas = new Dictionary<string, OpenApiComponentSchema>
         {
@@ -84,7 +85,7 @@ public class GenerateModelsTests
         // Arrange
         var toDoItemProperties = new Dictionary<string, OpenApiComponentProperty>
         {
-            { "id", new OpenApiComponentProperty(openApiType, default, default) },
+            { "id", new OpenApiComponentProperty(openApiType,default,  default, default) },
         };
         var componentSchemas = new Dictionary<string, OpenApiComponentSchema>
         {
@@ -105,12 +106,69 @@ public class GenerateModelsTests
     }
 
     [Fact]
+    public void PropertyWithNestedTypeGeneratesSubtype()
+    {
+        // Arrange
+        var properties = new Dictionary<string, OpenApiComponentPropertyTypeItem>
+        {
+            { "name", new OpenApiComponentPropertyTypeItem("integer", "Name of something") },
+        };
+        var toDoItemProperties = new Dictionary<string, OpenApiComponentProperty>
+        {
+            { "id", new OpenApiComponentProperty("array", new OpenApiComponentPropertyType(properties), default, default) },
+        };
+        var componentSchemas = new Dictionary<string, OpenApiComponentSchema>
+        {
+            { "ToDoItem", new OpenApiComponentSchema("object", toDoItemProperties) }
+        };
+        var components = new OpenApiComponent(componentSchemas);
+        var spec = new OpenApiSpec(new Dictionary<string, OpenApiPath>(), components);
+
+        // Act
+        var recordDeclarationSyntaxes = ApiGenerator.GenerateModels(spec).ToArray();
+
+        // Assert
+        Assert.Equal(2, recordDeclarationSyntaxes.Length);
+
+        var typeSyntax = recordDeclarationSyntaxes[0];
+        Assert.Equal("ToDoItem", typeSyntax.Identifier.Value);
+        var typeClassModifier = Assert.Single(typeSyntax.Modifiers);
+        Assert.Equal("public", typeClassModifier.Value);
+
+        Assert.Equal("{", typeSyntax.OpenBraceToken.Value);
+        Assert.Equal("}", typeSyntax.CloseBraceToken.Value);
+        var typeMemberDeclarationSyntax = Assert.Single(typeSyntax.Members);
+        var typePropertyDeclarationSyntax = Assert.IsType<PropertyDeclarationSyntax>(typeMemberDeclarationSyntax);
+        Assert.Equal("Id", typePropertyDeclarationSyntax.Identifier.Value);
+        var typePropertyMethodModifier = Assert.Single(typePropertyDeclarationSyntax.Modifiers);
+        Assert.Equal("public", typePropertyMethodModifier.Value);
+        var typePropertyArrayTypeSyntax = Assert.IsType<ArrayTypeSyntax>(typePropertyDeclarationSyntax.Type);
+        var typePropertyArrayElementType = Assert.IsType<IdentifierNameSyntax>(typePropertyArrayTypeSyntax.ElementType);
+        Assert.Equal("ToDoItemIdSubType", typePropertyArrayElementType.Identifier.Value);
+
+        var subTypeSyntax = recordDeclarationSyntaxes[1];
+        Assert.Equal("ToDoItemIdSubType", subTypeSyntax.Identifier.Value);
+        var subTypeClassModifier = Assert.Single(subTypeSyntax.Modifiers);
+        Assert.Equal("public", subTypeClassModifier.Value);
+
+        Assert.Equal("{", subTypeSyntax.OpenBraceToken.Value);
+        Assert.Equal("}", subTypeSyntax.CloseBraceToken.Value);
+        var subtypeMemberDeclarationSyntax = Assert.Single(subTypeSyntax.Members);
+        var subTypePropertyDeclarationSyntax = Assert.IsType<PropertyDeclarationSyntax>(subtypeMemberDeclarationSyntax);
+        Assert.Equal("Name", subTypePropertyDeclarationSyntax.Identifier.Value);
+        var subTypePropertyMethodModifier = Assert.Single(subTypePropertyDeclarationSyntax.Modifiers);
+        Assert.Equal("public", subTypePropertyMethodModifier.Value);
+        var subTypePropertyTypeSyntax = Assert.IsType<PredefinedTypeSyntax>(subTypePropertyDeclarationSyntax.Type);
+        Assert.Equal("int", subTypePropertyTypeSyntax.Keyword.Value);
+    }
+
+    [Fact]
     public void NotSupportedPropertyTypesThrows()
     {
         // Arrange
         var toDoItemProperties = new Dictionary<string, OpenApiComponentProperty>
         {
-            { "id", new OpenApiComponentProperty("pizza", default, default) },
+            { "id", new OpenApiComponentProperty("pizza",default,  default, default) },
         };
         var componentSchemas = new Dictionary<string, OpenApiComponentSchema>
         {

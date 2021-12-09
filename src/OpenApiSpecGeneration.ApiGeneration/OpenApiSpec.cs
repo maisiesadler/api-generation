@@ -23,5 +23,7 @@ namespace OpenApiSpecGeneration
 
     public record OpenApiComponent(IReadOnlyDictionary<string, OpenApiComponentSchema> schemas);
     public record OpenApiComponentSchema(string type, IReadOnlyDictionary<string, OpenApiComponentProperty> properties);
-    public record OpenApiComponentProperty(string type, string? format, bool? nullable);
+    public record OpenApiComponentProperty(string type, OpenApiComponentPropertyType? items, string? format, bool? nullable);
+    public record OpenApiComponentPropertyType(IReadOnlyDictionary<string, OpenApiComponentPropertyTypeItem> properties);
+    public record OpenApiComponentPropertyTypeItem(string type, string? description);
 }
