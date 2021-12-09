@@ -77,7 +77,7 @@ namespace OpenApiSpecGeneration.Model
                     )
                 )
             );
-    
+
             return SyntaxFactory.Attribute(
                 SyntaxFactory.IdentifierName("JsonPropertyName"),
                 SyntaxFactory.AttributeArgumentList(
