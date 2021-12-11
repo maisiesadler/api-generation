@@ -1,3 +1,5 @@
+using System.Text.Json.Serialization;
+
 namespace OpenApiSpecGeneration
 {
     public record OpenApiSpec(IReadOnlyDictionary<string, OpenApiPath> paths, OpenApiComponent components);
@@ -19,7 +21,16 @@ namespace OpenApiSpecGeneration
 
     public record OpenApiContent(OpenApiContentSchema schema);
 
-    public record OpenApiContentSchema(string type, IReadOnlyDictionary<string, string> items);
+    public record OpenApiContentSchema
+    {
+        public OpenApiContentSchema() { }
+        public OpenApiContentSchema(string type, IReadOnlyDictionary<string, string>? items)
+            => (this.type, this.items) = (type, items);
+
+        public string? type { get; init; }
+        public IReadOnlyDictionary<string, string>? items { get; init; }
+        [JsonPropertyName("$ref")] public string? Ref { get; init; }
+    }
 
     public record OpenApiComponent(IReadOnlyDictionary<string, OpenApiComponentSchema> schemas);
     public record OpenApiComponentSchema(string type, IReadOnlyDictionary<string, OpenApiComponentProperty> properties);

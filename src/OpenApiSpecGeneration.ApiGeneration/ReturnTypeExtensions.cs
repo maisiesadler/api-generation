@@ -32,11 +32,29 @@ namespace OpenApiSpecGeneration
             if (!response.Value.content.Any()) return false;
             var content = response.Value.content.First();
             var component = string.Empty;
-            if (!content.Value?.schema?.items?.TryGetValue("$ref", out component) == true) return false;
-            if (component == null) return false;
+
+            if (!TryGetRef(content.Value?.schema, out component)) return false;
 
             returnType = component.Split("/").Last();
             return true;
+        }
+
+        private static bool TryGetRef(OpenApiContentSchema? schema, [NotNullWhen(true)] out string? @ref)
+        {
+            if (!string.IsNullOrWhiteSpace(schema?.Ref))
+            {
+                @ref = schema.Ref;
+                return true;
+            }
+
+            if (schema?.items?.TryGetValue("$ref", out var component) == true)
+            {
+                @ref = component;
+                return true;
+            }
+
+            @ref = null;
+            return false;
         }
     }
 }
