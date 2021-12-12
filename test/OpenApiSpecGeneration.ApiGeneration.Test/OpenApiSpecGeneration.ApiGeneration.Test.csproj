@@ -24,4 +24,8 @@
     <ProjectReference Include="..\..\src\OpenApiSpecGeneration.ApiGeneration\OpenApiSpecGeneration.ApiGeneration.csproj" />
   </ItemGroup>
 
+  <ItemGroup>
+    <Content Include="TestData/**" CopyToOutputDirectory="Always" />
+  </ItemGroup>
+
 </Project>

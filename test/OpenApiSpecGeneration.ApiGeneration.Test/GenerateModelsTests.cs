@@ -1,6 +1,8 @@
 using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
+using System.Text.Json;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
 using Xunit;
 
@@ -109,9 +111,9 @@ public class GenerateModelsTests
     public void PropertyWithNestedTypeGeneratesSubtype()
     {
         // Arrange
-        var properties = new Dictionary<string, OpenApiComponentPropertyTypeItem>
+        var properties = new Dictionary<string, OpenApiComponentProperty>
         {
-            { "name", new OpenApiComponentPropertyTypeItem("integer", "Name of something") },
+            { "name", new OpenApiComponentProperty("integer", default, default, default) },
         };
         var toDoItemProperties = new Dictionary<string, OpenApiComponentProperty>
         {

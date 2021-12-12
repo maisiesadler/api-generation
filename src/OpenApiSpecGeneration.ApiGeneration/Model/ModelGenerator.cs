@@ -19,8 +19,14 @@ namespace OpenApiSpecGeneration.Model
 
                 foreach (var (subtypename, subtype) in subtypes)
                 {
-                    var (subtypeRecord, _) = TryGenerateRecord(subtypename, GetProperties(subtype));
+                    var (subtypeRecord, heello) = TryGenerateRecord(subtypename, GetProperties(subtype));
                     yield return subtypeRecord;
+
+                    foreach (var (_subtypename, _subtype) in heello)
+                    {
+                        var (_subtypeRecord, _) = TryGenerateRecord(_subtypename, GetProperties(_subtype));
+                        yield return _subtypeRecord;
+                    }
                 }
             }
         }
@@ -39,7 +45,7 @@ namespace OpenApiSpecGeneration.Model
         {
             foreach (var (propertyName, openApiProperty) in openApiComponentPropertyType.properties)
             {
-                yield return (propertyName, openApiProperty.type, default);
+                yield return (propertyName, openApiProperty.type, openApiProperty.items);
             }
         }
 
@@ -58,12 +64,13 @@ namespace OpenApiSpecGeneration.Model
                     )
                 );
 
-                var potentialSubtypeName = name + CsharpNamingExtensions.FirstLetterToUpper(propertyName) + "SubType";
+                var potentialSubtypeName = name + CsharpNamingExtensions.SnakeCaseToCamel(propertyName) + "SubType";
                 var (typeSyntax, createSubType) = ParseTypeSyntax(potentialSubtypeName, propertyType);
+                // System.Console.WriteLine($"Potentially create: {potentialSubtypeName} - {createSubType} - {items != null}");
 
                 var property = SyntaxFactory.PropertyDeclaration(
                         typeSyntax,
-                        SyntaxFactory.Identifier(CsharpNamingExtensions.FirstLetterToUpper(propertyName)))
+                        SyntaxFactory.Identifier(CsharpNamingExtensions.SnakeCaseToCamel(propertyName)))
                     .AddModifiers(SyntaxFactory.Token(SyntaxKind.PublicKeyword))
                     .AddAccessorListAccessors(
                         SyntaxFactory.AccessorDeclaration(SyntaxKind.GetAccessorDeclaration).WithSemicolonToken(SyntaxFactory.Token(SyntaxKind.SemicolonToken)),

@@ -1,0 +1,24 @@
+{
+    "type": "object",
+    "properties": {
+        "report": {
+            "type": "array",
+            "items": {
+                "type": "object",
+                "properties": {
+                    "account_holders": {
+                        "type": "array",
+                        "items": {
+                            "properties": {
+                                "name": {
+                                    "type": "string",
+                                    "description": "Array of names of account holders in the account"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+}
