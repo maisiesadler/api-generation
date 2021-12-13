@@ -1,8 +1,8 @@
 # Api Definition Generation
 
-I watched [this]() video around microservices done right, one of the things that is discussed is that they generate a lot of their code from config files. The config files are linted to give consistent APIs and then they generate APIs, clients, mocks and tests.
+After watching [this](https://www.youtube.com/watch?v=j6ow-UemzBc) video about microservices done right and hearing about how they use custom config files to generate APIs, clients, mocks and tests. I started to think about how powerful that could be, and how we could make it useful at work.
 
-At TrueLayer we maintain open api specifications for all of our services and then the application is designed against the open api spec. It would be great if we had some assertion that the API we create is exactly as in the spec.
+At TrueLayer we maintain open api specifications for all of our services and then the application is designed against the open api spec. It would be great if we had some assertion that the code we create is exactly as in the spec.
 
 Could we generate a c# API from an openapi specification?
 
@@ -41,7 +41,7 @@ The other requirement was that the tool needed to be easier to use than writing 
 ### Benefits
 
 - 🤩 Running API code is consistent with spec
-- 🤩 Apply best practices
+- 🤩 Apply best practices in one place
 
 ## The implementation
 
@@ -56,7 +56,7 @@ I found [this](https://www.stevejgordon.co.uk/getting-started-with-the-roslyn-ap
 
 The code looks weird when you first start working with it, but the API is pretty consistent so you start to get a feel for what the functions are expecting.
 
-Once I had some basic code working - generate a class, save it as a file I started to look at how I could write tests against it. I'm a big advocate for TDD and the confidence it gives you while you're developing.
+Once I had some basic code working - generate a class, save it as a file - I started to look at how I could write tests against it. I'm a big advocate for TDD and the confidence it gives you while you're developing.
 The code to generate the file looks like this:
 
 ```csharp
@@ -73,9 +73,9 @@ Now I can generate some code from code I wanted to be able to generate the contr
 
 #### First the models
 
-TDD approach is to write a test to describe the thing you're implementing and then only add the code required for that feature. In this case I wasn't sure what the roslyn types should look like so there was a bit of back and forth between trying stuff/debugging the types and being able to write the asserts.
+The TDD approach is to write a test to describe the thing you're implementing and then only add the code required for that feature. In this case I wasn't sure what the roslyn types should look like so there was a bit of back and forth between trying stuff/debugging the types and being able to write the asserts.
 
-First I needed to create a type with the right name, the test looked something like this:
+The first bit of behaviour I wanted to create was a type with the right name, the test looked something like this:
 
 ```csharp
 // Arrange
