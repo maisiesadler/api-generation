@@ -1,3 +1,3 @@
-dotnet run --project src/OpenApiSpecGeneration.ApiGeneration.Console \
-    generate -i definition.json -o example/generated -n Example
+dotnet run --project src/OpenApiSpecGeneration.Console \
+    api -i definition.json -o example/generated -n Example
 

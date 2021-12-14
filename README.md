@@ -21,7 +21,7 @@ Running `dotnet run --project example` and navigating to `http://localhost:5009/
 
 ## Usage
 
-There are two available projects [OpenApiSpecGeneration.ApiGeneration](./src/OpenApiSpecGeneration.ApiGeneration) and [OpenApiSpecGeneration.ApiGeneration.Console](./src/OpenApiSpecGeneration.ApiGeneration.Console).
+There are two available projects [OpenApiSpecGeneration.ApiGeneration](./src/OpenApiSpecGeneration.ApiGeneration) and [OpenApiSpecGeneration.Console](./src/OpenApiSpecGeneration.Console).
 
 The first can be used as a package (soon) and the second is a console app that takes an input file and produces c# files to the gievn output directory. See the project folder for more details on usage.
 
@@ -31,6 +31,6 @@ The first can be used as a package (soon) and the second is a console app that t
 
 ### Reading open api specs
 
-The [console app](src/OpenApiSpecGeneration.ApiGeneration.Console) takes an input json openapi spec and outputs C# files to the given output directory.
+The [console app](src/OpenApiSpecGeneration.Console) takes an input json openapi spec and outputs C# files to the given output directory.
 
 Our API specs are defined in YAML, since this is not easily parsed in dotnet I have created a tool [yamltojson](./yamltojson) that takes a YAML file and outputs a JSON file which can then be used by the console app.

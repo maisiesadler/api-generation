@@ -9,7 +9,7 @@ using Spectre.Console.Cli;
 
 namespace OpenApiSpecGeneration.Console;
 
-public class GenerateOpenApiSpecSettings : CommandSettings
+public class GenerateApiSettings : CommandSettings
 {
     [CommandOption("-i|--input")]
     [Description("Input file name")]
@@ -33,16 +33,17 @@ public class GenerateOpenApiSpecSettings : CommandSettings
     }
 }
 
-public class GenerateOpenApiSpec : AsyncCommand<GenerateOpenApiSpecSettings>
+public class GenerateApi : AsyncCommand<GenerateApiSettings>
 {
-    public GenerateOpenApiSpec()
+    public GenerateApi()
     {
     }
 
-    public override async Task<int> ExecuteAsync([NotNull] CommandContext context, [NotNull] GenerateOpenApiSpecSettings settings)
+    public override async Task<int> ExecuteAsync([NotNull] CommandContext context, [NotNull] GenerateApiSettings settings)
     {
         try
         {
+            AnsiConsole.MarkupLine("Generating API");
             AnsiConsole.MarkupLine("Reading from [yellow]{0}[/] and writing to [yellow]{1}[/] with namespace [yellow]{2}[/]", settings.InputFileName, settings.OutputDirectory, settings.Namespace);
 
             var path = Directory.GetCurrentDirectory();

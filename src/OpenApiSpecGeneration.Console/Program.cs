@@ -12,7 +12,8 @@ namespace OpenApiSpecGeneration.Console
             var app = new CommandApp(new TypeRegistrar(services));
             app.Configure(config =>
             {
-                config.AddCommand<GenerateOpenApiSpec>("generate");
+                config.AddCommand<GenerateApi>("api");
+                config.AddCommand<GenerateSdk>("sdk");
             });
 
             await app.RunAsync(args);
