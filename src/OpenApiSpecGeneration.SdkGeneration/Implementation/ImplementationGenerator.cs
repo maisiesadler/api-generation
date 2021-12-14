@@ -6,7 +6,7 @@ namespace OpenApiSpecGeneration.ImplementationGeneration.Implementation
 {
     internal class ImplementationGenerator
     {
-        internal static IEnumerable<InterfaceDeclarationSyntax> GenerateImplementations(OpenApiSpec spec)
+        internal static IEnumerable<ClassDeclarationSyntax> GenerateImplementations(OpenApiSpec spec)
         {
             foreach (var (apiPath, openApiPath) in spec.paths)
             {
@@ -21,21 +21,17 @@ namespace OpenApiSpecGeneration.ImplementationGeneration.Implementation
                     // var methods = new[] { methodDeclaration };
 
                     var implementationName = CsharpNamingExtensions.PathToInteractorImplementationType(apiPath, method);
+                    var interfaceName = CsharpNamingExtensions.PathToInteractorInterface(apiPath, method);
 
-                    var interfaceDeclaration = SyntaxFactory.InterfaceDeclaration(
-                        attributeLists: default,
-                        modifiers: SyntaxFactory.TokenList(SyntaxFactory.Token(SyntaxKind.PublicKeyword)),
-                        keyword: SyntaxFactory.Token(SyntaxKind.InterfaceKeyword),
-                        identifier: SyntaxFactory.Identifier(implementationName),
-                        typeParameterList: default,
-                        baseList: null,
-                        constraintClauses: default,
-                        openBraceToken: SyntaxFactory.Token(SyntaxKind.OpenBraceToken),
-                        members: default, // SyntaxFactory.List<MemberDeclarationSyntax>(methods),
-                        closeBraceToken: SyntaxFactory.Token(SyntaxKind.CloseBraceToken),
-                        semicolonToken: default);
+                    var @class = SyntaxFactory.ClassDeclaration(SyntaxFactory.Identifier(implementationName))
+                        .AddBaseListTypes(SyntaxFactory.SimpleBaseType(SyntaxFactory.IdentifierName(interfaceName)))
+                        // .AddMembers(fields.ToArray())
+                        // .AddMembers(ctor)
+                        // .AddMembers(classMethods.ToArray())
+                        .AddModifiers(SyntaxFactory.Token(SyntaxKind.PublicKeyword));
+                        // .AddAttributeLists(GetControllerAttributeList(apiPath));
 
-                    yield return interfaceDeclaration;
+                    yield return @class;
                 }
             }
         }

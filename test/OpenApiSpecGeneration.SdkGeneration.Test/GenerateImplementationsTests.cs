@@ -72,4 +72,42 @@ public class GenerateImplementationsTests
         var usingName1 = Assert.IsType<IdentifierNameSyntax>(writableFile.usingDirectiveSyntax!.Value[1].Name);
         Assert.Equal("MyNamespace.Models", usingName1.Identifier.Value);
     }
+
+    [Fact]
+    public void ImplementationClassHasCorrectNameAndType()
+    {
+        // Arrange
+        var openApiContentSchema = new OpenApiContentSchema("array", new Dictionary<string, string>());
+        var openApiResponse = new OpenApiResponse("Success", new Dictionary<string, OpenApiContent>
+        {
+            { "text/plain", new OpenApiContent(openApiContentSchema) }
+        });
+        var openApiResponses = new Dictionary<string, OpenApiResponse> { { "200", openApiResponse } };
+        var apiTestPath = new OpenApiPath
+        {
+            get = new OpenApiMethod { responses = openApiResponses },
+        };
+        var paths = new Dictionary<string, OpenApiPath>
+        {
+            { "/api/test", apiTestPath },
+        };
+        var spec = new OpenApiSpec(paths, new OpenApiComponent(new Dictionary<string, OpenApiComponentSchema>()));
+
+        // Act
+        var writableFiles = FileGenerator.GenerateImplementations("MyNamespace", spec);
+
+        // Assert
+        var writableFile = Assert.Single(writableFiles);
+        var classDeclarationSyntax = Assert.Single(writableFile.namespaceDeclarationSyntax.Members.GetMembersOfType<ClassDeclarationSyntax>());
+
+        Assert.Equal("GetApiTestInteractor", classDeclarationSyntax.Identifier.Value);
+        var classModifier = Assert.Single(classDeclarationSyntax.Modifiers);
+        Assert.Equal("public", classModifier.Value);
+
+        Assert.NotNull(classDeclarationSyntax.BaseList);
+        Assert.Equal(":", classDeclarationSyntax.BaseList!.ColonToken.Value);
+        var baseType = Assert.Single(classDeclarationSyntax.BaseList.Types);
+        var baseTypeIdentifier = Assert.IsType<IdentifierNameSyntax>(baseType.Type);
+        Assert.Equal("IGetApiTestInteractor", baseTypeIdentifier.Identifier.Value);
+    }
 }
