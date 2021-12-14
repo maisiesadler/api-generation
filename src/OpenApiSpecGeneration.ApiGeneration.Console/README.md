@@ -4,7 +4,7 @@ This is a console application to invoke the API Generation.
 
 It takes in a JSON file, if the spec is a yaml file then run the file through the [yamltojson](../yamltojson) tool first.
 
-## Usage
+## Usage
 
 ```sh
 dotnet run --project src/OpenApiSpecGeneration.ApiGeneration.Console \
