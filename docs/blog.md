@@ -41,6 +41,7 @@ The other requirement was that the tool needed to be easier to use than writing 
 ### Benefits
 
 - 🤩 Running API code is consistent with spec
+- 🤩 Consistent code across all APIs generated with this tool
 - 🤩 Apply best practices in one place
 
 ## The implementation
@@ -113,20 +114,37 @@ Assert.Equal("public", classModifier.Value);
 
 I worked iteratively like this while implementing different bits of the model, adding attributes for `JsonPropertyName`, adding the namespace, etc until I got a feel for what the roslyn models look like. They're a bit strange at first but they do start to make sense, honest.
 
-I also set up an example project so I would know when the types I was creating actually generated something that compiled and could be worked with. This was created using `dotnet new webapi` and removing the default WeatherController. The generated code is all under `./generated` and is deleted and recreated each time the tool runs.
+I also set up an example project so I would know when the types I was creating actually generated something that compiled and could be worked with. This was created using `dotnet new webapi` and removing the default controller. The generated code is all under `./generated` and is deleted and recreated each time the tool runs. View the example project [here](https://github.com/maisiesadler/api-generation/tree/main/example).
 
-#### Making decisions
+### Generic or Specific
 
-One of the aims of this would be that it keeps code consistent across projects and so that means the generated code is opnionated and I was making a lot of decisions about what the code looks like along the way.
+One of the aims of this would be that it keeps code consistent across projects and so that means the generated code is opionated and I was making a lot of decisions about what the code looks like along the way.
 
-##### `class` or `record`
+As an example, in choosing between a `class` and a `record` for the models, in my opnion best practice for models would be records with init only setters.
+Records are only available since C# 9, which is only supported by .NET 5 and higher.
+If this is to be used at work then it isn't a problem, but if this will be an open source library used by the masses then I should probably opt for class or make it configurable.
 
-Well records are only available since C# 9, which is only supported by .NET 5 and higher. Best practice for models (IMO) would be records with init only setters.
-If this is something to use for projects at work then there should be no problems there - if we're not there yet we will be there soon.
-If this will be an open source library used by the masses then I should probably opt for class.
+![The General Problem](./images/the_general_problem.png)
 
-I decided that it's unlikely that'll be the case and I should support best practices for the specific use case. It can always be added in as an option later.
+I put the idea of my API generation tool becoming the next Newtonsoft.Json and this being built into dotnet to one side and decide that it can always be added in as an option later.
 
-### Other Considerations
+In the balance between configurable and opinionated this definitely leans towards opionated.
 
-- [Jimmy-proof](https://blog.codinghorror.com/new-programming-jargon/#10)
+## The Result
+
+The idea works! I can generate a usable API from an openapi spec - this is really cool!
+
+I tried it against another openapi spec and found that the openapi definition types I have created are probably not very well defined against the spec.
+I think if this would work then enforcing some code styles around definitions that could/should be used would be required.
+
+Is the solution [Jimmy-Proof](https://blog.codinghorror.com/new-programming-jargon/#10)?
+It's definitely more complicated than writing the API manually and so we need to be cautious the benefits of using it outweigh the extra complexity.
+The generated API can be seperated without the tool and I would always argue for automation over manual steps.
+
+One of the cool things about this solution are that, since it only creates a part of the project, the project is still free to implement other functionality as they see fit.
+
+Need to decide if it's worth investing more time into this project or a similar new project based on this idea.
+
+How can we make this actually useful, and easier to use than making the change yourself?
+Where would it run?
+
