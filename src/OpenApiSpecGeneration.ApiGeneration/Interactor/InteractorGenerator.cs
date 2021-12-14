@@ -7,7 +7,6 @@ namespace OpenApiSpecGeneration.Interactor
     {
         internal static IEnumerable<InterfaceDeclarationSyntax> GenerateInteractors(OpenApiSpec spec)
         {
-            var members = new List<InterfaceDeclarationSyntax>();
             foreach (var (apiPath, openApiPath) in spec.paths)
             {
                 foreach (var (method, openApiMethod) in openApiPath.GetMethods())
@@ -35,11 +34,9 @@ namespace OpenApiSpecGeneration.Interactor
                         closeBraceToken: SyntaxFactory.Token(SyntaxKind.CloseBraceToken),
                         semicolonToken: default);
 
-                    members.Add(interfaceDeclaration);
+                    yield return interfaceDeclaration;
                 }
             }
-
-            return members;
         }
     }
 }

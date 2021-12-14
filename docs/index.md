@@ -5,6 +5,8 @@ title: API Generation 🤖
 
 Generate dotnet APIs, mocks and clients from openapi specifications.
 
+View blog [here](https://www.maisiesadler.co.uk/api-generation/blog).
+
 This ensures that the application is always returning models that match the defined API specification.
 
 Creates
