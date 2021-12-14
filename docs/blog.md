@@ -120,8 +120,9 @@ I also set up an example project so I would know when the types I was creating a
 
 One of the aims of this would be that it keeps code consistent across projects and so that means the generated code is opionated and I was making a lot of decisions about what the code looks like along the way.
 
-As an example, in choosing between a `class` and a `record` for the models, in my opnion best practice for models would be records with init only setters.
-Records are only available since C# 9, which is only supported by .NET 5 and higher.
+An example of this would be choosing between a `class` and a `record` for the models.
+In my opnion best practice for models would be records with init only setters.
+Records are available from C# 9, which is only supported by .NET 5 and higher.
 If this is to be used at work then it isn't a problem, but if this will be an open source library used by the masses then I should probably opt for class or make it configurable.
 
 ![The General Problem](./images/the_general_problem.png)
