@@ -21,12 +21,13 @@ namespace OpenApiSpecGeneration.SdkGeneration
                 .Select(interactor =>
                 {
                     var usings = SyntaxFactory.List<UsingDirectiveSyntax>(new[]{
-                                SyntaxFactory.UsingDirective(SyntaxFactory.IdentifierName($"{@namespace}.Models")),
+                        SyntaxFactory.UsingDirective(SyntaxFactory.IdentifierName($"{@namespace}.Interactors")),
+                        SyntaxFactory.UsingDirective(SyntaxFactory.IdentifierName($"{@namespace}.Models")),
                     });
-                    var ns = SyntaxFactory.NamespaceDeclaration(SyntaxFactory.ParseName($"{@namespace}.Interactors"))
+                    var ns = SyntaxFactory.NamespaceDeclaration(SyntaxFactory.ParseName($"{@namespace}.Implementations"))
                         .AddMembers(interactor);
 
-                    return new WritableFile($"/interactors/{interactor.Identifier.Value}.cs", usings, ns);
+                    return new WritableFile($"/implementations/{interactor.Identifier.Value}.cs", usings, ns);
                 });
     }
 }

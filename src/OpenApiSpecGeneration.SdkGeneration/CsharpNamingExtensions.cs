@@ -10,9 +10,9 @@ namespace OpenApiSpecGeneration.SdkGeneration
             return string.Join("", split.Select(RemoveParameters).Select(FirstLetterToUpper));
         }
 
-        internal static string PathToInteractorType(string apiPath, string method)
+        internal static string PathToImplementationType(string apiPath, string method)
         {
-            return $"I{FirstLetterToUpper(method)}{PathToClassName(apiPath)}Interactor";
+            return $"{FirstLetterToUpper(method)}{PathToClassName(apiPath)}Interactor";
         }
 
         internal static string InterfaceToPropertyName(string interfaceTypeName)
