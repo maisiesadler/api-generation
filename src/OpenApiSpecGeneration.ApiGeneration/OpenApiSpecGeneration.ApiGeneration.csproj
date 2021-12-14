@@ -10,4 +10,8 @@
     <PackageReference Include="Microsoft.CodeAnalysis" Version="3.9.0 "/>
   </ItemGroup>
 
+  <ItemGroup>
+    <ProjectReference Include="..\OpenApiSpecGeneration.Entities\OpenApiSpecGeneration.Entities.csproj" />
+  </ItemGroup>
+
 </Project>

@@ -3,7 +3,7 @@ using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
 using OpenApiSpecGeneration.Entities;
 
-namespace OpenApiSpecGeneration.ApiGeneration
+namespace OpenApiSpecGeneration.SdkGeneration
 {
     internal class ReturnTypeExtensions
     {

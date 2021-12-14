@@ -4,6 +4,7 @@ using System.IO;
 using System.Linq;
 using System.Text.Json;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
+using OpenApiSpecGeneration.Entities;
 using Xunit;
 
 namespace OpenApiSpecGeneration.ApiGeneration.Test;

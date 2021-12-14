@@ -2,6 +2,8 @@ using System.ComponentModel;
 using System.Diagnostics.CodeAnalysis;
 using System.Text.Json;
 using Microsoft.CodeAnalysis;
+using OpenApiSpecGeneration.ApiGeneration;
+using OpenApiSpecGeneration.Entities;
 using Spectre.Console;
 using Spectre.Console.Cli;
 

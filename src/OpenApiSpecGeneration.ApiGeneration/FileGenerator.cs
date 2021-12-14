@@ -1,11 +1,11 @@
-using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
-using OpenApiSpecGeneration.Controller;
-using OpenApiSpecGeneration.Interactor;
-using OpenApiSpecGeneration.Model;
+using OpenApiSpecGeneration.ApiGeneration.Controller;
+using OpenApiSpecGeneration.Entities;
+using OpenApiSpecGeneration.ApiGeneration.Interactor;
+using OpenApiSpecGeneration.ApiGeneration.Model;
 
-namespace OpenApiSpecGeneration
+namespace OpenApiSpecGeneration.ApiGeneration
 {
     public class FileGenerator
     {
@@ -50,9 +50,4 @@ namespace OpenApiSpecGeneration
                     return new WritableFile($"/interactors/{interactor.Identifier.Value}.cs", usings, ns);
                 });
     }
-
-    public record WritableFile(
-        string fileLocation,
-        SyntaxList<UsingDirectiveSyntax>? usingDirectiveSyntax,
-        NamespaceDeclarationSyntax namespaceDeclarationSyntax);
 }

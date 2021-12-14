@@ -1,6 +1,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
+using OpenApiSpecGeneration.Entities;
 using Xunit;
 
 namespace OpenApiSpecGeneration.ApiGeneration.Test;

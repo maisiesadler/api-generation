@@ -1,7 +1,8 @@
 using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
+using OpenApiSpecGeneration.Entities;
 
-namespace OpenApiSpecGeneration.Controller
+namespace OpenApiSpecGeneration.ApiGeneration.Controller
 {
     internal class ControllerGenerator
     {

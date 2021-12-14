@@ -7,3 +7,4 @@ node_modules
 dist.yaml
 dist.json
 example-2
+sdk

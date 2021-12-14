@@ -1,8 +1,8 @@
-namespace OpenApiSpecGeneration
+namespace OpenApiSpecGeneration.Entities
 {
-    internal static class OpenApiSpecExtensions
+    public static class OpenApiSpecExtensions
     {
-        internal static IEnumerable<(string, OpenApiMethod)> GetMethods(this OpenApiPath openApiPath)
+        public static IEnumerable<(string, OpenApiMethod)> GetMethods(this OpenApiPath openApiPath)
         {
             if (openApiPath.get != null) yield return ("get", openApiPath.get);
             if (openApiPath.post != null) yield return ("post", openApiPath.post);

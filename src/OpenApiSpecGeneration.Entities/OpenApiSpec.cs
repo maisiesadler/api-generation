@@ -1,6 +1,6 @@
 using System.Text.Json.Serialization;
 
-namespace OpenApiSpecGeneration
+namespace OpenApiSpecGeneration.Entities
 {
     public record OpenApiSpec(IReadOnlyDictionary<string, OpenApiPath> paths, OpenApiComponent components);
     public class OpenApiPath

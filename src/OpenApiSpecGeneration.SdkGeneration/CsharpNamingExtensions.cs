@@ -1,6 +1,6 @@
 using System.Text.RegularExpressions;
 
-namespace OpenApiSpecGeneration.ApiGeneration
+namespace OpenApiSpecGeneration.SdkGeneration
 {
     internal class CsharpNamingExtensions
     {
