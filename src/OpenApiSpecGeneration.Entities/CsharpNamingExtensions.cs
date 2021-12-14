@@ -1,21 +1,26 @@
 using System.Text.RegularExpressions;
 
-namespace OpenApiSpecGeneration.ApiGeneration
+namespace OpenApiSpecGeneration.Entities
 {
-    internal class CsharpNamingExtensions
+    public class CsharpNamingExtensions
     {
-        internal static string PathToClassName(string apiPath)
+        public static string PathToClassName(string apiPath)
         {
             var split = apiPath.Split("/", StringSplitOptions.RemoveEmptyEntries);
             return string.Join("", split.Select(RemoveParameters).Select(FirstLetterToUpper));
         }
 
-        internal static string PathToInteractorType(string apiPath, string method)
+        public static string PathToInteractorInterface(string apiPath, string method)
         {
-            return $"I{FirstLetterToUpper(method)}{PathToClassName(apiPath)}Interactor";
+            return $"I{PathToInteractorImplementationType(apiPath, method)}";
         }
 
-        internal static string InterfaceToPropertyName(string interfaceTypeName)
+        public static string PathToInteractorImplementationType(string apiPath, string method)
+        {
+            return $"{FirstLetterToUpper(method)}{PathToClassName(apiPath)}Interactor";
+        }
+
+        public static string InterfaceToPropertyName(string interfaceTypeName)
         {
             if (interfaceTypeName.Length > 2 && interfaceTypeName[0] == 'I')
                 return char.ToLower(interfaceTypeName[1]) + interfaceTypeName.Substring(2);
@@ -26,12 +31,12 @@ namespace OpenApiSpecGeneration.ApiGeneration
             return interfaceTypeName.ToLower();
         }
 
-        internal static string RemoveParameters(string str)
+        public static string RemoveParameters(string str)
         {
             return Regex.Replace(str, "[{}]", "");
         }
 
-        internal static string FirstLetterToUpper(string str)
+        public static string FirstLetterToUpper(string str)
         {
             if (str.Length > 1)
                 return char.ToUpper(str[0]) + str.Substring(1);
@@ -39,7 +44,7 @@ namespace OpenApiSpecGeneration.ApiGeneration
             return str.ToUpper();
         }
 
-        internal static string SnakeCaseToCamel(string str)
+        public static string SnakeCaseToCamel(string str)
         {
             var split = str.Split("_");
             return string.Join("", split.Select(FirstLetterToUpper));

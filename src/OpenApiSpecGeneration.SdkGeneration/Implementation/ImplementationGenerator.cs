@@ -1,7 +1,6 @@
 using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
 using OpenApiSpecGeneration.Entities;
-using OpenApiSpecGeneration.SdkGeneration;
 
 namespace OpenApiSpecGeneration.ImplementationGeneration.Implementation
 {
@@ -21,13 +20,13 @@ namespace OpenApiSpecGeneration.ImplementationGeneration.Implementation
 
                     // var methods = new[] { methodDeclaration };
 
-                    var interfaceName = CsharpNamingExtensions.PathToImplementationType(apiPath, method);
+                    var implementationName = CsharpNamingExtensions.PathToInteractorImplementationType(apiPath, method);
 
                     var interfaceDeclaration = SyntaxFactory.InterfaceDeclaration(
                         attributeLists: default,
                         modifiers: SyntaxFactory.TokenList(SyntaxFactory.Token(SyntaxKind.PublicKeyword)),
                         keyword: SyntaxFactory.Token(SyntaxKind.InterfaceKeyword),
-                        identifier: SyntaxFactory.Identifier(interfaceName),
+                        identifier: SyntaxFactory.Identifier(implementationName),
                         typeParameterList: default,
                         baseList: null,
                         constraintClauses: default,

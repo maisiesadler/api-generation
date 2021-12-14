@@ -1,13 +1,12 @@
 using System.Diagnostics.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
-using OpenApiSpecGeneration.Entities;
 
-namespace OpenApiSpecGeneration.SdkGeneration
+namespace OpenApiSpecGeneration.Entities
 {
-    internal class ReturnTypeExtensions
+    public class ReturnTypeExtensions
     {
-        internal static TypeSyntax GetReturnTypeSyntax(IReadOnlyDictionary<string, OpenApiResponse> responses)
+        public static TypeSyntax GetReturnTypeSyntax(IReadOnlyDictionary<string, OpenApiResponse> responses)
         {
             if (TryGetFirstReturnTypeComponentName(responses, out var componentName))
             {
@@ -20,7 +19,7 @@ namespace OpenApiSpecGeneration.SdkGeneration
             return SyntaxFactory.ParseTypeName("Task");
         }
 
-        internal static bool HasReturnType(IReadOnlyDictionary<string, OpenApiResponse>? responses)
+        public static bool HasReturnType(IReadOnlyDictionary<string, OpenApiResponse>? responses)
             => responses != null && TryGetFirstReturnTypeComponentName(responses, out var _);
 
         private static bool TryGetFirstReturnTypeComponentName(

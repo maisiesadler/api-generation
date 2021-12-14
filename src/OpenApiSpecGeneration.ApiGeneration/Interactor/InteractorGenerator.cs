@@ -20,7 +20,7 @@ namespace OpenApiSpecGeneration.ApiGeneration.Interactor
 
                     var methods = new[] { methodDeclaration };
 
-                    var interfaceName = CsharpNamingExtensions.PathToInteractorType(apiPath, method);
+                    var interfaceName = CsharpNamingExtensions.PathToInteractorInterface(apiPath, method);
 
                     var interfaceDeclaration = SyntaxFactory.InterfaceDeclaration(
                         attributeLists: default,

@@ -20,7 +20,7 @@ namespace OpenApiSpecGeneration.ApiGeneration.Controller
 
                 foreach (var (method, openApiMethod) in openApiPath.GetMethods())
                 {
-                    var propertyType = CsharpNamingExtensions.PathToInteractorType(apiPath, method);
+                    var propertyType = CsharpNamingExtensions.PathToInteractorInterface(apiPath, method);
                     var propertyName = CsharpNamingExtensions.InterfaceToPropertyName(propertyType);
 
                     classMethods.Add(MethodGenerator.CreateMethod(method, openApiMethod, propertyType, propertyName));
