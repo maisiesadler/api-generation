@@ -2,7 +2,7 @@ using System.ComponentModel;
 using System.Diagnostics.CodeAnalysis;
 using System.Text.Json;
 using Microsoft.CodeAnalysis;
-using OpenApiSpecGeneration.ApiGeneration;
+using OpenApiSpecGeneration.SdkGeneration;
 using OpenApiSpecGeneration.Entities;
 using Spectre.Console;
 using Spectre.Console.Cli;
@@ -77,6 +77,11 @@ public class GenerateSdk : AsyncCommand<GenerateSdkSettings>
                 await WriteToFile(settings.OutputDirectory, file);
             }
 
+            foreach (var file in FileGenerator.GenerateImplementations(settings.Namespace, openApiSpec))
+            {
+                await WriteToFile(settings.OutputDirectory, file);
+            }
+
             AnsiConsole.MarkupLine("[green]Done :magic_wand:[/]");
         }
         catch (Exception ex)
@@ -113,6 +118,7 @@ public class GenerateSdk : AsyncCommand<GenerateSdkSettings>
             Directory.Delete(location, true);
         Directory.CreateDirectory(location);
         Directory.CreateDirectory($"{location}/models");
+        Directory.CreateDirectory($"{location}/implementations");
         Directory.CreateDirectory($"{location}/interactors");
     }
 }

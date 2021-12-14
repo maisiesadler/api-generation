@@ -28,7 +28,7 @@ public class GenerateImplementationsTests
         var spec = new OpenApiSpec(paths, new OpenApiComponent(new Dictionary<string, OpenApiComponentSchema>()));
 
         // Act
-        var writableFiles = FileGenerator.GenerateImplementation("MyNamespace", spec);
+        var writableFiles = FileGenerator.GenerateImplementations("MyNamespace", spec);
 
         // Assert
         var writableFile = Assert.Single(writableFiles);
@@ -56,7 +56,7 @@ public class GenerateImplementationsTests
         var spec = new OpenApiSpec(paths, new OpenApiComponent(new Dictionary<string, OpenApiComponentSchema>()));
 
         // Act
-        var writableFiles = FileGenerator.GenerateImplementation("MyNamespace", spec);
+        var writableFiles = FileGenerator.GenerateImplementations("MyNamespace", spec);
 
         // Assert
         var writableFile = Assert.Single(writableFiles);

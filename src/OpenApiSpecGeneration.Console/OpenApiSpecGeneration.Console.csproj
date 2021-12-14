@@ -13,6 +13,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\OpenApiSpecGeneration.ApiGeneration\OpenApiSpecGeneration.ApiGeneration.csproj" />
+    <ProjectReference Include="..\OpenApiSpecGeneration.SdkGeneration\OpenApiSpecGeneration.SdkGeneration.csproj" />
   </ItemGroup>
 
   <ItemGroup>

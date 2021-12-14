@@ -16,7 +16,7 @@ namespace OpenApiSpecGeneration.SdkGeneration
         public static IEnumerable<WritableFile> GenerateInteractors(string @namespace, OpenApiSpec spec)
             => ApiGeneration.FileGenerator.GenerateInteractors(@namespace, spec);
 
-        public static IEnumerable<WritableFile> GenerateImplementation(string @namespace, OpenApiSpec spec)
+        public static IEnumerable<WritableFile> GenerateImplementations(string @namespace, OpenApiSpec spec)
             => ImplementationGenerator.GenerateImplementations(spec)
                 .Select(interactor =>
                 {
