@@ -5,10 +5,10 @@ View a post on the idea behind this project [here](https://www.maisiesadler.co.u
 
 This ensures that the application is always returning models that match the defined API specification.
 
-The project creates
-- Controller [e.g.](example/generated/ApiTodoController.cs) created for [path](./definition.json#L8)
-- Models [e.g.](example/generated/models/ToDoItem.cs) created for [schema](./definition.json#L56)
-- Interface describing each action [e.g.](example/generated/interactors/IGetApiTodoInteractor.cs) created for [route](./definition.json#L8)
+The easiest way to describe what the project does is through an example of what is generated:
+- [Controller](example/generated/ApiTodoController.cs) created for [path](./definition.json#L8)
+- [Model](example/generated/models/ToDoItem.cs) created for [schema](./definition.json#L56)
+- [Interface](example/generated/interactors/IGetApiTodoInteractor.cs) describing each [route](./definition.json#L8)
 
 This can then be implemented in the project with any custom logic, [e.g.](example/implementations/GetApiTodoInteractor.cs).
 
