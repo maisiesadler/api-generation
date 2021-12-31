@@ -1,16 +1,16 @@
 # Api Definition Generation
 
-After watching [this](https://www.youtube.com/watch?v=j6ow-UemzBc) video about microservices done right and hearing about how they use custom config files to generate APIs, clients, mocks and tests. I started to think about how powerful that could be, and how we could make it useful at work.
+After watching [this](https://www.youtube.com/watch?v=j6ow-UemzBc) video about microservices done right and hearing about how they use custom config files to generate APIs, clients, mocks, and tests. I started to think about how powerful that could be, and how we could make it useful at work.
 
-At TrueLayer we maintain open api specifications for all of our services and then the application is designed against the open api spec. It would be great if we had some assertion that the code we create is exactly as in the spec.
+At TrueLayer we maintain OpenAPI specifications for all of our services and then the application is designed against the OpenAPI spec. It would be great if we had some assertion that the code we create is exactly as in the spec.
 
-Could we generate a C# API from an openapi specification?
+Could we generate a C# API from an OpenAPI specification?
 
 ## The Idea
 
-I wanted to take an open api specification and generate models and controllers that match that spec.
+I wanted to take an OpenAPI specification and generate models and controllers that match that spec.
 
-Ideally the generated files could be deleted and regenerated so they would need to compile without extra code.
+Ideally, the generated files could be deleted and regenerated so they would need to compile without extra code.
 The generated code shouldn't depend on the tool, in case it isn't maintained or the API simply wants to diverge from it.
 
 The idea I had was that each route could have an interface that matched it, the controller would then resolve the interface and return the model.
@@ -36,7 +36,7 @@ public interface IGetThingInteractor
 
 This interface could then be implemented in the service.
 
-The other requirement was that the tool needed to be easier to use than writing the API yourself so that people actually use it.
+The other requirement was that the tool needed to be easier to use than writing the API yourself so that people choose to use it.
 
 ### Benefits
 
@@ -48,7 +48,7 @@ The other requirement was that the tool needed to be easier to use than writing 
 
 ### Generating Code
 
-The way to generate C# code is using [Roslyn](https://github.com/dotnet/roslyn), the open source implementation of the .NET Compiler.
+The way to generate C# code is using [Roslyn](https://github.com/dotnet/roslyn), the open-source implementation of the .NET Compiler.
 
 I found [this](https://www.stevejgordon.co.uk/getting-started-with-the-roslyn-apis-writing-code-with-code) article (written by the author of [this](https://www.stevejgordon.co.uk/introduction-to-httpclientfactory-aspnetcore) wonderful series of posts on HttpClientFactory - well worth a read!) that had some reference code that I could get started with.
 
@@ -68,11 +68,11 @@ I'd like my tests to test as much as possible and be easy to work with, I didn't
 
 ### Generating useful code
 
-Now I can generate some code I wanted to be able to generate the controllers, interactors and models to create an API.
+Now I can generate some code I wanted to be able to generate the controllers, interactors, and models to create an API.
 
 #### First the models
 
-The TDD approach is to write a test to describe the thing you're implementing and then only add the code required for that feature. In this case I wasn't sure what the roslyn types should look like so there was a bit of back and forth between trying stuff/debugging the types and being able to write the asserts.
+The TDD approach is to write a test to describe the thing you're implementing and then only add the code required for that feature. In this case, I wasn't sure what the roslyn types should look like so there was a bit of back and forth between trying stuff/debugging the types and being able to write the asserts.
 
 The first bit of behaviour I wanted to create was a type with the right name, the test looked something like this:
 
@@ -112,19 +112,19 @@ Assert.Equal("public", classModifier.Value);
 
 I worked iteratively like this while implementing different bits of the model, adding attributes for `JsonPropertyName`, adding the namespace, etc until I got a feel for what the roslyn models look like.
 
-I also set up an example project so I would know when the types I was creating actually generated something that compiled and could be worked with. This was created using `dotnet new webapi` and removing the default controller. The generated code is all under `./generated` and is deleted and recreated each time the tool runs. View the example project [here](https://github.com/maisiesadler/api-generation/tree/main/example).
+I also set up an example project so I would know when the types I was creating generated something that compiles and could be worked with. This was created using `dotnet new webapi` and removing the default controller. The generated code is all under `./generated` and is deleted and recreated each time the tool runs. View the example project [here](https://github.com/maisiesadler/api-generation/tree/main/example).
 
 ## The Result
 
-The idea works! I can generate a usable API from an openapi spec - this is really cool!
+The idea works! I can generate a usable API from an OpenAPI spec - this is really cool!
 
 ## Configurable or Opinionated
 
-One of the aims of this would be that it keeps code consistent across projects and so that means the generated code is opionated and I was making a lot of decisions about what the code looks like along the way.
+One of the aims of this would be that it keeps code consistent across projects and so that means the generated code is opinionated and I was making a lot of decisions about what the code looks like along the way.
 
-In the balance between configurable and opinionated this definitely leans towards opionated.
+In the balance between configurable and opinionated, this leans towards opinionated.
 
-Wonder if the openapi spec gives us enough info, or if there would need to be another layer above the openapi spec to generate both?
+Wonder if the OpenAPI spec gives us enough info, or if there would need to be another layer above the OpenAPI spec to generate both?
 
 ## Pros and Cons
 
@@ -142,11 +142,11 @@ Worry about the maintainability of the project.
 ![The General Problem](./images/the_general_problem.png)
 
 It's definitely more complicated than writing the API manually and so we need to be cautious the benefits of using it outweigh the extra complexity.
-The generated API can be seperated without the tool and I would always argue for automation over manual steps.
+The generated API can be separated without the tool and I would always argue for automation over manual steps.
 
 ### Other options
 
-One of the trickiest bits would be ot get all the functionality some might require into the controller - or allow them to specify all the options using the openapi specification.
+One of the trickiest bits would be to get all the functionality some might require into the controller - or allow them to specify all the options using the OpenAPI specification.
 
 Another idea would be to just generate the models - getting a large portion of the benefits and still allowing the developers to configure the controllers as they see fit.
 
@@ -154,7 +154,7 @@ Another idea would be to write a code analysis tool that verifies the generated 
 
 ### To make this thing work
 
-I tried it against another openapi spec and found that the openapi definition types I have created are probably not very well defined against the spec.
+I tried it against another OpenAPI spec and found that the OpenAPI definition types I have created are probably not very well defined against the spec.
 I think if this would work then enforcing some code styles around definitions that could/should be used would be required.
 
 Need to decide if it's worth investing more time into this project or a similar new project based on this idea.
