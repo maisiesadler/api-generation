@@ -4,7 +4,6 @@ description: >-
 url: "https://www.maisiesadler.co.uk/"
 github_username: maisiesadler
 author: Maisie Sadler
-logo: /images/favicon.png
 
 remote_theme: pages-themes/slate@v0.2.0
 plugins:
