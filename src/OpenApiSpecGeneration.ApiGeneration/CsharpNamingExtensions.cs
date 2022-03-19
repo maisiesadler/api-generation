@@ -2,7 +2,7 @@ using System.Text.RegularExpressions;
 
 namespace OpenApiSpecGeneration
 {
-    internal class CsharpNamingExtensions
+    internal static class CsharpNamingExtensions
     {
         internal static string PathToClassName(string apiPath)
         {

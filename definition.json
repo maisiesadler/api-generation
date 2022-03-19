@@ -46,7 +46,35 @@
             "post": {}
         },
         "/api/Todo/{id}": {
-            "get": {},
+            "get": {
+                "parameters": [
+                    {
+                        "in": "path",
+                        "name": "id",
+                        "required": true,
+                        "schema": {
+                            "type": "integer",
+                            "minimum": 1
+                        },
+                        "description": "The user ID"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Success",
+                        "content": {
+                            "text/plain": {
+                                "schema": {
+                                    "type": "array",
+                                    "items": {
+                                        "$ref": "#/components/schemas/ToDoItem"
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            },
             "put": {},
             "delete": {}
         }

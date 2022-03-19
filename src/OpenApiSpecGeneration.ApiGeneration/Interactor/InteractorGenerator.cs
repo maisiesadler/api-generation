@@ -1,3 +1,4 @@
+using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
 
@@ -11,10 +12,12 @@ namespace OpenApiSpecGeneration.Interactor
             {
                 foreach (var (method, openApiMethod) in openApiPath.GetMethods())
                 {
+                    var parameters = CreateParameterList(openApiMethod.parameters);
                     var returnType = ReturnTypeExtensions.GetReturnTypeSyntax(openApiMethod.responses);
                     var methodDeclaration = SyntaxFactory.MethodDeclaration(
                             returnType,
                             SyntaxFactory.Identifier("Execute"))
+                        .WithParameterList(parameters)
                         .WithSemicolonToken(SyntaxFactory.Token(SyntaxKind.SemicolonToken));
 
                     var methods = new[] { methodDeclaration };
@@ -37,6 +40,35 @@ namespace OpenApiSpecGeneration.Interactor
                     yield return interfaceDeclaration;
                 }
             }
+        }
+
+        private static ParameterListSyntax CreateParameterList(OpenApiMethodParameter[]? openApiMethodParameters)
+        {
+            if (openApiMethodParameters == null) return SyntaxFactory.ParameterList();
+
+            var parameters = new List<ParameterSyntax>();
+
+            foreach (var openApiMethodParameter in openApiMethodParameters)
+            {
+                var attributeList = SyntaxFactory.List<AttributeListSyntax>();
+                var typeSyntax = CsharpTypeExtensions.ParseTypeSyntax(openApiMethodParameter.schema?.type);
+                var parameter = SyntaxFactory.Parameter(
+                        attributeList,
+                        default,
+                        typeSyntax,
+                        SyntaxFactory.Identifier(openApiMethodParameter.name ?? string.Empty),
+                        default
+                    );
+
+                parameters.Add(parameter);
+            }
+
+            var list = SyntaxFactory.SeparatedList<ParameterSyntax>(parameters);
+            return SyntaxFactory.ParameterList(
+                SyntaxFactory.Token(SyntaxKind.OpenParenToken),
+                list,
+                SyntaxFactory.Token(SyntaxKind.CloseParenToken)
+            );
         }
     }
 }

@@ -1,6 +1,5 @@
 using System.ComponentModel;
 using System.Diagnostics.CodeAnalysis;
-using System.Text.Json;
 using Microsoft.CodeAnalysis;
 using Spectre.Console;
 using Spectre.Console.Cli;
@@ -31,10 +30,13 @@ public class GenerateOpenApiSpecSettings : CommandSettings
     }
 }
 
-public class GenerateOpenApiSpec : AsyncCommand<GenerateOpenApiSpecSettings>
+internal class GenerateOpenApiSpec : AsyncCommand<GenerateOpenApiSpecSettings>
 {
-    public GenerateOpenApiSpec()
+    private readonly GetOpenApiSpecFile _getOpenApiSpecFile;
+
+    public GenerateOpenApiSpec(GetOpenApiSpecFile getOpenApiSpecFile)
     {
+        _getOpenApiSpecFile = getOpenApiSpecFile;
     }
 
     public override async Task<int> ExecuteAsync([NotNull] CommandContext context, [NotNull] GenerateOpenApiSpecSettings settings)
@@ -43,21 +45,17 @@ public class GenerateOpenApiSpec : AsyncCommand<GenerateOpenApiSpecSettings>
         {
             AnsiConsole.MarkupLine("Reading from [yellow]{0}[/] and writing to [yellow]{1}[/] with namespace [yellow]{2}[/]", settings.InputFileName, settings.OutputDirectory, settings.Namespace);
 
-            var path = Directory.GetCurrentDirectory();
-            await using var fileStream = File.OpenRead(Path.Combine(path, settings.InputFileName));
-
             SetupOutputDirectory(settings.OutputDirectory);
 
-            var openApiSpec = await JsonSerializer.DeserializeAsync<OpenApiSpec>(fileStream, new JsonSerializerOptions
-            {
-                PropertyNameCaseInsensitive = true
-            });
-
-            if (openApiSpec == null)
+            var path = Directory.GetCurrentDirectory();
+            var result = await _getOpenApiSpecFile.Execute(Path.Combine(path, settings.InputFileName));
+            if (!result.IsSuccess)
             {
                 System.Console.WriteLine("Could not read file");
                 return 1;
             }
+
+            var openApiSpec = result.Value!;
 
             foreach (var file in FileGenerator.GenerateControllers(settings.Namespace, openApiSpec))
             {

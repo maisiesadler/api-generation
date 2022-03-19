@@ -1,3 +1,4 @@
+using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
 
@@ -9,16 +10,22 @@ namespace OpenApiSpecGeneration.Controller
             string method, OpenApiMethod? openApiMethod, string propertyType, string propertyName)
         {
             var hasReturnType = ReturnTypeExtensions.HasReturnType(openApiMethod?.responses);
-            var methodBody = CreateMethodBody(propertyName, hasReturnType);
+            var methodBody = CreateMethodBody(propertyName, openApiMethod?.parameters, hasReturnType);
+            var parameterList = CreateParameterList(openApiMethod?.parameters);
             return SyntaxFactory.MethodDeclaration(SyntaxFactory.ParseTypeName("Task<IActionResult>"), CsharpNamingExtensions.FirstLetterToUpper(method))
                 .AddModifiers(
                     SyntaxFactory.Token(SyntaxKind.PublicKeyword),
                     SyntaxFactory.Token(SyntaxKind.AsyncKeyword))
                 .WithBody(methodBody)
+                .WithParameterList(SyntaxFactory.ParameterList(
+                    SyntaxFactory.Token(SyntaxKind.OpenParenToken),
+                    parameterList,
+                    SyntaxFactory.Token(SyntaxKind.CloseParenToken)
+                ))
                 .AddAttributeLists(GetMethodAttributeList(method));
         }
 
-        private static BlockSyntax CreateMethodBody(string propertyName, bool hasReturnType)
+        private static BlockSyntax CreateMethodBody(string propertyName, OpenApiMethodParameter[]? parameters, bool hasReturnType)
         {
             var memberAccessExpressionSyntax = SyntaxFactory.MemberAccessExpression(
                 SyntaxKind.SimpleMemberAccessExpression,
@@ -27,9 +34,11 @@ namespace OpenApiSpecGeneration.Controller
                 SyntaxFactory.IdentifierName("Execute")
             );
 
+            var argumentList = CreateArgumentList(parameters);
+
             var invocationExpressionSyntax = SyntaxFactory.InvocationExpression(
                 memberAccessExpressionSyntax,
-                SyntaxFactory.ArgumentList()
+                argumentList
             );
 
             var awaitExpressionSyntax = SyntaxFactory.AwaitExpression(
@@ -40,6 +49,56 @@ namespace OpenApiSpecGeneration.Controller
             return hasReturnType
                 ? SaveAndReturnResult(awaitExpressionSyntax)
                 : CallAndReturnOk(awaitExpressionSyntax);
+        }
+
+        private static SeparatedSyntaxList<ParameterSyntax> CreateParameterList(OpenApiMethodParameter[]? openApiMethodParameters)
+        {
+            if (openApiMethodParameters == null) return SyntaxFactory.SeparatedList<ParameterSyntax>();
+
+            var parameters = new List<ParameterSyntax>();
+
+            foreach (var openApiMethodParameter in openApiMethodParameters)
+            {
+                if (openApiMethodParameter.In != "path") throw new InvalidOperationException($"Unknown parameter type '{openApiMethodParameter.In}'");
+
+                var attributeList = SyntaxFactory.List<AttributeListSyntax>(
+                    new[]{ SyntaxFactory.AttributeList(
+                        SyntaxFactory.SingletonSeparatedList<AttributeSyntax>(
+                            SyntaxFactory.Attribute(SyntaxFactory.IdentifierName("FromRoute"))
+                        )
+                    )}
+                );
+                var typeSyntax = CsharpTypeExtensions.ParseTypeSyntax(openApiMethodParameter.schema?.type);
+                var parameter = SyntaxFactory.Parameter(
+                        attributeList,
+                        default,
+                        typeSyntax,
+                        SyntaxFactory.Identifier(openApiMethodParameter.name ?? string.Empty),
+                        default
+                    );
+
+                parameters.Add(parameter);
+            }
+
+            return SyntaxFactory.SeparatedList<ParameterSyntax>(parameters);
+        }
+
+        private static ArgumentListSyntax CreateArgumentList(OpenApiMethodParameter[]? openApiMethodParameters)
+        {
+            if (openApiMethodParameters == null) return SyntaxFactory.ArgumentList();
+
+            var arguments = new List<ArgumentSyntax>();
+
+            foreach (var openApiMethodParameter in openApiMethodParameters)
+            {
+                var argument = SyntaxFactory.Argument(
+                    SyntaxFactory.IdentifierName(openApiMethodParameter.name ?? string.Empty));
+
+                arguments.Add(argument);
+            }
+
+            var argumentSyntaxList = SyntaxFactory.SeparatedList<ArgumentSyntax>(arguments);
+            return SyntaxFactory.ArgumentList(argumentSyntaxList);
         }
 
         private static BlockSyntax CallAndReturnOk(AwaitExpressionSyntax awaitExpressionSyntax)
