@@ -48,4 +48,38 @@ public class GetOpenApiSpecFileTests
         Assert.Equal("name", propertiesPropertiesPropertyKey);
         Assert.Equal("string", propertiesPropertiesPropertyValue.type);
     }
+
+    [Fact]
+    public async Task TodoGetWithId_ResponsesLoadCorrectly()
+    {
+        // Arrange
+        var getOpenApiSpecFile = new GetOpenApiSpecFile();
+        var path = $"TestData/TodoGetWithId.json";
+
+        // Act
+        var result = await getOpenApiSpecFile.Execute(path);
+
+        // Assert
+        Assert.True(result.IsSuccess);
+
+        var (key, value) = Assert.Single(result.Value?.paths);
+        Assert.Equal("/api/Todo/{id}", key);
+        Assert.NotNull(value.get);
+        Assert.Null(value.delete);
+        Assert.Null(value.post);
+        Assert.Null(value.put);
+
+        var (responseKey, responseValue) = Assert.Single(value.get?.responses);
+        Assert.Equal("200", responseKey);
+        Assert.Equal("Success", responseValue.description);
+
+        var (responseContentKey, responseContentValue) = Assert.Single(responseValue.content);
+        Assert.Equal("text/plain", responseContentKey);
+        Assert.Equal("array", responseContentValue.schema.type);
+
+        Assert.Null(responseContentValue.schema.Ref);
+        var (schemaItemKey, schemaItemValue) = Assert.Single(responseContentValue.schema.items);
+        Assert.Equal("$ref", schemaItemKey);
+        Assert.Equal("#/components/schemas/ToDoItem", schemaItemValue);
+    }
 }
