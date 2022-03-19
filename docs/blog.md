@@ -116,7 +116,7 @@ I also set up an example project so I would know when the types I was creating g
 
 ## The Result
 
-The idea works! I can generate a usable API from an OpenAPI spec - this is really cool!
+The idea works! I can generate a usable API from an OpenAPI spec - this is cool!
 
 ## Configurable or Opinionated
 
@@ -159,7 +159,7 @@ I think if this would work then enforcing some code styles around definitions th
 
 Need to decide if it's worth investing more time into this project or a similar new project based on this idea.
 
-How can we make this actually useful, and easier to use than making the change yourself?
+How can we make this useful, and easier to use than making the change yourself?
 Where would it run?
 Could it be enforced somehow? Using CI, could we get it to work before CI?
 
