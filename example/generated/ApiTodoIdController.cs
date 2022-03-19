@@ -21,8 +21,8 @@ namespace Example
         [HttpGet]
         public async Task<IActionResult> Get()
         {
-            await _getApiTodoIdInteractor.Execute();
-            return Ok();
+            var result = await _getApiTodoIdInteractor.Execute();
+            return Ok(result);
         }
 
         [HttpPut]
