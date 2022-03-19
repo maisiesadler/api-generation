@@ -21,7 +21,7 @@ namespace Example
         [HttpGet]
         public async Task<IActionResult> Get([FromRoute] int id)
         {
-            var result = await _getApiTodoIdInteractor.Execute();
+            var result = await _getApiTodoIdInteractor.Execute(id);
             return Ok(result);
         }
 
