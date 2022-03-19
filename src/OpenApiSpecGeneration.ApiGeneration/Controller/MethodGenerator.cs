@@ -1,3 +1,4 @@
+using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
 
@@ -10,11 +11,17 @@ namespace OpenApiSpecGeneration.Controller
         {
             var hasReturnType = ReturnTypeExtensions.HasReturnType(openApiMethod?.responses);
             var methodBody = CreateMethodBody(propertyName, hasReturnType);
+            var parameterList = CreateParameterList(openApiMethod?.parameters);
             return SyntaxFactory.MethodDeclaration(SyntaxFactory.ParseTypeName("Task<IActionResult>"), CsharpNamingExtensions.FirstLetterToUpper(method))
                 .AddModifiers(
                     SyntaxFactory.Token(SyntaxKind.PublicKeyword),
                     SyntaxFactory.Token(SyntaxKind.AsyncKeyword))
                 .WithBody(methodBody)
+                .WithParameterList(SyntaxFactory.ParameterList(
+                    SyntaxFactory.Token(SyntaxKind.OpenParenToken),
+                    parameterList,
+                    SyntaxFactory.Token(SyntaxKind.CloseParenToken)
+                ))
                 .AddAttributeLists(GetMethodAttributeList(method));
         }
 
@@ -40,6 +47,38 @@ namespace OpenApiSpecGeneration.Controller
             return hasReturnType
                 ? SaveAndReturnResult(awaitExpressionSyntax)
                 : CallAndReturnOk(awaitExpressionSyntax);
+        }
+
+        private static SeparatedSyntaxList<ParameterSyntax> CreateParameterList(OpenApiMethodParameters[]? openApiMethodParameters)
+        {
+            if (openApiMethodParameters == null) return SyntaxFactory.SeparatedList<ParameterSyntax>();
+
+            var parameters = new List<ParameterSyntax>();
+
+            foreach (var openApiMethodParameter in openApiMethodParameters)
+            {
+                if (openApiMethodParameter.In != "path") throw new InvalidOperationException($"Unknown parameter type '{openApiMethodParameter.In}'");
+
+                var attributeList = SyntaxFactory.List<AttributeListSyntax>(
+                    new[]{ SyntaxFactory.AttributeList(
+                        SyntaxFactory.SingletonSeparatedList<AttributeSyntax>(
+                            SyntaxFactory.Attribute(SyntaxFactory.IdentifierName("FromRoute"))
+                        )
+                    )}
+                );
+                var typeSyntax = ParseTypeSyntax(openApiMethodParameter.schema?.type);
+                var parameter = SyntaxFactory.Parameter(
+                        attributeList,
+                        default,
+                        typeSyntax,
+                        SyntaxFactory.Identifier(openApiMethodParameter.name ?? string.Empty),
+                        default
+                    );
+
+                parameters.Add(parameter);
+            }
+
+            return SyntaxFactory.SeparatedList<ParameterSyntax>(parameters);
         }
 
         private static BlockSyntax CallAndReturnOk(AwaitExpressionSyntax awaitExpressionSyntax)
@@ -128,6 +167,17 @@ namespace OpenApiSpecGeneration.Controller
                 "put" => "HttpPut",
                 "delete" => "HttpDelete",
                 _ => throw new InvalidOperationException($"Unknown method '{method}'"),
+            };
+        }
+
+        internal static TypeSyntax ParseTypeSyntax(string? propertyType)
+        {
+            return propertyType switch
+            {
+                "integer" => SyntaxFactory.ParseTypeName("int"),
+                "string" => SyntaxFactory.ParseTypeName("string"),
+                "boolean" => SyntaxFactory.ParseTypeName("bool"),
+                _ => throw new InvalidOperationException($"Unknown openapi type '{propertyType}'"),
             };
         }
     }
