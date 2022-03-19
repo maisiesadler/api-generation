@@ -16,9 +16,9 @@ public class GenerateControllerMethodTests
         {
             get = new OpenApiMethod
             {
-                parameters = new OpenApiMethodParameters[]
+                parameters = new OpenApiMethodParameter[]
                 {
-                    new OpenApiMethodParameters
+                    new OpenApiMethodParameter
                     {
                         In = "path",
                         name = "testname",
@@ -48,9 +48,6 @@ public class GenerateControllerMethodTests
         Assert.Equal("async", methodDeclarationSyntax.Modifiers[1].Value);
 
         var parameterSyntax = Assert.Single(methodDeclarationSyntax.ParameterList.Parameters);
-        Assert.Equal("testname", parameterSyntax.Identifier.ValueText);
-        var parameterTypeSyntax = Assert.IsType<PredefinedTypeSyntax>(parameterSyntax.Type);
-        Assert.Equal("int", parameterTypeSyntax.Keyword.Value);
 
         var parameterAttributeListSyntax = Assert.Single(parameterSyntax.AttributeLists);
         var parameterAttributeSyntax = Assert.Single(parameterAttributeListSyntax.Attributes);
@@ -67,9 +64,9 @@ public class GenerateControllerMethodTests
         {
             get = new OpenApiMethod
             {
-                parameters = new OpenApiMethodParameters[]
+                parameters = new OpenApiMethodParameter[]
                 {
-                    new OpenApiMethodParameters
+                    new OpenApiMethodParameter
                     {
                         In = "path",
                         name = "testname",
@@ -100,9 +97,9 @@ public class GenerateControllerMethodTests
         {
             get = new OpenApiMethod
             {
-                parameters = new OpenApiMethodParameters[]
+                parameters = new OpenApiMethodParameter[]
                 {
-                    new OpenApiMethodParameters
+                    new OpenApiMethodParameter
                     {
                         In = "potatoes",
                         name = "testname",

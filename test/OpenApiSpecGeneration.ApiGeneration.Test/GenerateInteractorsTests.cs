@@ -130,4 +130,49 @@ public class GenerateInteractorsTests
         var genericNameSyntax = Assert.IsType<IdentifierNameSyntax>(methodDeclarationSyntax.ReturnType);
         Assert.Equal("Task", genericNameSyntax.Identifier.Value);
     }
+
+    [Fact]
+    public void ParametersSetIfAvailable()
+    {
+        // Arrange
+        var apiTestPath = new OpenApiPath
+        {
+            get = new OpenApiMethod
+            {
+                parameters = new[]
+                {
+                    new OpenApiMethodParameter
+                    {
+                        In = "path",
+                        name = "testname",
+                        required = true,
+                        description = "something",
+                        schema = new OpenApiMethodParameterSchema("integer", null)
+                    }
+                }
+            },
+        };
+        var paths = new Dictionary<string, OpenApiPath>
+        {
+            { "/api/test", apiTestPath },
+        };
+        var spec = new OpenApiSpec(paths, new OpenApiComponent(new Dictionary<string, OpenApiComponentSchema>()));
+
+        // Act
+        var interfaceDeclarationSyntaxes = ApiGenerator.GenerateInteractors(spec);
+
+        // Assert
+        var interfaceDeclarationSyntax = Assert.Single(interfaceDeclarationSyntaxes);
+        Assert.Equal("IGetApiTestInteractor", interfaceDeclarationSyntax.Identifier.Value);
+
+        var memberDeclarationSyntax = Assert.Single(interfaceDeclarationSyntax.Members);
+        var methodDeclarationSyntax = Assert.IsType<MethodDeclarationSyntax>(memberDeclarationSyntax);
+
+        Assert.Equal("Execute", methodDeclarationSyntax.Identifier.Value);
+        var parameterSyntax = Assert.Single(methodDeclarationSyntax.ParameterList.Parameters);
+
+        Assert.Equal("testname", parameterSyntax.Identifier.ValueText);
+        var parameterTypeSyntax = Assert.IsType<PredefinedTypeSyntax>(parameterSyntax.Type);
+        Assert.Equal("int", parameterTypeSyntax.Keyword.Value);
+    }
 }

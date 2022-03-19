@@ -49,7 +49,7 @@ namespace OpenApiSpecGeneration.Controller
                 : CallAndReturnOk(awaitExpressionSyntax);
         }
 
-        private static SeparatedSyntaxList<ParameterSyntax> CreateParameterList(OpenApiMethodParameters[]? openApiMethodParameters)
+        private static SeparatedSyntaxList<ParameterSyntax> CreateParameterList(OpenApiMethodParameter[]? openApiMethodParameters)
         {
             if (openApiMethodParameters == null) return SyntaxFactory.SeparatedList<ParameterSyntax>();
 
@@ -66,7 +66,7 @@ namespace OpenApiSpecGeneration.Controller
                         )
                     )}
                 );
-                var typeSyntax = ParseTypeSyntax(openApiMethodParameter.schema?.type);
+                var typeSyntax = CsharpTypeExtensions.ParseTypeSyntax(openApiMethodParameter.schema?.type);
                 var parameter = SyntaxFactory.Parameter(
                         attributeList,
                         default,
@@ -167,17 +167,6 @@ namespace OpenApiSpecGeneration.Controller
                 "put" => "HttpPut",
                 "delete" => "HttpDelete",
                 _ => throw new InvalidOperationException($"Unknown method '{method}'"),
-            };
-        }
-
-        internal static TypeSyntax ParseTypeSyntax(string? propertyType)
-        {
-            return propertyType switch
-            {
-                "integer" => SyntaxFactory.ParseTypeName("int"),
-                "string" => SyntaxFactory.ParseTypeName("string"),
-                "boolean" => SyntaxFactory.ParseTypeName("bool"),
-                _ => throw new InvalidOperationException($"Unknown openapi type '{propertyType}'"),
             };
         }
     }

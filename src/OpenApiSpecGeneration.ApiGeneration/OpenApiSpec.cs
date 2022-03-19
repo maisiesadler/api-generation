@@ -15,11 +15,11 @@ namespace OpenApiSpecGeneration
     {
         public IReadOnlyCollection<string> tags { get; init; } = Array.Empty<string>();
         public IReadOnlyDictionary<string, OpenApiResponse> responses { get; init; } = new Dictionary<string, OpenApiResponse>();
-        public OpenApiMethodParameters[]? parameters { get; init; }
+        public OpenApiMethodParameter[]? parameters { get; init; }
     }
 
     public record OpenApiMethodParameterSchema(string? type, int? minimum);
-    public record OpenApiMethodParameters
+    public record OpenApiMethodParameter
     {
         [JsonPropertyName("in")] public string? In { get; init; }
         public string? name { get; init; }
