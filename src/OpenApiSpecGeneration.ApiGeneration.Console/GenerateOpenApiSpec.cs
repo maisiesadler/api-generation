@@ -55,7 +55,7 @@ internal class GenerateOpenApiSpec : AsyncCommand<GenerateOpenApiSpecSettings>
                 return 1;
             }
 
-            var openApiSpec = result.Value;
+            var openApiSpec = result.Value!;
 
             foreach (var file in FileGenerator.GenerateControllers(settings.Namespace, openApiSpec))
             {

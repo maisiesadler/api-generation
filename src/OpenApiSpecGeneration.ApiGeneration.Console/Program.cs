@@ -21,6 +21,7 @@ namespace OpenApiSpecGeneration.Console
         private static IServiceCollection BuildServiceCollection()
         {
             var services = new ServiceCollection();
+            services.AddSingleton<GetOpenApiSpecFile>();
             return services;
         }
     }
