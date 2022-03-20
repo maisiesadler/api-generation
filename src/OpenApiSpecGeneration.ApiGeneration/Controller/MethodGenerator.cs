@@ -67,12 +67,13 @@ namespace OpenApiSpecGeneration.Controller
                         )
                     )}
                 );
+                var name = CsharpNamingExtensions.HeaderToParameter(openApiMethodParameter.name);
                 var typeSyntax = CsharpTypeExtensions.ParseTypeSyntax(openApiMethodParameter.schema?.type);
                 var parameter = SyntaxFactory.Parameter(
                         attributeList,
                         default,
                         typeSyntax,
-                        SyntaxFactory.Identifier(openApiMethodParameter.name ?? string.Empty),
+                        SyntaxFactory.Identifier(name),
                         default
                     );
 
@@ -90,8 +91,8 @@ namespace OpenApiSpecGeneration.Controller
 
             foreach (var openApiMethodParameter in openApiMethodParameters)
             {
-                var argument = SyntaxFactory.Argument(
-                    SyntaxFactory.IdentifierName(openApiMethodParameter.name ?? string.Empty));
+                var name = CsharpNamingExtensions.HeaderToParameter(openApiMethodParameter.name);
+                var argument = SyntaxFactory.Argument(SyntaxFactory.IdentifierName(name));
 
                 arguments.Add(argument);
             }
@@ -195,6 +196,7 @@ namespace OpenApiSpecGeneration.Controller
             {
                 "path" => "FromRoute",
                 "query" => "FromQuery",
+                "header" => "FromHeader",
                 _ => throw new InvalidOperationException($"Unknown parameter type '{parameterLocation}'"),
             };
         }

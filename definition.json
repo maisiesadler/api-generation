@@ -49,6 +49,13 @@
             "get": {
                 "parameters": [
                     {
+                        "in": "header",
+                        "name": "x-request-id",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
                         "in": "path",
                         "name": "id",
                         "required": true,

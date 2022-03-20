@@ -111,7 +111,61 @@ public class GenerateControllerMethodTests
     }
 
     [Fact]
-    public void ValidMethodPathParameterPassedToInteractor()
+    public void ValidMethodHeaderParameterGenerated()
+    {
+        // Arrange
+        var apiTestPath = new OpenApiPath
+        {
+            get = new OpenApiMethod
+            {
+                parameters = new OpenApiMethodParameter[]
+                {
+                    new OpenApiMethodParameter
+                    {
+                        In = "header",
+                        name = "x-request-id",
+                        required = true,
+                        description = "something",
+                        schema = new OpenApiMethodParameterSchema("string", null)
+                    },
+                },
+            },
+        };
+        var paths = new Dictionary<string, OpenApiPath>
+        {
+            { "/api/test", apiTestPath },
+        };
+        var spec = new OpenApiSpec(paths, new OpenApiComponent(new Dictionary<string, OpenApiComponentSchema>()));
+
+        // Act
+        var classDeclarationSyntaxes = ApiGenerator.GenerateControllers(spec);
+
+        // Assert
+        var classDeclarationSyntax = Assert.Single(classDeclarationSyntaxes);
+
+        var methodDeclarationSyntax = Assert.Single(classDeclarationSyntax.Members.GetMembersOfType<MethodDeclarationSyntax>());
+        Assert.Equal("Get", methodDeclarationSyntax.Identifier.Value);
+        Assert.Equal(2, methodDeclarationSyntax.Modifiers.Count);
+        Assert.Equal("public", methodDeclarationSyntax.Modifiers[0].Value);
+        Assert.Equal("async", methodDeclarationSyntax.Modifiers[1].Value);
+
+        var parameterSyntax = Assert.Single(methodDeclarationSyntax.ParameterList.Parameters);
+        Assert.Equal("xRequestId", parameterSyntax.Identifier.Value);
+        var parameterSyntaxType = Assert.IsType<PredefinedTypeSyntax>(parameterSyntax.Type);
+        Assert.Equal("string", parameterSyntaxType.Keyword.Value);
+
+        var parameterAttributeListSyntax = Assert.Single(parameterSyntax.AttributeLists);
+        var parameterAttributeSyntax = Assert.Single(parameterAttributeListSyntax.Attributes);
+
+        var parameterIdentifierNameSyntax = Assert.IsType<IdentifierNameSyntax>(parameterAttributeSyntax.Name);
+        Assert.Equal("FromHeader", parameterIdentifierNameSyntax.Identifier.Value);
+        // "x-request-id"
+    }
+
+    [Theory]
+    [InlineData("paramName", "paramName")]
+    [InlineData("x-request-id", "xRequestId")]
+    public void ValidMethodParameterPassedToInteractor(string paramName, string expectedGeneratedParam)
     {
         // Arrange
         var apiTestPath = new OpenApiPath
@@ -123,7 +177,7 @@ public class GenerateControllerMethodTests
                     new OpenApiMethodParameter
                     {
                         In = "path",
-                        name = "paramName",
+                        name = paramName,
                         required = true,
                         description = "something",
                         schema = new OpenApiMethodParameterSchema("integer", null)
@@ -158,7 +212,7 @@ public class GenerateControllerMethodTests
 
         var argumentSyntax = Assert.Single(invocationExpressionSyntax.ArgumentList.Arguments);
         var argumentSyntaxExpression = Assert.IsType<IdentifierNameSyntax>(argumentSyntax.Expression);
-        Assert.Equal("paramName", argumentSyntaxExpression.Identifier.Value);
+        Assert.Equal(expectedGeneratedParam, argumentSyntaxExpression.Identifier.Value);
     }
 
     [Fact]
