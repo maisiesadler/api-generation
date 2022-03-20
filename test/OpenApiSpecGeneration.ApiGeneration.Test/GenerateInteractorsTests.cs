@@ -47,7 +47,47 @@ public class GenerateInteractorsTests
         var genericNameSyntax = Assert.IsType<GenericNameSyntax>(methodDeclarationSyntax.ReturnType);
         Assert.Equal("Task", genericNameSyntax.Identifier.Value);
         var typeArgument = Assert.Single(genericNameSyntax.TypeArgumentList.Arguments);
-        var identifierNameSyntax = Assert.IsType<IdentifierNameSyntax>(typeArgument);
+        var arrayTypeSyntax = Assert.IsType<ArrayTypeSyntax>(typeArgument);
+        var identifierNameSyntax = Assert.IsType<IdentifierNameSyntax>(arrayTypeSyntax.ElementType);
+        Assert.Equal("ToDoItem", identifierNameSyntax.Identifier.Value);
+    }
+
+    [Fact]
+    public void SetReturnTypeAsArray()
+    {
+        // Arrange
+        var openApiContentSchema = new OpenApiContentSchema("array", new Dictionary<string, string>
+        {
+            { "$ref", "#/components/schemas/ToDoItem" },
+        });
+        var openApiResponse = new OpenApiResponse("Success", new Dictionary<string, OpenApiContent>
+        {
+            { "text/plain", new OpenApiContent(openApiContentSchema) }
+        });
+        var openApiResponses = new Dictionary<string, OpenApiResponse> { { "200", openApiResponse } };
+        var apiTestPath = new OpenApiPath
+        {
+            get = new OpenApiMethod { responses = openApiResponses },
+        };
+        var paths = new Dictionary<string, OpenApiPath>
+        {
+            { "/api/test", apiTestPath },
+        };
+        var spec = new OpenApiSpec(paths, new OpenApiComponent(new Dictionary<string, OpenApiComponentSchema>()));
+
+        // Act
+        var interfaceDeclarationSyntaxes = ApiGenerator.GenerateInteractors(spec);
+
+        // Assert
+        var interfaceDeclarationSyntax = Assert.Single(interfaceDeclarationSyntaxes);
+        var memberDeclarationSyntax = Assert.Single(interfaceDeclarationSyntax.Members);
+        var methodDeclarationSyntax = Assert.IsType<MethodDeclarationSyntax>(memberDeclarationSyntax);
+
+        var genericNameSyntax = Assert.IsType<GenericNameSyntax>(methodDeclarationSyntax.ReturnType);
+        Assert.Equal("Task", genericNameSyntax.Identifier.Value);
+        var typeArgument = Assert.Single(genericNameSyntax.TypeArgumentList.Arguments);
+        var arrayTypeSyntax = Assert.IsType<ArrayTypeSyntax>(typeArgument);
+        var identifierNameSyntax = Assert.IsType<IdentifierNameSyntax>(arrayTypeSyntax.ElementType);
         Assert.Equal("ToDoItem", identifierNameSyntax.Identifier.Value);
     }
 

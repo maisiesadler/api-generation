@@ -8,11 +8,12 @@ namespace OpenApiSpecGeneration
     {
         internal static TypeSyntax GetReturnTypeSyntax(IReadOnlyDictionary<string, OpenApiResponse> responses)
         {
-            if (TryGetFirstReturnTypeComponentName(responses, out var componentName))
+            if (TryGetFirstReturnTypeSyntax(responses, out var typeSyntax))
             {
-                var arg = SyntaxFactory.ParseTypeName(componentName);
                 return SyntaxFactory.GenericName(SyntaxFactory.Identifier("Task"),
-                    SyntaxFactory.TypeArgumentList(SyntaxFactory.SingletonSeparatedList<TypeSyntax>(arg))
+                    SyntaxFactory.TypeArgumentList(
+                        SyntaxFactory.SingletonSeparatedList<TypeSyntax>(typeSyntax)
+                    )
                 );
             }
 
@@ -20,22 +21,56 @@ namespace OpenApiSpecGeneration
         }
 
         internal static bool HasReturnType(IReadOnlyDictionary<string, OpenApiResponse>? responses)
-            => responses != null && TryGetFirstReturnTypeComponentName(responses, out var _);
+            => responses != null && TryGetFirstReturnTypeSyntax(responses, out var _);
 
-        private static bool TryGetFirstReturnTypeComponentName(
+        private static bool TryGetFirstReturnTypeSyntax(
             IReadOnlyDictionary<string, OpenApiResponse> responses,
-            [NotNullWhen(true)] out string? returnType)
+            [NotNullWhen(true)] out TypeSyntax? typeSyntax)
         {
-            returnType = null;
+            typeSyntax = null;
+            return TryGetFirstReturnTypeSchema(responses, out var componentSchema)
+                && TryConvertComponent(componentSchema, out typeSyntax);
+        }
+
+        private static bool TryGetFirstReturnTypeSchema(
+            IReadOnlyDictionary<string, OpenApiResponse> responses,
+            [NotNullWhen(true)] out OpenApiContentSchema? responseSchema)
+        {
+            responseSchema = null;
             if (!responses.Any()) return false;
             var response = responses.First();
             if (!response.Value.content.Any()) return false;
             var content = response.Value.content.First();
-            var component = string.Empty;
+            responseSchema = content.Value.schema;
 
-            if (!TryGetRef(content.Value?.schema, out component)) return false;
+            return true;
+        }
 
-            returnType = component.Split("/").Last();
+        private static bool TryConvertComponent(
+            OpenApiContentSchema responseSchema,
+            [NotNullWhen(true)] out TypeSyntax? typeSyntax)
+        {
+            if (!TryGetRef(responseSchema, out var component))
+            {
+                typeSyntax = null;
+                return false;
+            }
+
+            var returnType = component.Split("/").Last();
+
+            if (responseSchema.type == "array")
+            {
+                typeSyntax = SyntaxFactory.ArrayType(SyntaxFactory.ParseTypeName(returnType))
+                    .WithRankSpecifiers(
+                        SyntaxFactory.SingletonList<ArrayRankSpecifierSyntax>(
+                           SyntaxFactory.ArrayRankSpecifier(
+                                SyntaxFactory.SingletonSeparatedList<ExpressionSyntax>(
+                                    SyntaxFactory.OmittedArraySizeExpression()))));
+
+                return true;
+            }
+
+            typeSyntax = SyntaxFactory.ParseTypeName(returnType);
             return true;
         }
 

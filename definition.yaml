@@ -52,9 +52,7 @@ paths:
           content:
             text/plain:
               schema:
-                type: array
-                items:
-                  $ref: '#/components/schemas/ToDoItem'
+                $ref: '#/components/schemas/ToDoItem'
     put: {}
     delete: {}
 components:

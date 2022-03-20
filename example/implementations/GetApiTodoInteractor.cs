@@ -5,6 +5,8 @@ namespace Example.Implementations
 {
     public class GetApiTodoInteractor : IGetApiTodoInteractor
     {
-        public Task<ToDoItem> Execute() => Task.FromResult(new ToDoItem { Id = 1, Name = "pizza", IsCompleted = true });
+        public Task<ToDoItem[]> Execute() => Task.FromResult(
+            new[] { new ToDoItem { Id = 123, Name = "pizza", IsCompleted = false } }
+        );
     }
 }

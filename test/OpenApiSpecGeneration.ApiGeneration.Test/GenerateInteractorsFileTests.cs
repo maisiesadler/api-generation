@@ -38,8 +38,8 @@ public class GenerateInteractorsFileTests
         Assert.Equal("MyNamespace", leftNamespaceIdentifier.Identifier.Value);
         var rightNamespaceIdentifier = Assert.IsType<IdentifierNameSyntax>(namespaceIdentifier.Right);
         Assert.Equal("Interactors", rightNamespaceIdentifier.Identifier.Value);
-        Assert.Equal(1, writableFile.usingDirectiveSyntax!.Value.Count);
-        var usingName0 = Assert.IsType<IdentifierNameSyntax>(writableFile.usingDirectiveSyntax!.Value[0].Name);
-        Assert.Equal("MyNamespace.Models", usingName0.Identifier.Value);
+        var usingDirective = Assert.Single(writableFile.usingDirectiveSyntax!.Value);
+        var usingName = Assert.IsType<IdentifierNameSyntax>(usingDirective.Name);
+        Assert.Equal("MyNamespace.Models", usingName.Identifier.Value);
     }
 }
