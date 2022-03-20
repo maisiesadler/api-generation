@@ -39,9 +39,29 @@ namespace OpenApiSpecGeneration
             return str.ToUpper();
         }
 
-        internal static string SnakeCaseToCamel(string str)
+        private static string FirstLetterToLower(string str)
         {
-            var split = str.Split("_");
+            if (str.Length > 1)
+                return char.ToLower(str[0]) + str.Substring(1);
+
+            return str.ToUpper();
+        }
+
+        internal static string SnakeCaseToCamel(string str)
+            => SplitToCamel(str, '_');
+
+        internal static string HeaderToParameter(string? str)
+        {
+            if (str == null) return string.Empty;
+
+            var x = SplitToCamel(str, '_');
+            x = SplitToCamel(x, '-');
+            return FirstLetterToLower(x);
+        }
+
+        private static string SplitToCamel(string str, char splitChar)
+        {
+            var split = str.Split(splitChar);
             return string.Join("", split.Select(FirstLetterToUpper));
         }
     }

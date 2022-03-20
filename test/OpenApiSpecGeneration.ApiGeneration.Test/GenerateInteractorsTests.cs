@@ -131,8 +131,10 @@ public class GenerateInteractorsTests
         Assert.Equal("Task", genericNameSyntax.Identifier.Value);
     }
 
-    [Fact]
-    public void ParametersSetIfAvailable()
+    [Theory]
+    [InlineData("test", "test")]
+    [InlineData("x-request-id", "xRequestId")]
+    public void ParametersSetIfAvailable(string paramName, string expectedGeneratedParam)
     {
         // Arrange
         var apiTestPath = new OpenApiPath
@@ -144,7 +146,7 @@ public class GenerateInteractorsTests
                     new OpenApiMethodParameter
                     {
                         In = "path",
-                        name = "testname",
+                        name = paramName,
                         required = true,
                         description = "something",
                         schema = new OpenApiMethodParameterSchema("integer", null)
@@ -171,7 +173,7 @@ public class GenerateInteractorsTests
         Assert.Equal("Execute", methodDeclarationSyntax.Identifier.Value);
         var parameterSyntax = Assert.Single(methodDeclarationSyntax.ParameterList.Parameters);
 
-        Assert.Equal("testname", parameterSyntax.Identifier.ValueText);
+        Assert.Equal(expectedGeneratedParam, parameterSyntax.Identifier.ValueText);
         var parameterTypeSyntax = Assert.IsType<PredefinedTypeSyntax>(parameterSyntax.Type);
         Assert.Equal("int", parameterTypeSyntax.Keyword.Value);
     }

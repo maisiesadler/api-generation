@@ -59,21 +59,19 @@ namespace OpenApiSpecGeneration.Controller
 
             foreach (var openApiMethodParameter in openApiMethodParameters)
             {
-                if (openApiMethodParameter.In != "path") throw new InvalidOperationException($"Unknown parameter type '{openApiMethodParameter.In}'");
-
+                var attribute = ParamAttribute(openApiMethodParameter.In, openApiMethodParameter.name);
                 var attributeList = SyntaxFactory.List<AttributeListSyntax>(
                     new[]{ SyntaxFactory.AttributeList(
-                        SyntaxFactory.SingletonSeparatedList<AttributeSyntax>(
-                            SyntaxFactory.Attribute(SyntaxFactory.IdentifierName("FromRoute"))
-                        )
+                        SyntaxFactory.SingletonSeparatedList<AttributeSyntax>(attribute)
                     )}
                 );
+                var name = CsharpNamingExtensions.HeaderToParameter(openApiMethodParameter.name);
                 var typeSyntax = CsharpTypeExtensions.ParseTypeSyntax(openApiMethodParameter.schema?.type);
                 var parameter = SyntaxFactory.Parameter(
                         attributeList,
                         default,
                         typeSyntax,
-                        SyntaxFactory.Identifier(openApiMethodParameter.name ?? string.Empty),
+                        SyntaxFactory.Identifier(name),
                         default
                     );
 
@@ -91,8 +89,8 @@ namespace OpenApiSpecGeneration.Controller
 
             foreach (var openApiMethodParameter in openApiMethodParameters)
             {
-                var argument = SyntaxFactory.Argument(
-                    SyntaxFactory.IdentifierName(openApiMethodParameter.name ?? string.Empty));
+                var name = CsharpNamingExtensions.HeaderToParameter(openApiMethodParameter.name);
+                var argument = SyntaxFactory.Argument(SyntaxFactory.IdentifierName(name));
 
                 arguments.Add(argument);
             }
@@ -187,6 +185,39 @@ namespace OpenApiSpecGeneration.Controller
                 "put" => "HttpPut",
                 "delete" => "HttpDelete",
                 _ => throw new InvalidOperationException($"Unknown method '{method}'"),
+            };
+        }
+
+        private static AttributeSyntax ParamAttribute(string? parameterLocation, string? parameterName)
+        {
+            AttributeSyntax AsAttribute(string attributeName, string? name = null)
+            {
+                if (name == null)
+                    return SyntaxFactory.Attribute(SyntaxFactory.IdentifierName(attributeName));
+
+                return SyntaxFactory.Attribute(SyntaxFactory.IdentifierName(attributeName))
+                    .WithArgumentList(
+                        SyntaxFactory.AttributeArgumentList(
+                            SyntaxFactory.SingletonSeparatedList<AttributeArgumentSyntax>(
+                                SyntaxFactory
+                                    .AttributeArgument(
+                                        SyntaxFactory.LiteralExpression(
+                                            SyntaxKind.StringLiteralExpression,
+                                            SyntaxFactory.Literal(parameterName ?? string.Empty)))
+                                    .WithNameEquals(
+                                        SyntaxFactory.NameEquals(SyntaxFactory.IdentifierName(name))
+                                    )
+                            )
+                        )
+                    );
+            }
+
+            return parameterLocation switch
+            {
+                "path" => AsAttribute("FromRoute"),
+                "query" => AsAttribute("FromQuery"),
+                "header" => AsAttribute("FromHeader", "Name"),
+                _ => throw new InvalidOperationException($"Unknown parameter type '{parameterLocation}'"),
             };
         }
     }

@@ -51,12 +51,13 @@ namespace OpenApiSpecGeneration.Interactor
             foreach (var openApiMethodParameter in openApiMethodParameters)
             {
                 var attributeList = SyntaxFactory.List<AttributeListSyntax>();
+                var name = CsharpNamingExtensions.HeaderToParameter(openApiMethodParameter.name);
                 var typeSyntax = CsharpTypeExtensions.ParseTypeSyntax(openApiMethodParameter.schema?.type);
                 var parameter = SyntaxFactory.Parameter(
                         attributeList,
                         default,
                         typeSyntax,
-                        SyntaxFactory.Identifier(openApiMethodParameter.name ?? string.Empty),
+                        SyntaxFactory.Identifier(name),
                         default
                     );
 

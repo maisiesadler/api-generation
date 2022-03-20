@@ -1,0 +1,41 @@
+{
+    "openapi": "3.0.1",
+    "info": {
+        "title": "API V1",
+        "version": "v1"
+    },
+    "paths": {
+        "/api/Todo": {
+            "get": {
+                "parameters": [
+                    {
+                        "in": "header",
+                        "name": "requestId",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Success",
+                        "content": {
+                            "text/plain": {
+                                "schema": {
+                                    "type": "array",
+                                    "items": {
+                                        "$ref": "#/components/schemas/ToDoItem"
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    },
+    "components": {
+        "schemas": {}
+    }
+}

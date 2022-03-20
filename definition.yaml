@@ -31,6 +31,10 @@ paths:
   /api/Todo/{id}:
     get:
       parameters:
+      - in: header
+        name: x-request-id
+        schema:
+          type: string
       - in: path
         name: id   # Note the name is the same as in the path
         required: true
@@ -38,6 +42,10 @@ paths:
           type: integer
           minimum: 1
         description: The user ID
+      - in: query
+        name: type
+        schema:
+          type: string
       responses:
         '200':
           description: Success
