@@ -50,11 +50,11 @@ public class GetOpenApiSpecFileTests
     }
 
     [Fact]
-    public async Task TodoGetWithId_ResponsesLoadCorrectly()
+    public async Task TodoGetWithPathParam_ResponsesLoadCorrectly()
     {
         // Arrange
         var getOpenApiSpecFile = new GetOpenApiSpecFile();
-        var path = $"TestData/TodoGetWithId.json";
+        var path = $"TestData/TodoGetWithPathParam.json";
 
         // Act
         var result = await getOpenApiSpecFile.Execute(path);
@@ -84,11 +84,11 @@ public class GetOpenApiSpecFileTests
     }
 
     [Fact]
-    public async Task TodoGetWithId_ParameteresLoadCorrectly()
+    public async Task TodoGetWithPathParam_ParametersLoadCorrectly()
     {
         // Arrange
         var getOpenApiSpecFile = new GetOpenApiSpecFile();
-        var path = $"TestData/TodoGetWithId.json";
+        var path = $"TestData/TodoGetWithPathParam.json";
 
         // Act
         var result = await getOpenApiSpecFile.Execute(path);
@@ -109,5 +109,32 @@ public class GetOpenApiSpecFileTests
         Assert.Equal("integer", parameter.schema?.type);
         Assert.Equal(1, parameter.schema?.minimum);
         Assert.Equal("The user ID", parameter.description);
+    }
+
+    [Fact]
+    public async Task TodoGetWithQueryParam_ParametersLoadCorrectly()
+    {
+        // Arrange
+        var getOpenApiSpecFile = new GetOpenApiSpecFile();
+        var path = $"TestData/TodoGetWithQueryParam.json";
+
+        // Act
+        var result = await getOpenApiSpecFile.Execute(path);
+
+        // Assert
+        Assert.True(result.IsSuccess);
+
+        var (key, value) = Assert.Single(result.Value?.paths);
+        Assert.Equal("/api/Todo", key);
+        Assert.NotNull(value.get);
+        Assert.Null(value.delete);
+        Assert.Null(value.post);
+        Assert.Null(value.put);
+
+        var parameter = Assert.Single(value.get?.parameters);
+        Assert.Equal("query", parameter.In);
+        Assert.Equal("offset", parameter.name);
+        Assert.Equal("string", parameter.schema?.type);
+        Assert.Equal("The number of items to skip before starting to collect the result set", parameter.description);
     }
 }

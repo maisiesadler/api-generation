@@ -1,0 +1,42 @@
+{
+    "openapi": "3.0.1",
+    "info": {
+        "title": "API V1",
+        "version": "v1"
+    },
+    "paths": {
+        "/api/Todo": {
+            "get": {
+                "parameters": [
+                    {
+                        "in": "query",
+                        "name": "offset",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        },
+                        "description": "The number of items to skip before starting to collect the result set"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Success",
+                        "content": {
+                            "text/plain": {
+                                "schema": {
+                                    "type": "array",
+                                    "items": {
+                                        "$ref": "#/components/schemas/ToDoItem"
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    },
+    "components": {
+        "schemas": {}
+    }
+}
