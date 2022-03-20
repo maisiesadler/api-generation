@@ -59,12 +59,11 @@ namespace OpenApiSpecGeneration.Controller
 
             foreach (var openApiMethodParameter in openApiMethodParameters)
             {
-                if (openApiMethodParameter.In != "path") throw new InvalidOperationException($"Unknown parameter type '{openApiMethodParameter.In}'");
-
+                var attributeName = ParamAttributeName(openApiMethodParameter.In);
                 var attributeList = SyntaxFactory.List<AttributeListSyntax>(
                     new[]{ SyntaxFactory.AttributeList(
                         SyntaxFactory.SingletonSeparatedList<AttributeSyntax>(
-                            SyntaxFactory.Attribute(SyntaxFactory.IdentifierName("FromRoute"))
+                            SyntaxFactory.Attribute(SyntaxFactory.IdentifierName(attributeName))
                         )
                     )}
                 );
@@ -187,6 +186,16 @@ namespace OpenApiSpecGeneration.Controller
                 "put" => "HttpPut",
                 "delete" => "HttpDelete",
                 _ => throw new InvalidOperationException($"Unknown method '{method}'"),
+            };
+        }
+
+        private static string ParamAttributeName(string? parameterLocation)
+        {
+            return parameterLocation switch
+            {
+                "path" => "FromRoute",
+                "query" => "FromQuery",
+                _ => throw new InvalidOperationException($"Unknown parameter type '{parameterLocation}'"),
             };
         }
     }

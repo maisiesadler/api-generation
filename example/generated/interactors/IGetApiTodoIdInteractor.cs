@@ -4,6 +4,6 @@ namespace Example.Interactors
 {
     public interface IGetApiTodoIdInteractor
     {
-        Task<ToDoItem> Execute(int id);
+        Task<ToDoItem> Execute(int id, string type);
     }
 }

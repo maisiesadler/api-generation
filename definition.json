@@ -57,6 +57,13 @@
                             "minimum": 1
                         },
                         "description": "The user ID"
+                    },
+                    {
+                        "in": "query",
+                        "name": "type",
+                        "schema": {
+                            "type": "string"
+                        }
                     }
                 ],
                 "responses": {

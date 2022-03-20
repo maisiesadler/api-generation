@@ -19,9 +19,9 @@ namespace Example
         }
 
         [HttpGet]
-        public async Task<IActionResult> Get([FromRoute] int id)
+        public async Task<IActionResult> Get([FromRoute] int id, [FromQuery] string type)
         {
-            var result = await _getApiTodoIdInteractor.Execute(id);
+            var result = await _getApiTodoIdInteractor.Execute(id, type);
             return Ok(result);
         }
 
