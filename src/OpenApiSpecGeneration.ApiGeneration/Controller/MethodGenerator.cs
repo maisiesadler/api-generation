@@ -59,12 +59,10 @@ namespace OpenApiSpecGeneration.Controller
 
             foreach (var openApiMethodParameter in openApiMethodParameters)
             {
-                var attributeName = ParamAttributeName(openApiMethodParameter.In);
+                var attribute = ParamAttribute(openApiMethodParameter.In, openApiMethodParameter.name);
                 var attributeList = SyntaxFactory.List<AttributeListSyntax>(
                     new[]{ SyntaxFactory.AttributeList(
-                        SyntaxFactory.SingletonSeparatedList<AttributeSyntax>(
-                            SyntaxFactory.Attribute(SyntaxFactory.IdentifierName(attributeName))
-                        )
+                        SyntaxFactory.SingletonSeparatedList<AttributeSyntax>(attribute)
                     )}
                 );
                 var name = CsharpNamingExtensions.HeaderToParameter(openApiMethodParameter.name);
@@ -190,13 +188,35 @@ namespace OpenApiSpecGeneration.Controller
             };
         }
 
-        private static string ParamAttributeName(string? parameterLocation)
+        private static AttributeSyntax ParamAttribute(string? parameterLocation, string? parameterName)
         {
+            AttributeSyntax AsAttribute(string attributeName, string? name = null)
+            {
+                if (name == null)
+                    return SyntaxFactory.Attribute(SyntaxFactory.IdentifierName(attributeName));
+
+                return SyntaxFactory.Attribute(SyntaxFactory.IdentifierName(attributeName))
+                    .WithArgumentList(
+                        SyntaxFactory.AttributeArgumentList(
+                            SyntaxFactory.SingletonSeparatedList<AttributeArgumentSyntax>(
+                                SyntaxFactory
+                                    .AttributeArgument(
+                                        SyntaxFactory.LiteralExpression(
+                                            SyntaxKind.StringLiteralExpression,
+                                            SyntaxFactory.Literal(parameterName ?? string.Empty)))
+                                    .WithNameEquals(
+                                        SyntaxFactory.NameEquals(SyntaxFactory.IdentifierName(name))
+                                    )
+                            )
+                        )
+                    );
+            }
+
             return parameterLocation switch
             {
-                "path" => "FromRoute",
-                "query" => "FromQuery",
-                "header" => "FromHeader",
+                "path" => AsAttribute("FromRoute"),
+                "query" => AsAttribute("FromQuery"),
+                "header" => AsAttribute("FromHeader", "Name"),
                 _ => throw new InvalidOperationException($"Unknown parameter type '{parameterLocation}'"),
             };
         }

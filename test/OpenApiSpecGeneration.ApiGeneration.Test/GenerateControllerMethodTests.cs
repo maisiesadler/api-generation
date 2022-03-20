@@ -57,6 +57,7 @@ public class GenerateControllerMethodTests
 
         var parameterIdentifierNameSyntax = Assert.IsType<IdentifierNameSyntax>(parameterAttributeSyntax.Name);
         Assert.Equal("FromRoute", parameterIdentifierNameSyntax.Identifier.Value);
+        Assert.Null(parameterAttributeSyntax.ArgumentList);
     }
 
     [Fact]
@@ -108,6 +109,7 @@ public class GenerateControllerMethodTests
 
         var parameterIdentifierNameSyntax = Assert.IsType<IdentifierNameSyntax>(parameterAttributeSyntax.Name);
         Assert.Equal("FromQuery", parameterIdentifierNameSyntax.Identifier.Value);
+        Assert.Null(parameterAttributeSyntax.ArgumentList);
     }
 
     [Fact]
@@ -159,7 +161,13 @@ public class GenerateControllerMethodTests
 
         var parameterIdentifierNameSyntax = Assert.IsType<IdentifierNameSyntax>(parameterAttributeSyntax.Name);
         Assert.Equal("FromHeader", parameterIdentifierNameSyntax.Identifier.Value);
-        // "x-request-id"
+
+        var singleAttributeArgument = Assert.Single(parameterAttributeSyntax.ArgumentList?.Arguments);
+        var attributeArgument = Assert.IsType<AttributeArgumentSyntax>(singleAttributeArgument);
+        Assert.IsType<NameEqualsSyntax>(attributeArgument.NameEquals);
+
+        var expression = Assert.IsType<LiteralExpressionSyntax>(attributeArgument.Expression);
+        Assert.Equal("\"x-request-id\"", expression.Token.Text);
     }
 
     [Theory]
