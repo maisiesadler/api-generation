@@ -137,4 +137,30 @@ public class GetOpenApiSpecFileTests
         Assert.Equal("string", parameter.schema?.type);
         Assert.Equal("The number of items to skip before starting to collect the result set", parameter.description);
     }
+
+    [Fact]
+    public async Task TodoGetWithHeaderParam_ParametersLoadCorrectly()
+    {
+        // Arrange
+        var getOpenApiSpecFile = new GetOpenApiSpecFile();
+        var path = $"TestData/TodoGetWithHeaderParam.json";
+
+        // Act
+        var result = await getOpenApiSpecFile.Execute(path);
+
+        // Assert
+        Assert.True(result.IsSuccess);
+
+        var (key, value) = Assert.Single(result.Value?.paths);
+        Assert.Equal("/api/Todo", key);
+        Assert.NotNull(value.get);
+        Assert.Null(value.delete);
+        Assert.Null(value.post);
+        Assert.Null(value.put);
+
+        var parameter = Assert.Single(value.get?.parameters);
+        Assert.Equal("header", parameter.In);
+        Assert.Equal("requestId", parameter.name);
+        Assert.Equal("string", parameter.schema?.type);
+    }
 }
