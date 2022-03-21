@@ -1,7 +1,7 @@
 cd yamltojson
-npm run start ../dist.yaml ../dist.json
+npm run start ../identity.yaml ../identity.json
 cd ../
 
 dotnet run --project src/OpenApiSpecGeneration.ApiGeneration.Console \
-    generate -i dist.json -o example-2/generated -n Example
+    generate-mock -i identity.json -o example-2/generated -n Example
 

@@ -117,7 +117,7 @@ public class GenerateModelsTests
         };
         var toDoItemProperties = new Dictionary<string, OpenApiComponentProperty>
         {
-            { "id", new OpenApiComponentProperty("array", new OpenApiComponentPropertyType(properties), default, default) },
+            { "id", new OpenApiComponentProperty("array", new OpenApiComponentPropertyType(properties, null), default, default) },
         };
         var componentSchemas = new Dictionary<string, OpenApiComponentSchema>
         {
@@ -170,7 +170,7 @@ public class GenerateModelsTests
         // Arrange
         var toDoItemProperties = new Dictionary<string, OpenApiComponentProperty>
         {
-            { "id", new OpenApiComponentProperty("pizza",default,  default, default) },
+            { "id", new OpenApiComponentProperty("pizza", default, default, default) },
         };
         var componentSchemas = new Dictionary<string, OpenApiComponentSchema>
         {
@@ -182,6 +182,38 @@ public class GenerateModelsTests
         // Act & Assert
         var exception = Assert.Throws<InvalidOperationException>(() => ApiGenerator.GenerateModels(spec));
         Assert.Equal("Unknown openapi type 'pizza'", exception.Message);
+    }
+
+    [Fact]
+    public void SupportArrays()
+    {
+        // Arrange
+        var toDoItemProperties = new Dictionary<string, OpenApiComponentProperty>
+        {
+            { "things", new OpenApiComponentProperty("array", new OpenApiComponentPropertyType(null, "string"),  default, default) },
+        };
+        var componentSchemas = new Dictionary<string, OpenApiComponentSchema>
+        {
+            { "ToDoItem", new OpenApiComponentSchema("object", toDoItemProperties) }
+        };
+        var components = new OpenApiComponent(componentSchemas);
+        var spec = new OpenApiSpec(new Dictionary<string, OpenApiPath>(), components);
+
+        // Act
+        var recordDeclarationSyntaxes = ApiGenerator.GenerateModels(spec).ToList();
+
+        // Assert
+        Assert.Equal(2, recordDeclarationSyntaxes.Count);
+
+        // ToDoItem
+        var typeRecordDeclarationSyntax = recordDeclarationSyntaxes[0];
+        Assert.Equal("ToDoItem", typeRecordDeclarationSyntax.Identifier.Value);
+        var memberDeclarationSyntax = Assert.Single(typeRecordDeclarationSyntax.Members);
+        var propertyDeclarationSyntax = Assert.IsType<PropertyDeclarationSyntax>(memberDeclarationSyntax);
+        Assert.Equal("Things", propertyDeclarationSyntax.Identifier.Value);
+
+        var predefinedTypeSyntax = Assert.IsType<PredefinedTypeSyntax>(propertyDeclarationSyntax.Type);
+        // Assert.Equal(expectedCsharpType, predefinedTypeSyntax.Keyword.Value);
     }
 
     // public void PathSchema()

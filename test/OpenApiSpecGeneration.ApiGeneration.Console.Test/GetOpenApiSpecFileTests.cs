@@ -50,6 +50,31 @@ public class GetOpenApiSpecFileTests
     }
 
     [Fact]
+    public async Task ArraySchema_Loads()
+    {
+        // Arrange
+        var getOpenApiSpecFile = new GetOpenApiSpecFile();
+        var path = $"TestData/Schema_StringArray.json";
+
+        // Act
+        var result = await getOpenApiSpecFile.Execute(path);
+
+        // Assert
+        Assert.True(result.IsSuccess);
+
+        var (key, value) = Assert.Single(result.Value?.components.schemas);
+        Assert.Equal("Address", key);
+        Assert.Equal("object", value.type);
+
+        var (propertyKey, propertyValue) = Assert.Single(value.properties);
+        Assert.Equal("lines", propertyKey);
+        Assert.Equal("array", propertyValue.type);
+
+        Assert.Null(propertyValue.items?.properties);
+        Assert.Equal("string", propertyValue.items?.type);
+    }
+
+    [Fact]
     public async Task TodoGetWithPathParam_ResponsesLoadCorrectly()
     {
         // Arrange

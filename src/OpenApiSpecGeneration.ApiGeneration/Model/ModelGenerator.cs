@@ -19,12 +19,12 @@ namespace OpenApiSpecGeneration.Model
 
                 foreach (var (subtypename, subtype) in subtypes)
                 {
-                    var (subtypeRecord, heello) = TryGenerateRecord(subtypename, GetProperties(subtype));
+                    var (subtypeRecord, heello) = TryGenerateRecord(subtypename, GetProperties(subtype.properties));
                     yield return subtypeRecord;
 
                     foreach (var (_subtypename, _subtype) in heello)
                     {
-                        var (_subtypeRecord, _) = TryGenerateRecord(_subtypename, GetProperties(_subtype));
+                        var (_subtypeRecord, _) = TryGenerateRecord(_subtypename, GetProperties(subtype.properties));
                         yield return _subtypeRecord;
                     }
                 }
@@ -32,20 +32,20 @@ namespace OpenApiSpecGeneration.Model
         }
 
         private static IEnumerable<(string propertyName, string propertyType, OpenApiComponentPropertyType? items)>
-            GetProperties(IReadOnlyDictionary<string, OpenApiComponentProperty> openApiProperties)
+            GetProperties(IReadOnlyDictionary<string, OpenApiComponentProperty>? openApiProperties)
         {
+            if (openApiProperties == null) yield break;
+
             foreach (var (propertyName, openApiProperty) in openApiProperties)
             {
-                yield return (propertyName, openApiProperty.type, openApiProperty.items);
-            }
-        }
+                var type = openApiProperty.type;
+                if (type == null)
+                    type = openApiProperty.Ref?.Split("/").Last();
 
-        private static IEnumerable<(string propertyName, string propertyType, OpenApiComponentPropertyType? items)>
-            GetProperties(OpenApiComponentPropertyType openApiComponentPropertyType)
-        {
-            foreach (var (propertyName, openApiProperty) in openApiComponentPropertyType.properties)
-            {
-                yield return (propertyName, openApiProperty.type, openApiProperty.items);
+                if (type == null)
+                    throw new InvalidOperationException($"{propertyName} missing property type");
+
+                yield return (propertyName, type, openApiProperty.items);
             }
         }
 
@@ -65,8 +65,21 @@ namespace OpenApiSpecGeneration.Model
                 );
 
                 var potentialSubtypeName = name + CsharpNamingExtensions.SnakeCaseToCamel(propertyName) + "SubType";
-                var (typeSyntax, createSubType) = ParseTypeSyntax(potentialSubtypeName, propertyType);
+                var createSubType = ShouldCreateSubType(propertyType);
+                var typeSyntax = ParseTypeSyntax(propertyType);
                 // System.Console.WriteLine($"Potentially create: {potentialSubtypeName} - {createSubType} - {items != null}");
+
+                if (propertyType == "array")
+                {
+                    var elementType = ParseTypeSyntax(items?.type ?? throw new InvalidOperationException("Array element does not have type"));
+
+                    typeSyntax = SyntaxFactory.ArrayType(elementType)
+                        .WithRankSpecifiers(
+                            SyntaxFactory.SingletonList<ArrayRankSpecifierSyntax>(
+                               SyntaxFactory.ArrayRankSpecifier(
+                                    SyntaxFactory.SingletonSeparatedList<ExpressionSyntax>(
+                                        SyntaxFactory.OmittedArraySizeExpression()))));
+                }
 
                 var property = SyntaxFactory.PropertyDeclaration(
                         typeSyntax,
@@ -104,18 +117,22 @@ namespace OpenApiSpecGeneration.Model
             return (record, subTypes);
         }
 
-        private static (TypeSyntax typeSyntax, bool createSubType) ParseTypeSyntax(
-            string potentialSubtypeName, string propertyType)
+        private static TypeSyntax ParseTypeSyntax(string propertyType)
         {
             return propertyType switch
             {
-                "integer" => (SyntaxFactory.ParseTypeName("int"), false),
-                "string" => (SyntaxFactory.ParseTypeName("string"), false),
-                "boolean" => (SyntaxFactory.ParseTypeName("bool"), false),
-                "array" => (SyntaxFactory.ParseTypeName($"{potentialSubtypeName}[]"), true),
-                _ => throw new InvalidOperationException($"Unknown openapi type '{propertyType}'"),
+                "integer" => SyntaxFactory.ParseTypeName("int"),
+                "string" => SyntaxFactory.ParseTypeName("string"),
+                "boolean" => SyntaxFactory.ParseTypeName("bool"),
+                _ => SyntaxFactory.ParseTypeName(propertyType),
             };
         }
+
+        private static bool ShouldCreateSubType(string? propertyType)
+            => propertyType == "object" || propertyType == "array";
+
+        private static bool IsArray(string? propertyType, OpenApiComponentPropertyType? items)
+            => propertyType == "array";
 
         private static AttributeSyntax JsonPropertyNameAttributeSyntax(string propertyName)
         {

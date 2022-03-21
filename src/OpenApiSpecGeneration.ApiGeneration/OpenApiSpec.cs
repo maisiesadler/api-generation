@@ -45,6 +45,10 @@ namespace OpenApiSpecGeneration
 
     public record OpenApiComponent(IReadOnlyDictionary<string, OpenApiComponentSchema> schemas);
     public record OpenApiComponentSchema(string type, IReadOnlyDictionary<string, OpenApiComponentProperty> properties);
-    public record OpenApiComponentProperty(string type, OpenApiComponentPropertyType? items, string? format, bool? nullable);
-    public record OpenApiComponentPropertyType(IReadOnlyDictionary<string, OpenApiComponentProperty> properties);
+    public record OpenApiComponentProperty(string? type, OpenApiComponentPropertyType? items, string? format, bool? nullable)
+    {
+        [JsonPropertyName("$ref")] public string? Ref { get; init; }
+    }
+
+    public record OpenApiComponentPropertyType(IReadOnlyDictionary<string, OpenApiComponentProperty>? properties, string? type);
 }
