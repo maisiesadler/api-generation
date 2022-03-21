@@ -13,7 +13,7 @@ namespace OpenApiSpecGeneration.Interactor
                 foreach (var (method, openApiMethod) in openApiPath.GetMethods())
                 {
                     var parameters = CreateParameterList(openApiMethod.parameters);
-                    var returnType = ReturnTypeExtensions.GetReturnTypeSyntax(openApiMethod.responses);
+                    var returnType = ReturnTypeExtensions.GetReturnTypeSyntaxWrapped(openApiMethod.responses);
                     var methodDeclaration = SyntaxFactory.MethodDeclaration(
                             returnType,
                             SyntaxFactory.Identifier("Execute"))

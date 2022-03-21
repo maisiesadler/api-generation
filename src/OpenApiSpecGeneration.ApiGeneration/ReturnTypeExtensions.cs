@@ -6,7 +6,7 @@ namespace OpenApiSpecGeneration
 {
     internal class ReturnTypeExtensions
     {
-        internal static TypeSyntax GetReturnTypeSyntax(IReadOnlyDictionary<string, OpenApiResponse> responses)
+        internal static TypeSyntax GetReturnTypeSyntaxWrapped(IReadOnlyDictionary<string, OpenApiResponse> responses)
         {
             if (TryGetFirstReturnTypeSyntax(responses, out var typeSyntax))
             {
@@ -23,7 +23,7 @@ namespace OpenApiSpecGeneration
         internal static bool HasReturnType(IReadOnlyDictionary<string, OpenApiResponse>? responses)
             => responses != null && TryGetFirstReturnTypeSyntax(responses, out var _);
 
-        private static bool TryGetFirstReturnTypeSyntax(
+        internal static bool TryGetFirstReturnTypeSyntax(
             IReadOnlyDictionary<string, OpenApiResponse> responses,
             [NotNullWhen(true)] out TypeSyntax? typeSyntax)
         {

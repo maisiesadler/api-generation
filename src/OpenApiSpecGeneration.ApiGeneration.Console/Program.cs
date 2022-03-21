@@ -1,4 +1,6 @@
 ﻿using Microsoft.Extensions.DependencyInjection;
+using OpenApiSpecGeneration.Console.Commands;
+using OpenApiSpecGeneration.Console.Commands.Helpers;
 using Spectre.Console.Cli;
 
 namespace OpenApiSpecGeneration.Console
@@ -13,6 +15,7 @@ namespace OpenApiSpecGeneration.Console
             app.Configure(config =>
             {
                 config.AddCommand<GenerateOpenApiSpec>("generate");
+                config.AddCommand<GenerateOpenApiSpecWithMockImplementation>("generate-mock");
             });
 
             await app.RunAsync(args);
@@ -22,6 +25,7 @@ namespace OpenApiSpecGeneration.Console
         {
             var services = new ServiceCollection();
             services.AddSingleton<GetOpenApiSpecFile>();
+            services.AddSingleton<WriteToFile>();
             return services;
         }
     }
