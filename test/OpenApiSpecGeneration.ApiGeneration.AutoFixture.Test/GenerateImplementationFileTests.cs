@@ -2,7 +2,7 @@ using System.Collections.Generic;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
 using Xunit;
 
-namespace OpenApiSpecGeneration.ApiGeneration.Test;
+namespace OpenApiSpecGeneration.ApiGeneration.AutoFixture.Test;
 
 public class GenerateImplementationFileTests
 {
