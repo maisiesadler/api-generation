@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
 using Xunit;
 
@@ -64,6 +65,43 @@ public class GenerateImplementationTests
 
         var identifierNameSyntax = Assert.IsType<IdentifierNameSyntax>(methodDeclarationSyntax.ReturnType);
         Assert.Equal("Task", identifierNameSyntax.Identifier.Value);
+    }
+
+    [Fact]
+    public void ImplementationHasFixtureAsPrivateField()
+    {
+        // Arrange
+        var apiTestPath = new OpenApiPath
+        {
+            get = new OpenApiMethod { },
+        };
+        var paths = new Dictionary<string, OpenApiPath>
+        {
+            { "/api/test", apiTestPath },
+        };
+        var spec = new OpenApiSpec(paths, new OpenApiComponent(new Dictionary<string, OpenApiComponentSchema>()));
+
+        // Act
+        var classDeclarationSyntaxes = ApiGenerator.GenerateImplementations(spec);
+
+        // Assert
+        var classDeclarationSyntax = Assert.Single(classDeclarationSyntaxes);
+        var fieldDeclarationSyntax = Assert.Single(classDeclarationSyntax.Members.GetMembersOfType<FieldDeclarationSyntax>());
+        Assert.Equal(2, fieldDeclarationSyntax.Modifiers.Count);
+        Assert.Equal("private", fieldDeclarationSyntax.Modifiers[0].Value);
+        Assert.Equal("readonly", fieldDeclarationSyntax.Modifiers[1].Value);
+        var declarationType = Assert.IsType<IdentifierNameSyntax>(fieldDeclarationSyntax.Declaration.Type);
+        Assert.Equal("Fixture", declarationType.Identifier.Value);
+        var variable = Assert.Single(fieldDeclarationSyntax.Declaration.Variables);
+        Assert.Equal("_fixture", variable.Identifier.Value);
+        Assert.Equal(";", fieldDeclarationSyntax.SemicolonToken.Value);
+
+        var equalsValueClauseSyntax = Assert.IsType<EqualsValueClauseSyntax>(variable.Initializer);
+        var objectCreationExpressionSyntax = Assert.IsType<ObjectCreationExpressionSyntax>(equalsValueClauseSyntax.Value);
+        Assert.Empty(objectCreationExpressionSyntax.ArgumentList?.Arguments);
+        var identifierName = Assert.IsType<IdentifierNameSyntax>(objectCreationExpressionSyntax.Type);
+        Assert.Equal("Fixture", identifierName.Identifier.ValueText);
+        Assert.Equal("new", objectCreationExpressionSyntax.NewKeyword.ValueText);
     }
 
     [Fact]

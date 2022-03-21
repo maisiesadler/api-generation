@@ -26,15 +26,13 @@ namespace OpenApiSpecGeneration.ApiGeneration.AutoFixture.Implementation
                         .WithParameterList(parameters)
                         .WithBody(methodBody);
 
-                    var methods = new[] { methodDeclaration };
-
                     var interfaceName = CsharpNamingExtensions.PathToInteractorType(apiPath, method);
                     var className = interfaceName.Substring(1);
 
                     var classDeclaration = SyntaxFactory.ClassDeclaration(SyntaxFactory.Identifier(className))
                         .AddBaseListTypes(SyntaxFactory.SimpleBaseType(SyntaxFactory.IdentifierName(interfaceName)))
                         .AddMembers(new[] { CreateField() })
-                        .AddMembers(methods.ToArray())
+                        .AddMembers(new[] { methodDeclaration })
                         .AddModifiers(SyntaxFactory.Token(SyntaxKind.PublicKeyword));
 
                     yield return classDeclaration;
@@ -64,35 +62,31 @@ namespace OpenApiSpecGeneration.ApiGeneration.AutoFixture.Implementation
                 parameters.Add(parameter);
             }
 
-            var list = SyntaxFactory.SeparatedList<ParameterSyntax>(parameters);
             return SyntaxFactory.ParameterList(
                 SyntaxFactory.Token(SyntaxKind.OpenParenToken),
-                list,
+                SyntaxFactory.SeparatedList<ParameterSyntax>(parameters),
                 SyntaxFactory.Token(SyntaxKind.CloseParenToken)
             );
         }
 
         private static MemberDeclarationSyntax CreateField()
         {
-            var fieldTokens = SyntaxFactory.TokenList(
-                SyntaxFactory.Token(SyntaxKind.PrivateKeyword),
-                SyntaxFactory.Token(SyntaxKind.ReadOnlyKeyword)
-            );
+            var fixtureTypeIdentifier = SyntaxFactory.IdentifierName("Fixture");
+            var variableDeclaration = SyntaxFactory.VariableDeclarator(SyntaxFactory.Identifier("_fixture"))
+                .WithInitializer(
+                    SyntaxFactory.EqualsValueClause(
+                        SyntaxFactory.ObjectCreationExpression(fixtureTypeIdentifier)
+                            .WithArgumentList(SyntaxFactory.ArgumentList())
+                    )
+                );
 
             return SyntaxFactory.FieldDeclaration(
-                    SyntaxFactory.VariableDeclaration(
-                        SyntaxFactory.IdentifierName("Fixture"))
-                    .WithVariables(
-                        SyntaxFactory.SingletonSeparatedList<VariableDeclaratorSyntax>(
-                            SyntaxFactory.VariableDeclarator(
-                                SyntaxFactory.Identifier("_fixture"))
-                            .WithInitializer(
-                                SyntaxFactory.EqualsValueClause(
-                                    SyntaxFactory.ObjectCreationExpression(
-                                        SyntaxFactory.IdentifierName("Fixture"))
-                                    .WithArgumentList(
-                                        SyntaxFactory.ArgumentList()))))))
-                    .WithModifiers(fieldTokens);
+                SyntaxFactory.VariableDeclaration(fixtureTypeIdentifier)
+                    .AddVariables(variableDeclaration)
+                )
+                .AddModifiers(
+                    SyntaxFactory.Token(SyntaxKind.PrivateKeyword),
+                    SyntaxFactory.Token(SyntaxKind.ReadOnlyKeyword));
         }
     }
 }
