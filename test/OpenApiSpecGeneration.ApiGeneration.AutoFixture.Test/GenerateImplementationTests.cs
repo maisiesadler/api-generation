@@ -109,181 +109,82 @@ public class GenerateImplementationTests
         Assert.Equal("ToDoItem", identifierNameSyntax.Identifier.Value);
     }
 
-    // [Fact]
-    // public void TwoPathsGeneratedAsSeparateFiles()
-    // {
-    //     // Arrange
-    //     var apiTestPath = new OpenApiPath
-    //     {
-    //         get = new OpenApiMethod { tags = new List<string> { "peas" } },
-    //     };
-    //     var paths = new Dictionary<string, OpenApiPath>
-    //     {
-    //         { "/api/test", apiTestPath },
-    //         { "/api/test/{id}", apiTestPath },
-    //     };
-    //     var spec = new OpenApiSpec(paths, new OpenApiComponent(new Dictionary<string, OpenApiComponentSchema>()));
+    [Fact]
+    public void MethodBodyGeneratesReturnType()
+    {
+        // Arrange
+        var openApiContentSchema = new OpenApiContentSchema("object", new Dictionary<string, string>())
+        {
+            Ref = "#/components/schemas/ToDoItem",
+        };
+        var openApiResponse = new OpenApiResponse("Success", new Dictionary<string, OpenApiContent>
+        {
+            { "text/plain", new OpenApiContent(openApiContentSchema) }
+        });
+        var openApiResponses = new Dictionary<string, OpenApiResponse> { { "200", openApiResponse } };
+        var apiTestPath = new OpenApiPath
+        {
+            get = new OpenApiMethod { responses = openApiResponses },
+        };
+        var paths = new Dictionary<string, OpenApiPath>
+        {
+            { "/api/test", apiTestPath },
+        };
+        var spec = new OpenApiSpec(paths, new OpenApiComponent(new Dictionary<string, OpenApiComponentSchema>()));
 
-    //     // Act
-    //     var classDeclarationSyntaxes = ApiGenerator.GenerateControllers(spec).ToList();
+        // Act
+        var classDeclarationSyntaxes = ApiGenerator.GenerateImplementations(spec);
 
-    //     // Assert
-    //     Assert.Equal(2, classDeclarationSyntaxes.Count);
+        // Assert
+        var classDeclarationSyntax = Assert.Single(classDeclarationSyntaxes);
+        var methodDeclarationSyntax = Assert.Single(classDeclarationSyntax.Members.GetMembersOfType<MethodDeclarationSyntax>());
 
-    //     Assert.Equal("ApiTest", classDeclarationSyntaxes[0].Identifier.Value);
-    //     Assert.Equal("ApiTestId", classDeclarationSyntaxes[1].Identifier.Value);
-    // }
-    // [Fact]
-    // public void ControllerHasApiControllerAttribute()
-    // {
-    //     // Arrange
-    //     var apiTestPath = new OpenApiPath
-    //     {
-    //         get = new OpenApiMethod { tags = new List<string> { "peas" } },
-    //     };
-    //     var paths = new Dictionary<string, OpenApiPath>
-    //     {
-    //         { "/api/test", apiTestPath },
-    //     };
-    //     var spec = new OpenApiSpec(paths, new OpenApiComponent(new Dictionary<string, OpenApiComponentSchema>()));
+        var methodBodyStatement = Assert.Single(methodDeclarationSyntax.Body!.Statements);
 
-    //     // Act
-    //     var classDeclarationSyntaxes = ApiGenerator.GenerateControllers(spec);
+        // return _fixture.Create<ToDoItem>();
+        var returnStatementSyntax = Assert.IsType<ReturnStatementSyntax>(methodBodyStatement);
+        var invocationExpressionSyntax = Assert.IsType<InvocationExpressionSyntax>(returnStatementSyntax.Expression);
+        var memberAccessExpressionSyntax = Assert.IsType<MemberAccessExpressionSyntax>(invocationExpressionSyntax.Expression);
 
-    //     // Assert
-    //     var classDeclarationSyntax = Assert.Single(classDeclarationSyntaxes);
+        // _fixture
+        var memberAccessIdentifierSyntax = Assert.IsType<IdentifierNameSyntax>(memberAccessExpressionSyntax.Expression);
+        Assert.Equal("_fixture", memberAccessIdentifierSyntax.Identifier.Value);
 
-    //     Assert.Equal(2, classDeclarationSyntax.AttributeLists.Count);
+        // Create<ToDoItem>
+        var genericNameSyntax = Assert.IsType<GenericNameSyntax>(methodDeclarationSyntax.ReturnType);
+        Assert.Equal("Task", genericNameSyntax.Identifier.Value);
+        var argument = Assert.Single(genericNameSyntax.TypeArgumentList.Arguments);
+        var identifierNameSyntax = Assert.IsType<IdentifierNameSyntax>(argument);
+        Assert.Equal("ToDoItem", identifierNameSyntax.Identifier.Value);
+        var memberAccessMethodGenericSyntax = Assert.IsType<GenericNameSyntax>(memberAccessExpressionSyntax.Name);
+        Assert.Equal("Create", memberAccessMethodGenericSyntax.Identifier.Value);
 
-    //     var controllerAttributeListSyntax = classDeclarationSyntax.AttributeLists[0];
-    //     var controllerAttributeSyntax = Assert.Single(controllerAttributeListSyntax.Attributes);
-    //     var controllerIdentifierNameSyntax = Assert.IsType<IdentifierNameSyntax>(controllerAttributeSyntax.Name);
-    //     Assert.Equal("ApiController", controllerIdentifierNameSyntax.Identifier.Value);
-    //     Assert.Null(controllerAttributeSyntax.ArgumentList);
+        // ();
+        Assert.Empty(invocationExpressionSyntax.ArgumentList.Arguments);
+        Assert.Equal(";", returnStatementSyntax.SemicolonToken.Value);
+    }
 
-    //     var routeAttributeListSyntax = classDeclarationSyntax.AttributeLists[1];
-    //     var routeAttributeSyntax = Assert.Single(routeAttributeListSyntax.Attributes);
-    //     var routeIdentifierNameSyntax = Assert.IsType<IdentifierNameSyntax>(routeAttributeSyntax.Name);
-    //     Assert.Equal("Route", routeIdentifierNameSyntax.Identifier.Value);
+    [Fact]
+    public void MethodBodyEmptyIfNoReturnType()
+    {
+        // Arrange
+        var apiTestPath = new OpenApiPath
+        {
+            get = new OpenApiMethod { },
+        };
+        var paths = new Dictionary<string, OpenApiPath>
+        {
+            { "/api/test", apiTestPath },
+        };
+        var spec = new OpenApiSpec(paths, new OpenApiComponent(new Dictionary<string, OpenApiComponentSchema>()));
 
-    //     Assert.NotNull(routeAttributeSyntax.ArgumentList);
-    //     Assert.Equal("(", routeAttributeSyntax.ArgumentList!.OpenParenToken.Value);
-    //     Assert.Equal(")", routeAttributeSyntax.ArgumentList!.CloseParenToken.Value);
-    //     var routeAttributeArgument = Assert.Single(routeAttributeSyntax.ArgumentList!.Arguments);
-    //     var literalExpressionSyntax = Assert.IsType<LiteralExpressionSyntax>(routeAttributeArgument.Expression);
-    //     Assert.Equal("\"/api/test\"", literalExpressionSyntax.Token.Value);
-    // }
+        // Act
+        var classDeclarationSyntaxes = ApiGenerator.GenerateImplementations(spec);
 
-    // [Fact]
-    // public void MethodBodyCallsInteractor()
-    // {
-    //     // Arrange
-    //     var openApiContentSchema = new OpenApiContentSchema("array", new Dictionary<string, string>
-    //     {
-    //         { "$ref", "#/components/schemas/ToDoItem" },
-    //     });
-    //     var openApiResponse = new OpenApiResponse("Success", new Dictionary<string, OpenApiContent>
-    //     {
-    //         { "text/plain", new OpenApiContent(openApiContentSchema) }
-    //     });
-    //     var openApiResponses = new Dictionary<string, OpenApiResponse> { { "200", openApiResponse } };
-    //     var apiTestPath = new OpenApiPath
-    //     {
-    //         get = new OpenApiMethod { responses = openApiResponses },
-    //     };
-    //     var paths = new Dictionary<string, OpenApiPath>
-    //     {
-    //         { "/api/test", apiTestPath },
-    //     };
-    //     var spec = new OpenApiSpec(paths, new OpenApiComponent(new Dictionary<string, OpenApiComponentSchema>()));
+        // Assert
+        var classDeclarationSyntax = Assert.Single(classDeclarationSyntaxes);
+        var methodDeclarationSyntax = Assert.Single(classDeclarationSyntax.Members.GetMembersOfType<MethodDeclarationSyntax>());
 
-    //     // Act
-    //     var classDeclarationSyntaxes = ApiGenerator.GenerateControllers(spec);
-
-    //     // Assert
-    //     var classDeclarationSyntax = Assert.Single(classDeclarationSyntaxes);
-    //     var methodDeclarationSyntax = Assert.Single(classDeclarationSyntax.Members.GetMembersOfType<MethodDeclarationSyntax>());
-
-    //     Assert.Equal(2, methodDeclarationSyntax.Body!.Statements.Count);
-
-    //     // var result = await _interactor.Execute();
-    //     var localDeclarationStatementSyntax = Assert.IsType<LocalDeclarationStatementSyntax>(methodDeclarationSyntax.Body!.Statements[0]);
-    //     var variableDeclarationSyntax = Assert.IsType<VariableDeclarationSyntax>(localDeclarationStatementSyntax.Declaration);
-    //     var typeIdentifier = Assert.IsType<IdentifierNameSyntax>(variableDeclarationSyntax.Type);
-    //     Assert.Equal("var", typeIdentifier.Identifier.Value);
-    //     var variable = Assert.Single(variableDeclarationSyntax.Variables);
-    //     // VariableDeclaratorSyntax VariableDeclarator result = await _getApiTestInteractor.Execute()
-    //     Assert.Equal("result", variable.Identifier.Value);
-
-    //     // EqualsValueClauseSyntax EqualsValueClause = await _getApiTestInteractor.Execute()
-    //     Assert.NotNull(variable.Initializer);
-    //     Assert.Equal("=", variable.Initializer!.EqualsToken.Value);
-    //     var awaitExpressionSyntax = Assert.IsType<AwaitExpressionSyntax>(variable.Initializer!.Value);
-    //     var invocationExpressionSyntax = Assert.IsType<InvocationExpressionSyntax>(awaitExpressionSyntax.Expression);
-    //     var memberAccessExpressionSyntax = Assert.IsType<MemberAccessExpressionSyntax>(invocationExpressionSyntax.Expression);
-    //     var identifierNameSyntax = Assert.IsType<IdentifierNameSyntax>(memberAccessExpressionSyntax.Expression);
-    //     var methodIdentifierNameSyntax = Assert.IsType<IdentifierNameSyntax>(memberAccessExpressionSyntax.Name);
-    //     Assert.Equal("await", awaitExpressionSyntax.AwaitKeyword.Value);
-    //     Assert.Equal("_getApiTestInteractor", identifierNameSyntax.Identifier.Value);
-    //     Assert.Equal("Execute", methodIdentifierNameSyntax.Identifier.Value);
-    //     Assert.Equal(";", localDeclarationStatementSyntax.SemicolonToken.Value);
-
-    //     // return Ok(result);
-    //     var returnStatementSyntax = Assert.IsType<ReturnStatementSyntax>(methodDeclarationSyntax.Body!.Statements[1]);
-
-    //     // InvocationExpressionSyntax InvocationExpression Ok(result)
-    //     var returnOkInvocationExpressionSyntax = Assert.IsType<InvocationExpressionSyntax>(returnStatementSyntax.Expression);
-    //     var returnOkInvocationIdentifier = Assert.IsType<IdentifierNameSyntax>(returnOkInvocationExpressionSyntax.Expression);
-    //     Assert.Equal("Ok", returnOkInvocationIdentifier.Identifier.Value);
-    //     var singleArgument = Assert.Single(returnOkInvocationExpressionSyntax.ArgumentList.Arguments);
-    //     var singleArgumentIdentifier = Assert.IsType<IdentifierNameSyntax>(singleArgument.Expression);
-    //     Assert.Equal("result", singleArgumentIdentifier.Identifier.Value);
-    //     Assert.Equal(";", returnStatementSyntax.SemicolonToken.Value);
-    // }
-
-    // [Fact]
-    // public void ResultNotSetIfReturnTypeIsVoid()
-    // {
-    //     // Arrange
-    //     var apiTestPath = new OpenApiPath
-    //     {
-    //         get = new OpenApiMethod { },
-    //     };
-    //     var paths = new Dictionary<string, OpenApiPath>
-    //     {
-    //         { "/api/test", apiTestPath },
-    //     };
-    //     var spec = new OpenApiSpec(paths, new OpenApiComponent(new Dictionary<string, OpenApiComponentSchema>()));
-
-    //     // Act
-    //     var classDeclarationSyntaxes = ApiGenerator.GenerateControllers(spec);
-
-    //     // Assert
-    //     var classDeclarationSyntax = Assert.Single(classDeclarationSyntaxes);
-    //     var methodDeclarationSyntax = Assert.Single(classDeclarationSyntax.Members.GetMembersOfType<MethodDeclarationSyntax>());
-
-    //     Assert.Equal(2, methodDeclarationSyntax.Body!.Statements.Count);
-
-    //     // await _interactor.Execute();
-    //     var expressionStatementSyntax = Assert.IsType<ExpressionStatementSyntax>(methodDeclarationSyntax.Body!.Statements[0]);
-    //     var awaitExpressionSyntax = Assert.IsType<AwaitExpressionSyntax>(expressionStatementSyntax.Expression);
-    //     var invocationExpressionSyntax = Assert.IsType<InvocationExpressionSyntax>(awaitExpressionSyntax.Expression);
-    //     var memberAccessExpressionSyntax = Assert.IsType<MemberAccessExpressionSyntax>(invocationExpressionSyntax.Expression);
-    //     var identifierNameSyntax = Assert.IsType<IdentifierNameSyntax>(memberAccessExpressionSyntax.Expression);
-    //     var methodIdentifierNameSyntax = Assert.IsType<IdentifierNameSyntax>(memberAccessExpressionSyntax.Name);
-    //     Assert.Equal("await", awaitExpressionSyntax.AwaitKeyword.Value);
-    //     Assert.Equal("_getApiTestInteractor", identifierNameSyntax.Identifier.Value);
-    //     Assert.Equal("Execute", methodIdentifierNameSyntax.Identifier.Value);
-    //     Assert.Equal(";", expressionStatementSyntax.SemicolonToken.Value);
-
-    //     // return Ok(result);
-    //     var returnStatementSyntax = Assert.IsType<ReturnStatementSyntax>(methodDeclarationSyntax.Body!.Statements[1]);
-
-    //     // InvocationExpressionSyntax InvocationExpression Ok(result)
-    //     var returnOkInvocationExpressionSyntax = Assert.IsType<InvocationExpressionSyntax>(returnStatementSyntax.Expression);
-    //     var returnOkInvocationIdentifier = Assert.IsType<IdentifierNameSyntax>(returnOkInvocationExpressionSyntax.Expression);
-    //     Assert.Equal("Ok", returnOkInvocationIdentifier.Identifier.Value);
-    //     Assert.Empty(returnOkInvocationExpressionSyntax.ArgumentList.Arguments);
-    //     Assert.Equal(";", returnStatementSyntax.SemicolonToken.Value);
-    // }
+        Assert.Empty(methodDeclarationSyntax.Body!.Statements);
+    }
 }
