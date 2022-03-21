@@ -1,8 +1,8 @@
 using System.Text.Json;
 
-namespace OpenApiSpecGeneration.Console.Commands;
+namespace OpenApiSpecGeneration.Console.Commands.Helpers;
 
-public class GetOpenApiSpecFile
+internal class GetOpenApiSpecFile
 {
     public async Task<Result<OpenApiSpec>> Execute(string path)
     {

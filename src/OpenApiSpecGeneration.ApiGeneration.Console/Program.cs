@@ -1,5 +1,6 @@
 ﻿using Microsoft.Extensions.DependencyInjection;
 using OpenApiSpecGeneration.Console.Commands;
+using OpenApiSpecGeneration.Console.Commands.Helpers;
 using Spectre.Console.Cli;
 
 namespace OpenApiSpecGeneration.Console
@@ -24,6 +25,7 @@ namespace OpenApiSpecGeneration.Console
         {
             var services = new ServiceCollection();
             services.AddSingleton<GetOpenApiSpecFile>();
+            services.AddSingleton<WriteToFile>();
             return services;
         }
     }

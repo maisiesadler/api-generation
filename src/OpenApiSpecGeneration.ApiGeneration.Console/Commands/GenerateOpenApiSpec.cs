@@ -1,6 +1,7 @@
 using System.ComponentModel;
 using System.Diagnostics.CodeAnalysis;
 using Microsoft.CodeAnalysis;
+using OpenApiSpecGeneration.Console.Commands.Helpers;
 using Spectre.Console;
 using Spectre.Console.Cli;
 
@@ -33,10 +34,14 @@ public class GenerateOpenApiSpecSettings : CommandSettings
 internal class GenerateOpenApiSpec : AsyncCommand<GenerateOpenApiSpecSettings>
 {
     private readonly GetOpenApiSpecFile _getOpenApiSpecFile;
+    private readonly WriteToFile _writeToFile;
 
-    public GenerateOpenApiSpec(GetOpenApiSpecFile getOpenApiSpecFile)
+    public GenerateOpenApiSpec(
+        GetOpenApiSpecFile getOpenApiSpecFile,
+        WriteToFile writeToFile)
     {
         _getOpenApiSpecFile = getOpenApiSpecFile;
+        _writeToFile = writeToFile;
     }
 
     public override async Task<int> ExecuteAsync([NotNull] CommandContext context, [NotNull] GenerateOpenApiSpecSettings settings)
@@ -45,7 +50,7 @@ internal class GenerateOpenApiSpec : AsyncCommand<GenerateOpenApiSpecSettings>
         {
             AnsiConsole.MarkupLine("Reading from [yellow]{0}[/] and writing to [yellow]{1}[/] with namespace [yellow]{2}[/]", settings.InputFileName, settings.OutputDirectory, settings.Namespace);
 
-            SetupOutputDirectory(settings.OutputDirectory);
+            _writeToFile.Initialize(settings.OutputDirectory, new[] { "models", "interactors" });
 
             var path = Directory.GetCurrentDirectory();
             var result = await _getOpenApiSpecFile.Execute(Path.Combine(path, settings.InputFileName));
@@ -59,17 +64,17 @@ internal class GenerateOpenApiSpec : AsyncCommand<GenerateOpenApiSpecSettings>
 
             foreach (var file in FileGenerator.GenerateControllers(settings.Namespace, openApiSpec))
             {
-                await WriteToFile(settings.OutputDirectory, file);
+                await _writeToFile.Execute(settings.OutputDirectory, file);
             }
 
             foreach (var file in FileGenerator.GenerateModels(settings.Namespace, openApiSpec))
             {
-                await WriteToFile(settings.OutputDirectory, file);
+                await _writeToFile.Execute(settings.OutputDirectory, file);
             }
 
             foreach (var file in FileGenerator.GenerateInteractors(settings.Namespace, openApiSpec))
             {
-                await WriteToFile(settings.OutputDirectory, file);
+                await _writeToFile.Execute(settings.OutputDirectory, file);
             }
 
             AnsiConsole.MarkupLine("[green]Done :magic_wand:[/]");
@@ -81,33 +86,5 @@ internal class GenerateOpenApiSpec : AsyncCommand<GenerateOpenApiSpecSettings>
         }
 
         return 0;
-    }
-
-    private static async Task WriteToFile(
-        string outputDirectory,
-        WritableFile writableFile)
-    {
-        await using var streamWriter = new StreamWriter($"{outputDirectory}/{writableFile.fileLocation}");
-
-        if (writableFile.usingDirectiveSyntax != null)
-        {
-            foreach (var directive in writableFile.usingDirectiveSyntax)
-            {
-                directive.NormalizeWhitespace().WriteTo(streamWriter);
-                streamWriter.WriteLine();
-            }
-            streamWriter.WriteLine();
-        }
-
-        writableFile.namespaceDeclarationSyntax.NormalizeWhitespace().WriteTo(streamWriter);
-    }
-
-    private static void SetupOutputDirectory(string location)
-    {
-        if (Directory.Exists(location))
-            Directory.Delete(location, true);
-        Directory.CreateDirectory(location);
-        Directory.CreateDirectory($"{location}/models");
-        Directory.CreateDirectory($"{location}/interactors");
     }
 }
