@@ -1,4 +1,3 @@
-using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
 using OpenApiSpecGeneration.ApiGeneration.AutoFixture.Implementation;
@@ -19,7 +18,7 @@ namespace OpenApiSpecGeneration.ApiGeneration.AutoFixture
                 var ns = SyntaxFactory.NamespaceDeclaration(SyntaxFactory.ParseName($"{@namespace}.GeneratedImplementations"))
                     .AddMembers(c);
 
-                return new WritableFile($"/implementations/{c.Identifier.Value}Controller.cs", usings, ns);
+                return new WritableFile($"/implementations/{c.Identifier.Value}Implementation.cs", usings, ns);
             });
     }
 }
