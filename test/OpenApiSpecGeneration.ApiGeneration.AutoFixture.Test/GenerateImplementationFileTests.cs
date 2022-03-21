@@ -25,7 +25,7 @@ public class GenerateImplementationFileTests
 
         // Assert
         var writableFile = Assert.Single(writableFiles);
-        Assert.Equal("/implementations/GetApiTestInteractorImplementation.cs", writableFile.fileLocation);
+        Assert.Equal("/implementations/GetApiTestInteractor.cs", writableFile.fileLocation);
         Assert.Equal("namespace", writableFile.namespaceDeclarationSyntax.NamespaceKeyword.Value);
         var namespaceIdentifier = Assert.IsType<QualifiedNameSyntax>(writableFile.namespaceDeclarationSyntax.Name);
         var leftNamespaceIdentifier = Assert.IsType<IdentifierNameSyntax>(namespaceIdentifier.Left);
