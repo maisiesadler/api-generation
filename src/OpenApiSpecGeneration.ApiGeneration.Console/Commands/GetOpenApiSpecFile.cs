@@ -1,6 +1,6 @@
 using System.Text.Json;
 
-namespace OpenApiSpecGeneration.Console;
+namespace OpenApiSpecGeneration.Console.Commands;
 
 public class GetOpenApiSpecFile
 {

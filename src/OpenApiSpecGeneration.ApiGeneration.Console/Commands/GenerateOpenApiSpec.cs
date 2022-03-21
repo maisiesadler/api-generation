@@ -4,7 +4,7 @@ using Microsoft.CodeAnalysis;
 using Spectre.Console;
 using Spectre.Console.Cli;
 
-namespace OpenApiSpecGeneration.Console;
+namespace OpenApiSpecGeneration.Console.Commands;
 
 public class GenerateOpenApiSpecSettings : CommandSettings
 {

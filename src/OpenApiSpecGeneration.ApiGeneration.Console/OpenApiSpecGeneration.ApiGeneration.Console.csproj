@@ -13,6 +13,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\OpenApiSpecGeneration.ApiGeneration\OpenApiSpecGeneration.ApiGeneration.csproj" />
+    <ProjectReference Include="..\OpenApiSpecGeneration.ApiGeneration.AutoFixture\OpenApiSpecGeneration.ApiGeneration.AutoFixture.csproj" />
   </ItemGroup>
 
   <ItemGroup>

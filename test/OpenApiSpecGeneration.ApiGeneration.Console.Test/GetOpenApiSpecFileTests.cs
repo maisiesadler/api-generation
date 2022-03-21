@@ -1,6 +1,7 @@
 using Xunit;
 using OpenApiSpecGeneration.Console;
 using System.Threading.Tasks;
+using OpenApiSpecGeneration.Console.Commands;
 
 namespace OpenApiSpecGeneration.ApiGeneration.Console.Test;
 

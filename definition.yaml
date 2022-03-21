@@ -36,7 +36,7 @@ paths:
         schema:
           type: string
       - in: path
-        name: id   # Note the name is the same as in the path
+        name: id
         required: true
         schema:
           type: integer
