@@ -165,26 +165,6 @@ public class GenerateModelsTests
     }
 
     [Fact]
-    public void NotSupportedPropertyTypesThrows()
-    {
-        // Arrange
-        var toDoItemProperties = new Dictionary<string, OpenApiComponentProperty>
-        {
-            { "id", new OpenApiComponentProperty("pizza", default, default, default) },
-        };
-        var componentSchemas = new Dictionary<string, OpenApiComponentSchema>
-        {
-            { "ToDoItem", new OpenApiComponentSchema("object", toDoItemProperties) }
-        };
-        var components = new OpenApiComponent(componentSchemas);
-        var spec = new OpenApiSpec(new Dictionary<string, OpenApiPath>(), components);
-
-        // Act & Assert
-        var exception = Assert.Throws<InvalidOperationException>(() => ApiGenerator.GenerateModels(spec));
-        Assert.Equal("Unknown openapi type 'pizza'", exception.Message);
-    }
-
-    [Fact]
     public void SupportArrays()
     {
         // Arrange
@@ -203,17 +183,16 @@ public class GenerateModelsTests
         var recordDeclarationSyntaxes = ApiGenerator.GenerateModels(spec).ToList();
 
         // Assert
-        Assert.Equal(2, recordDeclarationSyntaxes.Count);
+        var typeRecordDeclarationSyntax = Assert.Single(recordDeclarationSyntaxes);
 
-        // ToDoItem
-        var typeRecordDeclarationSyntax = recordDeclarationSyntaxes[0];
         Assert.Equal("ToDoItem", typeRecordDeclarationSyntax.Identifier.Value);
         var memberDeclarationSyntax = Assert.Single(typeRecordDeclarationSyntax.Members);
         var propertyDeclarationSyntax = Assert.IsType<PropertyDeclarationSyntax>(memberDeclarationSyntax);
         Assert.Equal("Things", propertyDeclarationSyntax.Identifier.Value);
 
-        var predefinedTypeSyntax = Assert.IsType<PredefinedTypeSyntax>(propertyDeclarationSyntax.Type);
-        // Assert.Equal(expectedCsharpType, predefinedTypeSyntax.Keyword.Value);
+        var arrayTypeSyntax = Assert.IsType<ArrayTypeSyntax>(propertyDeclarationSyntax.Type);
+        var predefinedTypeSyntax = Assert.IsType<PredefinedTypeSyntax>(arrayTypeSyntax.ElementType);
+        Assert.Equal("string", predefinedTypeSyntax.Keyword.Value);
     }
 
     // public void PathSchema()

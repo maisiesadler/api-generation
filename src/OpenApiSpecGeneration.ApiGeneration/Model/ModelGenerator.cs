@@ -1,3 +1,4 @@
+using System.Diagnostics.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
 
@@ -24,7 +25,7 @@ namespace OpenApiSpecGeneration.Model
 
                     foreach (var (_subtypename, _subtype) in heello)
                     {
-                        var (_subtypeRecord, _) = TryGenerateRecord(_subtypename, GetProperties(subtype.properties));
+                        var (_subtypeRecord, _) = TryGenerateRecord(_subtypename, GetProperties(_subtype.properties));
                         yield return _subtypeRecord;
                     }
                 }
@@ -65,13 +66,15 @@ namespace OpenApiSpecGeneration.Model
                 );
 
                 var potentialSubtypeName = name + CsharpNamingExtensions.SnakeCaseToCamel(propertyName) + "SubType";
-                var createSubType = ShouldCreateSubType(propertyType);
+                var createSubType = ShouldCreateSubType(propertyType, items?.type);
                 var typeSyntax = ParseTypeSyntax(propertyType);
                 // System.Console.WriteLine($"Potentially create: {potentialSubtypeName} - {createSubType} - {items != null}");
 
                 if (propertyType == "array")
                 {
-                    var elementType = ParseTypeSyntax(items?.type ?? throw new InvalidOperationException("Array element does not have type"));
+                    var elementType = createSubType
+                        ? ParseTypeSyntax(potentialSubtypeName)
+                        : ParseTypeSyntax(items?.type ?? throw new InvalidOperationException("Array element does not have type"));
 
                     typeSyntax = SyntaxFactory.ArrayType(elementType)
                         .WithRankSpecifiers(
@@ -117,22 +120,43 @@ namespace OpenApiSpecGeneration.Model
             return (record, subTypes);
         }
 
-        private static TypeSyntax ParseTypeSyntax(string propertyType)
+        private static bool TryGetPredefinedTypeSyntax(string? propertyType, [NotNullWhen(true)] out PredefinedTypeSyntax? predefinedTypeSyntax)
         {
-            return propertyType switch
+            switch (propertyType)
             {
-                "integer" => SyntaxFactory.ParseTypeName("int"),
-                "string" => SyntaxFactory.ParseTypeName("string"),
-                "boolean" => SyntaxFactory.ParseTypeName("bool"),
-                _ => SyntaxFactory.ParseTypeName(propertyType),
+                case "integer":
+                {
+                    predefinedTypeSyntax = SyntaxFactory.PredefinedType(SyntaxFactory.Token(SyntaxKind.IntKeyword));
+                    return true;
+                }
+                case "string":
+                {
+                    predefinedTypeSyntax = SyntaxFactory.PredefinedType(SyntaxFactory.Token(SyntaxKind.StringKeyword));
+                    return true;
+                }
+                case "boolean":
+                {
+                    predefinedTypeSyntax = SyntaxFactory.PredefinedType(SyntaxFactory.Token(SyntaxKind.BoolKeyword));
+                    return true;
+                }
+                default:
+                {
+                    predefinedTypeSyntax = null;
+                    return false;
+                }
             };
         }
 
-        private static bool ShouldCreateSubType(string? propertyType)
-            => propertyType == "object" || propertyType == "array";
+        private static TypeSyntax ParseTypeSyntax(string propertyType)
+        {
+            if (TryGetPredefinedTypeSyntax(propertyType, out var predefinedTypeSyntax))
+                return predefinedTypeSyntax;
 
-        private static bool IsArray(string? propertyType, OpenApiComponentPropertyType? items)
-            => propertyType == "array";
+            return SyntaxFactory.ParseTypeName(propertyType);
+        }
+
+        private static bool ShouldCreateSubType(string? propertyType, string? itemsType)
+            => propertyType == "object" || propertyType == "array" && !TryGetPredefinedTypeSyntax(itemsType, out _);
 
         private static AttributeSyntax JsonPropertyNameAttributeSyntax(string propertyName)
         {
