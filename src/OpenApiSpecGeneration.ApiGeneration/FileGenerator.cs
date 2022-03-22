@@ -1,6 +1,7 @@
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
+using Microsoft.OpenApi.Models;
 using OpenApiSpecGeneration.Controller;
 using OpenApiSpecGeneration.Interactor;
 using OpenApiSpecGeneration.Model;
@@ -9,8 +10,8 @@ namespace OpenApiSpecGeneration
 {
     public class FileGenerator
     {
-        public static IEnumerable<WritableFile> GenerateControllers(string @namespace, OpenApiSpec spec)
-           => ControllerGenerator.GenerateControllers(spec)
+        public static IEnumerable<WritableFile> GenerateControllers(string @namespace, OpenApiDocument document)
+           => ControllerGenerator.GenerateControllers(document)
             .Select(c =>
             {
                 var usings = SyntaxFactory.List<UsingDirectiveSyntax>(new[]{
@@ -24,8 +25,8 @@ namespace OpenApiSpecGeneration
                 return new WritableFile($"{c.Identifier.Value}Controller.cs", usings, ns);
             });
 
-        public static IEnumerable<WritableFile> GenerateModels(string @namespace, OpenApiSpec spec)
-            => ModelGenerator.GenerateModels(spec)
+        public static IEnumerable<WritableFile> GenerateModels(string @namespace, OpenApiDocument document)
+            => ModelGenerator.GenerateModels(document)
                 .Select(model =>
                 {
                     var usings = SyntaxFactory.List<UsingDirectiveSyntax>(new[]{
@@ -37,8 +38,8 @@ namespace OpenApiSpecGeneration
                     return new WritableFile($"/models/{model.Identifier.Value}.cs", usings, ns);
                 });
 
-        public static IEnumerable<WritableFile> GenerateInteractors(string @namespace, OpenApiSpec spec)
-            => InteractorGenerator.GenerateInteractors(spec)
+        public static IEnumerable<WritableFile> GenerateInteractors(string @namespace, OpenApiDocument document)
+            => InteractorGenerator.GenerateInteractors(document)
                 .Select(interactor =>
                 {
                     var usings = SyntaxFactory.List<UsingDirectiveSyntax>(new[]{

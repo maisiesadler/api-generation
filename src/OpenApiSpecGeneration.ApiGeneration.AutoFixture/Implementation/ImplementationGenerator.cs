@@ -1,20 +1,21 @@
 using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
+using Microsoft.OpenApi.Models;
 
 namespace OpenApiSpecGeneration.ApiGeneration.AutoFixture.Implementation
 {
     internal class ImplementationGenerator
     {
-        internal static IEnumerable<ClassDeclarationSyntax> Generate(OpenApiSpec spec)
+        internal static IEnumerable<ClassDeclarationSyntax> Generate(OpenApiDocument document)
         {
-            foreach (var (apiPath, openApiPath) in spec.paths)
+            foreach (var (apiPath, openApiPath) in document.Paths)
             {
-                foreach (var (method, openApiMethod) in openApiPath.GetMethods())
+                foreach (var (operationType, operation) in openApiPath.Operations)
                 {
-                    var parameters = CreateParameterList(openApiMethod.parameters);
-                    var typeToGenerate = ReturnTypeExtensions.TryGetFirstReturnTypeSyntax(openApiMethod.responses, out var rt)
+                    var parameters = CreateParameterList(operation.Parameters);
+                    var typeToGenerate = ReturnTypeExtensions.TryGetFirstReturnTypeSyntax(operation.Responses, out var rt)
                         ? rt : null;
-                    var returnType = ReturnTypeExtensions.GetReturnTypeSyntaxWrapped(openApiMethod.responses);
+                    var returnType = ReturnTypeExtensions.GetReturnTypeSyntaxWrapped(operation.Responses);
                     var methodBody = MethodGenerator.CreateMethodBody(typeToGenerate, returnType);
                     var methodDeclaration = SyntaxFactory.MethodDeclaration(
                             returnType,
@@ -26,7 +27,7 @@ namespace OpenApiSpecGeneration.ApiGeneration.AutoFixture.Implementation
                         .WithParameterList(parameters)
                         .WithBody(methodBody);
 
-                    var interfaceName = CsharpNamingExtensions.PathToInteractorType(apiPath, method);
+                    var interfaceName = CsharpNamingExtensions.PathToInteractorType(apiPath, operationType);
                     var className = interfaceName.Substring(1);
 
                     var classDeclaration = SyntaxFactory.ClassDeclaration(SyntaxFactory.Identifier(className))
@@ -40,17 +41,17 @@ namespace OpenApiSpecGeneration.ApiGeneration.AutoFixture.Implementation
             }
         }
 
-        private static ParameterListSyntax CreateParameterList(OpenApiMethodParameter[]? openApiMethodParameters)
+        private static ParameterListSyntax CreateParameterList(IList<OpenApiParameter>? openApiParameters)
         {
-            if (openApiMethodParameters == null) return SyntaxFactory.ParameterList();
+            if (openApiParameters == null) return SyntaxFactory.ParameterList();
 
             var parameters = new List<ParameterSyntax>();
 
-            foreach (var openApiMethodParameter in openApiMethodParameters)
+            foreach (var openApiMethodParameter in openApiParameters)
             {
                 var attributeList = SyntaxFactory.List<AttributeListSyntax>();
-                var name = CsharpNamingExtensions.HeaderToParameter(openApiMethodParameter.name);
-                var typeSyntax = CsharpTypeExtensions.ParseTypeSyntax(openApiMethodParameter.schema?.type);
+                var name = CsharpNamingExtensions.HeaderToParameter(openApiMethodParameter.Name);
+                var typeSyntax = CsharpTypeExtensions.ParseTypeSyntax(openApiMethodParameter.Schema?.Type);
                 var parameter = SyntaxFactory.Parameter(
                         attributeList,
                         default,

@@ -1,18 +1,19 @@
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
+using Microsoft.OpenApi.Models;
 
 namespace OpenApiSpecGeneration.Controller
 {
     internal class MethodGenerator
     {
         internal static MethodDeclarationSyntax CreateMethod(
-            string method, OpenApiMethod? openApiMethod, string propertyType, string propertyName)
+            OperationType operationType, OpenApiOperation? operation, string propertyType, string propertyName)
         {
-            var hasReturnType = ReturnTypeExtensions.HasReturnType(openApiMethod?.responses);
-            var methodBody = CreateMethodBody(propertyName, openApiMethod?.parameters, hasReturnType);
-            var parameterList = CreateParameterList(openApiMethod?.parameters);
-            return SyntaxFactory.MethodDeclaration(SyntaxFactory.ParseTypeName("Task<IActionResult>"), CsharpNamingExtensions.FirstLetterToUpper(method))
+            var hasReturnType = ReturnTypeExtensions.HasReturnType(operation?.Responses);
+            var methodBody = CreateMethodBody(propertyName, operation?.Parameters, hasReturnType);
+            var parameterList = CreateParameterList(operation?.Parameters);
+            return SyntaxFactory.MethodDeclaration(SyntaxFactory.ParseTypeName("Task<IActionResult>"), operationType.ToString())
                 .AddModifiers(
                     SyntaxFactory.Token(SyntaxKind.PublicKeyword),
                     SyntaxFactory.Token(SyntaxKind.AsyncKeyword))
@@ -22,10 +23,10 @@ namespace OpenApiSpecGeneration.Controller
                     parameterList,
                     SyntaxFactory.Token(SyntaxKind.CloseParenToken)
                 ))
-                .AddAttributeLists(GetMethodAttributeList(method));
+                .AddAttributeLists(GetMethodAttributeList(operationType));
         }
 
-        private static BlockSyntax CreateMethodBody(string propertyName, OpenApiMethodParameter[]? parameters, bool hasReturnType)
+        private static BlockSyntax CreateMethodBody(string propertyName, IList<OpenApiParameter>? parameters, bool hasReturnType)
         {
             var memberAccessExpressionSyntax = SyntaxFactory.MemberAccessExpression(
                 SyntaxKind.SimpleMemberAccessExpression,
@@ -51,7 +52,7 @@ namespace OpenApiSpecGeneration.Controller
                 : CallAndReturnOk(awaitExpressionSyntax);
         }
 
-        private static SeparatedSyntaxList<ParameterSyntax> CreateParameterList(OpenApiMethodParameter[]? openApiMethodParameters)
+        private static SeparatedSyntaxList<ParameterSyntax> CreateParameterList(IList<OpenApiParameter>? openApiMethodParameters)
         {
             if (openApiMethodParameters == null) return SyntaxFactory.SeparatedList<ParameterSyntax>();
 
@@ -59,14 +60,14 @@ namespace OpenApiSpecGeneration.Controller
 
             foreach (var openApiMethodParameter in openApiMethodParameters)
             {
-                var attribute = ParamAttribute(openApiMethodParameter.In, openApiMethodParameter.name);
+                var attribute = ParamAttribute(openApiMethodParameter.In, openApiMethodParameter.Name);
                 var attributeList = SyntaxFactory.List<AttributeListSyntax>(
                     new[]{ SyntaxFactory.AttributeList(
                         SyntaxFactory.SingletonSeparatedList<AttributeSyntax>(attribute)
                     )}
                 );
-                var name = CsharpNamingExtensions.HeaderToParameter(openApiMethodParameter.name);
-                var typeSyntax = CsharpTypeExtensions.ParseTypeSyntax(openApiMethodParameter.schema?.type);
+                var name = CsharpNamingExtensions.HeaderToParameter(openApiMethodParameter.Name);
+                var typeSyntax = CsharpTypeExtensions.ParseTypeSyntax(openApiMethodParameter.Schema?.Type);
                 var parameter = SyntaxFactory.Parameter(
                         attributeList,
                         default,
@@ -81,7 +82,7 @@ namespace OpenApiSpecGeneration.Controller
             return SyntaxFactory.SeparatedList<ParameterSyntax>(parameters);
         }
 
-        private static ArgumentListSyntax CreateArgumentList(OpenApiMethodParameter[]? openApiMethodParameters)
+        private static ArgumentListSyntax CreateArgumentList(IList<OpenApiParameter>? openApiMethodParameters)
         {
             if (openApiMethodParameters == null) return SyntaxFactory.ArgumentList();
 
@@ -89,7 +90,7 @@ namespace OpenApiSpecGeneration.Controller
 
             foreach (var openApiMethodParameter in openApiMethodParameters)
             {
-                var name = CsharpNamingExtensions.HeaderToParameter(openApiMethodParameter.name);
+                var name = CsharpNamingExtensions.HeaderToParameter(openApiMethodParameter.Name);
                 var argument = SyntaxFactory.Argument(SyntaxFactory.IdentifierName(name));
 
                 arguments.Add(argument);
@@ -164,9 +165,9 @@ namespace OpenApiSpecGeneration.Controller
             return SyntaxFactory.Block(statements);
         }
 
-        private static AttributeListSyntax[] GetMethodAttributeList(string method)
+        private static AttributeListSyntax[] GetMethodAttributeList(OperationType operationType)
         {
-            var attributeNmae = RouteAttributeName(method);
+            var attributeNmae = RouteAttributeName(operationType);
             return new[] {
                 SyntaxFactory.AttributeList(
                     SyntaxFactory.SingletonSeparatedList<AttributeSyntax>(
@@ -176,19 +177,19 @@ namespace OpenApiSpecGeneration.Controller
             };
         }
 
-        private static string RouteAttributeName(string method)
+        private static string RouteAttributeName(OperationType operationType)
         {
-            return method switch
+            return operationType switch
             {
-                "get" => "HttpGet",
-                "post" => "HttpPost",
-                "put" => "HttpPut",
-                "delete" => "HttpDelete",
-                _ => throw new InvalidOperationException($"Unknown method '{method}'"),
+                OperationType.Get => "HttpGet",
+                OperationType.Post => "HttpPost",
+                OperationType.Put => "HttpPut",
+                OperationType.Delete => "HttpDelete",
+                _ => throw new InvalidOperationException($"Unsupported operation type '{operationType}'"),
             };
         }
 
-        private static AttributeSyntax ParamAttribute(string? parameterLocation, string? parameterName)
+        private static AttributeSyntax ParamAttribute(ParameterLocation? parameterLocation, string? parameterName)
         {
             AttributeSyntax AsAttribute(string attributeName, string? name = null)
             {
@@ -214,9 +215,9 @@ namespace OpenApiSpecGeneration.Controller
 
             return parameterLocation switch
             {
-                "path" => AsAttribute("FromRoute"),
-                "query" => AsAttribute("FromQuery"),
-                "header" => AsAttribute("FromHeader", "Name"),
+                ParameterLocation.Path => AsAttribute("FromRoute"),
+                ParameterLocation.Query => AsAttribute("FromQuery"),
+                ParameterLocation.Header => AsAttribute("FromHeader", "Name"),
                 _ => throw new InvalidOperationException($"Unknown parameter type '{parameterLocation}'"),
             };
         }

@@ -10,7 +10,7 @@ public class GetOpenApiSpecFileTests
     public async Task FileNotFoundReturnsFailure()
     {
         // Arrange
-        var getOpenApiSpecFile = new GetOpenApiSpecFile2();
+        var getOpenApiSpecFile = new GetOpenApiSpecFile();
 
         // Act
         var result = await getOpenApiSpecFile.Execute("/file/not/found");

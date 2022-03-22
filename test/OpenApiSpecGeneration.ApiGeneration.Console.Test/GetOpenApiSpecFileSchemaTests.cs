@@ -10,7 +10,7 @@ public class GetOpenApiSpecFileSchemaTests
     public async Task NestedComponentSchema_Loads()
     {
         // Arrange
-        var getOpenApiSpecFile = new GetOpenApiSpecFile2();
+        var getOpenApiSpecFile = new GetOpenApiSpecFile();
         var path = $"TestData/NestedComponentSchema.json";
 
         // Act
@@ -40,7 +40,7 @@ public class GetOpenApiSpecFileSchemaTests
     public async Task ArraySchema_Loads()
     {
         // Arrange
-        var getOpenApiSpecFile = new GetOpenApiSpecFile2();
+        var getOpenApiSpecFile = new GetOpenApiSpecFile();
         var path = $"TestData/Schema_StringArray.json";
 
         // Act

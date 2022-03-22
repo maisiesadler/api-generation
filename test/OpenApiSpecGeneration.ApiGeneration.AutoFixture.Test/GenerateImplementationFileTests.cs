@@ -1,5 +1,6 @@
 using System.Collections.Generic;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
+using Microsoft.OpenApi.Models;
 using Xunit;
 
 namespace OpenApiSpecGeneration.ApiGeneration.AutoFixture.Test;
@@ -10,15 +11,20 @@ public class GenerateImplementationFileTests
     public void ControllerFileNamespacesAndFileNameCorrect()
     {
         // Arrange
-        var apiTestPath = new OpenApiPath
+        var apiTestPathItem = new OpenApiPathItem
         {
-            get = new OpenApiMethod { },
+            Operations = new Dictionary<OperationType, OpenApiOperation>
+            {
+                { OperationType.Get, new OpenApiOperation() },
+            }
         };
-        var paths = new Dictionary<string, OpenApiPath>
+        var spec = new OpenApiDocument()
         {
-            { "/api/test", apiTestPath },
+            Paths = new OpenApiPaths
+            {
+                { "/api/test", apiTestPathItem },
+            },
         };
-        var spec = new OpenApiSpec(paths, new OpenApiComponent(new Dictionary<string, OpenApiComponentSchema>()));
 
         // Act
         var writableFiles = AutoFixture.FileGenerator.GenerateImplementation("MyNamespace", spec);

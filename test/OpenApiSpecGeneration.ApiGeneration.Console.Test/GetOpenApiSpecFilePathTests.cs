@@ -11,7 +11,7 @@ public class GetOpenApiSpecFilePathTests
     public async Task TodoGetWithPathParam_ResponsesLoadCorrectly()
     {
         // Arrange
-        var getOpenApiSpecFile = new GetOpenApiSpecFile2();
+        var getOpenApiSpecFile = new GetOpenApiSpecFile();
         var path = $"TestData/TodoGetWithPathParam.json";
 
         // Act
@@ -44,7 +44,7 @@ public class GetOpenApiSpecFilePathTests
     public async Task TodoGetWithPathParam_ParametersLoadCorrectly()
     {
         // Arrange
-        var getOpenApiSpecFile = new GetOpenApiSpecFile2();
+        var getOpenApiSpecFile = new GetOpenApiSpecFile();
         var path = $"TestData/TodoGetWithPathParam.json";
 
         // Act
@@ -71,7 +71,7 @@ public class GetOpenApiSpecFilePathTests
     public async Task TodoGetWithQueryParam_ParametersLoadCorrectly()
     {
         // Arrange
-        var getOpenApiSpecFile = new GetOpenApiSpecFile2();
+        var getOpenApiSpecFile = new GetOpenApiSpecFile();
         var path = $"TestData/TodoGetWithQueryParam.json";
 
         // Act
@@ -97,7 +97,7 @@ public class GetOpenApiSpecFilePathTests
     public async Task TodoGetWithHeaderParam_ParametersLoadCorrectly()
     {
         // Arrange
-        var getOpenApiSpecFile = new GetOpenApiSpecFile2();
+        var getOpenApiSpecFile = new GetOpenApiSpecFile();
         var path = $"TestData/TodoGetWithHeaderParam.json";
 
         // Act

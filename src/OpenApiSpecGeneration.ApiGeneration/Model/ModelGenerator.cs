@@ -1,61 +1,62 @@
 using System.Diagnostics.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
+using Microsoft.OpenApi.Models;
 
 namespace OpenApiSpecGeneration.Model
 {
     internal class ModelGenerator
     {
-        internal static IEnumerable<RecordDeclarationSyntax> GenerateModels(OpenApiSpec spec)
+        internal static IEnumerable<RecordDeclarationSyntax> GenerateModels(OpenApiDocument document)
         {
-            return GenerateRecords(spec).ToArray();
+            return GenerateRecords(document).ToArray();
         }
 
-        private static IEnumerable<RecordDeclarationSyntax> GenerateRecords(OpenApiSpec spec)
+        private static IEnumerable<RecordDeclarationSyntax> GenerateRecords(OpenApiDocument document)
         {
-            foreach (var (name, openApiComponentSchema) in spec.components.schemas)
+            foreach (var (name, openApiComponentSchema) in document.Components.Schemas)
             {
-                var (record, subtypes) = TryGenerateRecord(name, GetProperties(openApiComponentSchema.properties));
+                var (record, subtypes) = TryGenerateRecord(name, GetProperties(openApiComponentSchema.Properties));
                 yield return record;
 
                 foreach (var (subtypename, subtype) in subtypes)
                 {
-                    var (subtypeRecord, heello) = TryGenerateRecord(subtypename, GetProperties(subtype.properties));
+                    var (subtypeRecord, heello) = TryGenerateRecord(subtypename, GetProperties(subtype.Properties));
                     yield return subtypeRecord;
 
                     foreach (var (_subtypename, _subtype) in heello)
                     {
-                        var (_subtypeRecord, _) = TryGenerateRecord(_subtypename, GetProperties(_subtype.properties));
+                        var (_subtypeRecord, _) = TryGenerateRecord(_subtypename, GetProperties(_subtype.Properties));
                         yield return _subtypeRecord;
                     }
                 }
             }
         }
 
-        private static IEnumerable<(string propertyName, string propertyType, OpenApiComponentPropertyType? items)>
-            GetProperties(IReadOnlyDictionary<string, OpenApiComponentProperty>? openApiProperties)
+        private static IEnumerable<(string propertyName, string propertyType, OpenApiSchema? items)>
+            GetProperties(IDictionary<string, OpenApiSchema>? openApiProperties)
         {
             if (openApiProperties == null) yield break;
 
             foreach (var (propertyName, openApiProperty) in openApiProperties)
             {
-                var type = openApiProperty.type;
+                var type = openApiProperty.Type;
                 if (type == null)
-                    type = openApiProperty.Ref?.Split("/").Last();
+                    type = openApiProperty.Reference.Id;
 
                 if (type == null)
                     throw new InvalidOperationException($"{propertyName} missing property type");
 
-                yield return (propertyName, type, openApiProperty.items);
+                yield return (propertyName, type, openApiProperty.Items);
             }
         }
 
-        private static (RecordDeclarationSyntax, IList<(string, OpenApiComponentPropertyType)>) TryGenerateRecord(
+        private static (RecordDeclarationSyntax, IList<(string, OpenApiSchema)>) TryGenerateRecord(
             string name,
-            IEnumerable<(string propertyName, string propertyType, OpenApiComponentPropertyType? items)> openApiProperties)
+            IEnumerable<(string propertyName, string propertyType, OpenApiSchema? items)> openApiProperties)
         {
             var properties = new List<MemberDeclarationSyntax>();
-            var subTypes = new List<(string, OpenApiComponentPropertyType)>();
+            var subTypes = new List<(string, OpenApiSchema)>();
 
             foreach (var (propertyName, propertyType, items) in openApiProperties)
             {
@@ -66,7 +67,7 @@ namespace OpenApiSpecGeneration.Model
                 );
 
                 var potentialSubtypeName = name + CsharpNamingExtensions.SnakeCaseToCamel(propertyName) + "SubType";
-                var createSubType = ShouldCreateSubType(propertyType, items?.type);
+                var createSubType = ShouldCreateSubType(propertyType, items?.Type);
                 var typeSyntax = ParseTypeSyntax(propertyType);
                 // System.Console.WriteLine($"Potentially create: {potentialSubtypeName} - {createSubType} - {items != null}");
 
@@ -74,7 +75,7 @@ namespace OpenApiSpecGeneration.Model
                 {
                     var elementType = createSubType
                         ? ParseTypeSyntax(potentialSubtypeName)
-                        : ParseTypeSyntax(items?.type ?? throw new InvalidOperationException("Array element does not have type"));
+                        : ParseTypeSyntax(items?.Type ?? throw new InvalidOperationException("Array element does not have type"));
 
                     typeSyntax = SyntaxFactory.ArrayType(elementType)
                         .WithRankSpecifiers(

@@ -22,6 +22,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\..\src\OpenApiSpecGeneration.ApiGeneration\OpenApiSpecGeneration.ApiGeneration.csproj" />
+    <ProjectReference Include="..\OpenApiSpecGeneration.ApiGeneration.OpenApiMocks\OpenApiSpecGeneration.ApiGeneration.OpenApiMocks.csproj" />
   </ItemGroup>
 
   <ItemGroup>

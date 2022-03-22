@@ -1,19 +1,19 @@
-using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
+using Microsoft.OpenApi.Models;
 
 namespace OpenApiSpecGeneration.Interactor
 {
     internal class InteractorGenerator
     {
-        internal static IEnumerable<InterfaceDeclarationSyntax> GenerateInteractors(OpenApiSpec spec)
+        internal static IEnumerable<InterfaceDeclarationSyntax> GenerateInteractors(OpenApiDocument document)
         {
-            foreach (var (apiPath, openApiPath) in spec.paths)
+            foreach (var (apiPath, openApiPath) in document.Paths)
             {
-                foreach (var (method, openApiMethod) in openApiPath.GetMethods())
+                foreach (var (operationType, operation) in openApiPath.Operations)
                 {
-                    var parameters = CreateParameterList(openApiMethod.parameters);
-                    var returnType = ReturnTypeExtensions.GetReturnTypeSyntaxWrapped(openApiMethod.responses);
+                    var parameters = CreateParameterList(operation.Parameters);
+                    var returnType = ReturnTypeExtensions.GetReturnTypeSyntaxWrapped(operation.Responses);
                     var methodDeclaration = SyntaxFactory.MethodDeclaration(
                             returnType,
                             SyntaxFactory.Identifier("Execute"))
@@ -22,7 +22,7 @@ namespace OpenApiSpecGeneration.Interactor
 
                     var methods = new[] { methodDeclaration };
 
-                    var interfaceName = CsharpNamingExtensions.PathToInteractorType(apiPath, method);
+                    var interfaceName = CsharpNamingExtensions.PathToInteractorType(apiPath, operationType);
 
                     var interfaceDeclaration = SyntaxFactory.InterfaceDeclaration(
                         attributeLists: default,
@@ -42,7 +42,7 @@ namespace OpenApiSpecGeneration.Interactor
             }
         }
 
-        private static ParameterListSyntax CreateParameterList(OpenApiMethodParameter[]? openApiMethodParameters)
+        private static ParameterListSyntax CreateParameterList(IList<OpenApiParameter>? openApiMethodParameters)
         {
             if (openApiMethodParameters == null) return SyntaxFactory.ParameterList();
 
@@ -51,8 +51,8 @@ namespace OpenApiSpecGeneration.Interactor
             foreach (var openApiMethodParameter in openApiMethodParameters)
             {
                 var attributeList = SyntaxFactory.List<AttributeListSyntax>();
-                var name = CsharpNamingExtensions.HeaderToParameter(openApiMethodParameter.name);
-                var typeSyntax = CsharpTypeExtensions.ParseTypeSyntax(openApiMethodParameter.schema?.type);
+                var name = CsharpNamingExtensions.HeaderToParameter(openApiMethodParameter.Name);
+                var typeSyntax = CsharpTypeExtensions.ParseTypeSyntax(openApiMethodParameter.Schema?.Type);
                 var parameter = SyntaxFactory.Parameter(
                         attributeList,
                         default,
