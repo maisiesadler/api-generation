@@ -1,0 +1,29 @@
+{
+    "openapi": "3.0.1",
+    "info": {
+        "title": "API V1",
+        "version": "v1"
+    },
+    "paths": {},
+    "components": {
+        "schemas": {
+            "Address": {
+                "description": "User Address",
+                "type": "object",
+                "properties": {
+                    "lines": {
+                        "type": "array",
+                        "items": {
+                            "type": "string"
+                        },
+                        "example": [
+                            "62 West Wallaby Street",
+                            "Wigan",
+                            "Lancashire"
+                        ]
+                    }
+                }
+            }
+        }
+    }
+}
