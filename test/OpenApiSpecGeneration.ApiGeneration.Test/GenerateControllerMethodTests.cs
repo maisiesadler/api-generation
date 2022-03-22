@@ -2,6 +2,8 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
+using Microsoft.OpenApi.Models;
+using OpenApiSpecGeneration.ApiGeneration.OpenApiMocks;
 using Xunit;
 
 namespace OpenApiSpecGeneration.ApiGeneration.Test;
@@ -12,31 +14,23 @@ public class GenerateControllerMethodTests
     public void ValidMethodPathParameterGenerated()
     {
         // Arrange
-        var apiTestPath = new OpenApiPath
-        {
-            get = new OpenApiMethod
-            {
-                parameters = new OpenApiMethodParameter[]
+        var apiTestPathItem = OpenApiMockBuilder.BuildPathItem()
+            .WithOperation(
+                OperationType.Get,
+                operation => operation.Parameters.Add(new OpenApiParameter
                 {
-                    new OpenApiMethodParameter
-                    {
-                        In = "path",
-                        name = "testname",
-                        required = true,
-                        description = "something",
-                        schema = new OpenApiMethodParameterSchema("integer", null)
-                    },
-                },
-            },
-        };
-        var paths = new Dictionary<string, OpenApiPath>
-        {
-            { "/api/test", apiTestPath },
-        };
-        var spec = new OpenApiSpec(paths, new OpenApiComponent(new Dictionary<string, OpenApiComponentSchema>()));
+                    In = ParameterLocation.Path,
+                    Name = "testname",
+                    Required = true,
+                    Description = "something",
+                    Schema = new OpenApiSchema { Type = "integer" },
+                }));
+
+        var document = OpenApiMockBuilder.BuildDocument()
+            .WithPath("/api/test", apiTestPathItem);
 
         // Act
-        var classDeclarationSyntaxes = ApiGenerator.GenerateControllers(spec);
+        var classDeclarationSyntaxes = ApiGenerator.GenerateControllers(document);
 
         // Assert
         var classDeclarationSyntax = Assert.Single(classDeclarationSyntaxes);
@@ -64,31 +58,23 @@ public class GenerateControllerMethodTests
     public void ValidMethodQueryParameterGenerated()
     {
         // Arrange
-        var apiTestPath = new OpenApiPath
-        {
-            get = new OpenApiMethod
-            {
-                parameters = new OpenApiMethodParameter[]
+        var apiTestPathItem = OpenApiMockBuilder.BuildPathItem()
+            .WithOperation(
+                OperationType.Get,
+                operation => operation.Parameters.Add(new OpenApiParameter
                 {
-                    new OpenApiMethodParameter
-                    {
-                        In = "query",
-                        name = "queryParam",
-                        required = true,
-                        description = "something",
-                        schema = new OpenApiMethodParameterSchema("string", null)
-                    },
-                },
-            },
-        };
-        var paths = new Dictionary<string, OpenApiPath>
-        {
-            { "/api/test", apiTestPath },
-        };
-        var spec = new OpenApiSpec(paths, new OpenApiComponent(new Dictionary<string, OpenApiComponentSchema>()));
+                    In = ParameterLocation.Query,
+                    Name = "queryParam",
+                    Required = true,
+                    Description = "something",
+                    Schema = new OpenApiSchema { Type = "string" },
+                }));
+
+        var document = OpenApiMockBuilder.BuildDocument()
+            .WithPath("/api/test", apiTestPathItem);
 
         // Act
-        var classDeclarationSyntaxes = ApiGenerator.GenerateControllers(spec);
+        var classDeclarationSyntaxes = ApiGenerator.GenerateControllers(document);
 
         // Assert
         var classDeclarationSyntax = Assert.Single(classDeclarationSyntaxes);
@@ -116,31 +102,23 @@ public class GenerateControllerMethodTests
     public void ValidMethodHeaderParameterGenerated()
     {
         // Arrange
-        var apiTestPath = new OpenApiPath
-        {
-            get = new OpenApiMethod
-            {
-                parameters = new OpenApiMethodParameter[]
+        var apiTestPathItem = OpenApiMockBuilder.BuildPathItem()
+            .WithOperation(
+                OperationType.Get,
+                operation => operation.Parameters.Add(new OpenApiParameter
                 {
-                    new OpenApiMethodParameter
-                    {
-                        In = "header",
-                        name = "x-request-id",
-                        required = true,
-                        description = "something",
-                        schema = new OpenApiMethodParameterSchema("string", null)
-                    },
-                },
-            },
-        };
-        var paths = new Dictionary<string, OpenApiPath>
-        {
-            { "/api/test", apiTestPath },
-        };
-        var spec = new OpenApiSpec(paths, new OpenApiComponent(new Dictionary<string, OpenApiComponentSchema>()));
+                    In = ParameterLocation.Header,
+                    Name = "x-request-id",
+                    Required = true,
+                    Description = "something",
+                    Schema = new OpenApiSchema { Type = "string" },
+                }));
+
+        var document = OpenApiMockBuilder.BuildDocument()
+            .WithPath("/api/test", apiTestPathItem);
 
         // Act
-        var classDeclarationSyntaxes = ApiGenerator.GenerateControllers(spec);
+        var classDeclarationSyntaxes = ApiGenerator.GenerateControllers(document);
 
         // Assert
         var classDeclarationSyntax = Assert.Single(classDeclarationSyntaxes);
@@ -176,31 +154,23 @@ public class GenerateControllerMethodTests
     public void ValidMethodParameterPassedToInteractor(string paramName, string expectedGeneratedParam)
     {
         // Arrange
-        var apiTestPath = new OpenApiPath
-        {
-            get = new OpenApiMethod
-            {
-                parameters = new OpenApiMethodParameter[]
+        var apiTestPathItem = OpenApiMockBuilder.BuildPathItem()
+            .WithOperation(
+                OperationType.Get,
+                operation => operation.Parameters.Add(new OpenApiParameter
                 {
-                    new OpenApiMethodParameter
-                    {
-                        In = "path",
-                        name = paramName,
-                        required = true,
-                        description = "something",
-                        schema = new OpenApiMethodParameterSchema("integer", null)
-                    },
-                },
-            },
-        };
-        var paths = new Dictionary<string, OpenApiPath>
-        {
-            { "/api/test", apiTestPath },
-        };
-        var spec = new OpenApiSpec(paths, new OpenApiComponent(new Dictionary<string, OpenApiComponentSchema>()));
+                    In = ParameterLocation.Path,
+                    Name = paramName,
+                    Required = true,
+                    Description = "something",
+                    Schema = new OpenApiSchema { Type = "integer" },
+                }));
+
+        var document = OpenApiMockBuilder.BuildDocument()
+            .WithPath("/api/test", apiTestPathItem);
 
         // Act
-        var classDeclarationSyntaxes = ApiGenerator.GenerateControllers(spec);
+        var classDeclarationSyntaxes = ApiGenerator.GenerateControllers(document);
 
         // Assert
         var classDeclarationSyntax = Assert.Single(classDeclarationSyntaxes);
@@ -227,65 +197,57 @@ public class GenerateControllerMethodTests
     public void InvalidParameterSchemaTypeThrows()
     {
         // Arrange
-        var apiTestPath = new OpenApiPath
-        {
-            get = new OpenApiMethod
-            {
-                parameters = new OpenApiMethodParameter[]
+        var apiTestPathItem = OpenApiMockBuilder.BuildPathItem()
+            .WithOperation(
+                OperationType.Get,
+                operation => operation.Parameters.Add(new OpenApiParameter
                 {
-                    new OpenApiMethodParameter
-                    {
-                        In = "path",
-                        name = "testname",
-                        required = true,
-                        description = "something",
-                        schema = new OpenApiMethodParameterSchema("potatoes", null)
-                    },
-                },
-            },
-        };
-        var paths = new Dictionary<string, OpenApiPath>
-        {
-            { "/api/test", apiTestPath },
-        };
-        var spec = new OpenApiSpec(paths, new OpenApiComponent(new Dictionary<string, OpenApiComponentSchema>()));
+                    In = ParameterLocation.Path,
+                    Name = "testname",
+                    Required = true,
+                    Description = "something",
+                    Schema = new OpenApiSchema { Type = "potatoes" },
+                }));
+
+        var document = OpenApiMockBuilder.BuildDocument()
+            .WithPath("/api/test", apiTestPathItem);
 
         // Act
-        var exception = Assert.Throws<InvalidOperationException>(() => ApiGenerator.GenerateControllers(spec).ToList());
+        var exception = Assert.Throws<InvalidOperationException>(() => ApiGenerator.GenerateControllers(document).ToList());
 
         Assert.Equal($"Unknown openapi type 'potatoes'", exception.Message);
     }
 
-    [Fact]
-    public void InvalidParameterTypeThrows()
-    {
-        // Arrange
-        var apiTestPath = new OpenApiPath
-        {
-            get = new OpenApiMethod
-            {
-                parameters = new OpenApiMethodParameter[]
-                {
-                    new OpenApiMethodParameter
-                    {
-                        In = "potatoes",
-                        name = "testname",
-                        required = true,
-                        description = "something",
-                        schema = new OpenApiMethodParameterSchema("integer", null)
-                    },
-                },
-            },
-        };
-        var paths = new Dictionary<string, OpenApiPath>
-        {
-            { "/api/test", apiTestPath },
-        };
-        var spec = new OpenApiSpec(paths, new OpenApiComponent(new Dictionary<string, OpenApiComponentSchema>()));
+    // [Fact]
+    // public void InvalidParameterTypeThrows()
+    // {
+    //     // Arrange
+    //     var apiTestPath = new OpenApiPath
+    //     {
+    //         get = new OpenApiMethod
+    //         {
+    //             parameters = new OpenApiMethodParameter[]
+    //             {
+    //                 new OpenApiMethodParameter
+    //                 {
+    //                     In = "potatoes",
+    //                     name = "testname",
+    //                     required = true,
+    //                     description = "something",
+    //                     schema = new OpenApiMethodParameterSchema("integer", null)
+    //                 },
+    //             },
+    //         },
+    //     };
+    //     var paths = new Dictionary<string, OpenApiPath>
+    //     {
+    //         { "/api/test", apiTestPath },
+    //     };
+    //     var spec = new OpenApiSpec(paths, new OpenApiComponent(new Dictionary<string, OpenApiComponentSchema>()));
 
-        // Act & Assert
-        var exception = Assert.Throws<InvalidOperationException>(() => ApiGenerator.GenerateControllers(spec).ToList());
+    //     // Act & Assert
+    //     var exception = Assert.Throws<InvalidOperationException>(() => ApiGenerator.GenerateControllers(spec).ToList());
 
-        Assert.Equal($"Unknown parameter type 'potatoes'", exception.Message);
-    }
+    //     Assert.Equal($"Unknown parameter type 'potatoes'", exception.Message);
+    // }
 }

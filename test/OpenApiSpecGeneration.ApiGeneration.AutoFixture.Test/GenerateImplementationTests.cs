@@ -13,9 +13,7 @@ public class GenerateImplementationTests
     {
         // Arrange
         var apiTestPathItem = OpenApiMockBuilder.BuildPathItem()
-            .WithOperation(
-                OperationType.Get,
-                new OpenApiOperation());
+            .WithOperation(OperationType.Get);
 
         var document = OpenApiMockBuilder.BuildDocument()
             .WithPath("/api/test", apiTestPathItem);
@@ -41,9 +39,7 @@ public class GenerateImplementationTests
     {
         // Arrange
         var apiTestPathItem = OpenApiMockBuilder.BuildPathItem()
-            .WithOperation(
-                OperationType.Get,
-                new OpenApiOperation());
+            .WithOperation(OperationType.Get);
 
         var document = OpenApiMockBuilder.BuildDocument()
             .WithPath("/api/test", apiTestPathItem);
@@ -69,9 +65,7 @@ public class GenerateImplementationTests
     {
         // Arrange
         var apiTestPathItem = OpenApiMockBuilder.BuildPathItem()
-            .WithOperation(
-                OperationType.Get,
-                new OpenApiOperation());
+            .WithOperation(OperationType.Get);
 
         var document = OpenApiMockBuilder.BuildDocument()
             .WithPath("/api/test", apiTestPathItem);
@@ -118,10 +112,8 @@ public class GenerateImplementationTests
         var apiTestPathItem = OpenApiMockBuilder.BuildPathItem()
             .WithOperation(
                 OperationType.Get,
-                new OpenApiOperation
-                {
-                    Responses = new OpenApiResponses { { "200", response }, }
-                });
+                operation => operation.Responses.Add("200", response)
+            );
 
         var document = OpenApiMockBuilder.BuildDocument()
             .WithPath("/api/test", apiTestPathItem);
@@ -165,10 +157,8 @@ public class GenerateImplementationTests
         var apiTestPathItem = OpenApiMockBuilder.BuildPathItem()
             .WithOperation(
                 OperationType.Get,
-                new OpenApiOperation
-                {
-                    Responses = new OpenApiResponses { { "200", response }, }
-                });
+                operation => operation.Responses.Add("200", response)
+            );
 
         var document = OpenApiMockBuilder.BuildDocument()
             .WithPath("/api/test", apiTestPathItem);
@@ -210,9 +200,7 @@ public class GenerateImplementationTests
     {
         // Arrange
         var apiTestPathItem = OpenApiMockBuilder.BuildPathItem()
-            .WithOperation(
-                OperationType.Get,
-                new OpenApiOperation());
+            .WithOperation(OperationType.Get);
 
         var document = OpenApiMockBuilder.BuildDocument()
             .WithPath("/api/test", apiTestPathItem);

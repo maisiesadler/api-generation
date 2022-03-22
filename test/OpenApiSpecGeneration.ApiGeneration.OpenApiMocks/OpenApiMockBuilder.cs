@@ -46,11 +46,18 @@ public static class OpenApiMockBuilder
     }
 
     public static OpenApiPathItem WithOperation(
-        this OpenApiPathItem pathItem,
-        OperationType operationType,
-        OpenApiOperation openApiOperation)
+       this OpenApiPathItem pathItem,
+       OperationType operationType,
+       Action<OpenApiOperation>? setup = null)
     {
-        pathItem.Operations.Add(operationType, openApiOperation);
+        var operation = new OpenApiOperation
+        {
+            Parameters = new List<OpenApiParameter>(),
+        };
+
+        if (setup != null) setup(operation);
+
+        pathItem.Operations.Add(operationType, operation);
         return pathItem;
     }
 }
