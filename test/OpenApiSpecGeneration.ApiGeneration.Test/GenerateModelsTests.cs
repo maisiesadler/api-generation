@@ -1,9 +1,8 @@
-using System;
 using System.Collections.Generic;
-using System.IO;
 using System.Linq;
-using System.Text.Json;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
+using Microsoft.OpenApi.Models;
+using OpenApiSpecGeneration.ApiGeneration.OpenApiMocks;
 using Xunit;
 
 namespace OpenApiSpecGeneration.ApiGeneration.Test;
@@ -14,19 +13,20 @@ public class GenerateModelsTests
     public void SuccessfulTypeModelCreated()
     {
         // Arrange
-        var toDoItemProperties = new Dictionary<string, OpenApiComponentProperty>
+        var responseSchema = new OpenApiSchema
         {
-            { "id", new OpenApiComponentProperty("integer", default, default, default) },
+            Type = "object",
+            Properties = new Dictionary<string, OpenApiSchema>
+            {
+                { "id", new OpenApiSchema { Type ="integer" } },
+            },
         };
-        var componentSchemas = new Dictionary<string, OpenApiComponentSchema>
-        {
-            { "ToDoItem", new OpenApiComponentSchema("object", toDoItemProperties) }
-        };
-        var components = new OpenApiComponent(componentSchemas);
-        var spec = new OpenApiSpec(new Dictionary<string, OpenApiPath>(), components);
+
+        var document = OpenApiMockBuilder.BuildDocument()
+            .WithComponentSchema("ToDoItem", responseSchema);
 
         // Act
-        var recordDeclarationSyntaxes = ApiGenerator.GenerateModels(spec);
+        var recordDeclarationSyntaxes = ApiGenerator.GenerateModels(document);
 
         // Assert
         var recordDeclarationSyntax = Assert.Single(recordDeclarationSyntaxes);
@@ -49,19 +49,20 @@ public class GenerateModelsTests
     public void ModelHasJsonPropertyNameAttribute()
     {
         // Arrange
-        var toDoItemProperties = new Dictionary<string, OpenApiComponentProperty>
+        var responseSchema = new OpenApiSchema
         {
-            { "id", new OpenApiComponentProperty("integer",default,  default, default) },
+            Type = "object",
+            Properties = new Dictionary<string, OpenApiSchema>
+            {
+                { "id", new OpenApiSchema { Type = "integer" } },
+            },
         };
-        var componentSchemas = new Dictionary<string, OpenApiComponentSchema>
-        {
-            { "ToDoItem", new OpenApiComponentSchema("object", toDoItemProperties) }
-        };
-        var components = new OpenApiComponent(componentSchemas);
-        var spec = new OpenApiSpec(new Dictionary<string, OpenApiPath>(), components);
+
+        var document = OpenApiMockBuilder.BuildDocument()
+            .WithComponentSchema("ToDoItem", responseSchema);
 
         // Act
-        var recordDeclarationSyntaxes = ApiGenerator.GenerateModels(spec);
+        var recordDeclarationSyntaxes = ApiGenerator.GenerateModels(document);
 
         // Assert
         var recordDeclarationSyntax = Assert.Single(recordDeclarationSyntaxes);
@@ -85,19 +86,20 @@ public class GenerateModelsTests
     public void SupportedPropertyTypesConvertedCorrectly(string openApiType, string expectedCsharpType)
     {
         // Arrange
-        var toDoItemProperties = new Dictionary<string, OpenApiComponentProperty>
+        var responseSchema = new OpenApiSchema
         {
-            { "id", new OpenApiComponentProperty(openApiType,default,  default, default) },
+            Type = "object",
+            Properties = new Dictionary<string, OpenApiSchema>
+            {
+                { "id", new OpenApiSchema { Type = openApiType} },
+            },
         };
-        var componentSchemas = new Dictionary<string, OpenApiComponentSchema>
-        {
-            { "ToDoItem", new OpenApiComponentSchema("object", toDoItemProperties) }
-        };
-        var components = new OpenApiComponent(componentSchemas);
-        var spec = new OpenApiSpec(new Dictionary<string, OpenApiPath>(), components);
+
+        var document = OpenApiMockBuilder.BuildDocument()
+            .WithComponentSchema("ToDoItem", responseSchema);
 
         // Act
-        var recordDeclarationSyntaxes = ApiGenerator.GenerateModels(spec);
+        var recordDeclarationSyntaxes = ApiGenerator.GenerateModels(document);
 
         // Assert
         var recordDeclarationSyntax = Assert.Single(recordDeclarationSyntaxes);
@@ -111,23 +113,33 @@ public class GenerateModelsTests
     public void PropertyWithNestedTypeGeneratesSubtype()
     {
         // Arrange
-        var properties = new Dictionary<string, OpenApiComponentProperty>
+        var responseSchema = new OpenApiSchema
         {
-            { "name", new OpenApiComponentProperty("integer", default, default, default) },
+            Type = "object",
+            Properties = new Dictionary<string, OpenApiSchema>
+            {
+                {
+                    "id",
+                    new OpenApiSchema
+                    {
+                        Type = "array",
+                        Items = new OpenApiSchema
+                        {
+                            Properties = new Dictionary<string, OpenApiSchema>
+                            {
+                                { "name", new OpenApiSchema { Type = "integer" } },
+                            },
+                        },
+                    }
+                },
+            },
         };
-        var toDoItemProperties = new Dictionary<string, OpenApiComponentProperty>
-        {
-            { "id", new OpenApiComponentProperty("array", new OpenApiComponentPropertyType(properties, null), default, default) },
-        };
-        var componentSchemas = new Dictionary<string, OpenApiComponentSchema>
-        {
-            { "ToDoItem", new OpenApiComponentSchema("object", toDoItemProperties) }
-        };
-        var components = new OpenApiComponent(componentSchemas);
-        var spec = new OpenApiSpec(new Dictionary<string, OpenApiPath>(), components);
+
+        var document = OpenApiMockBuilder.BuildDocument()
+            .WithComponentSchema("ToDoItem", responseSchema);
 
         // Act
-        var recordDeclarationSyntaxes = ApiGenerator.GenerateModels(spec).ToArray();
+        var recordDeclarationSyntaxes = ApiGenerator.GenerateModels(document).ToArray();
 
         // Assert
         Assert.Equal(2, recordDeclarationSyntaxes.Length);
@@ -168,19 +180,25 @@ public class GenerateModelsTests
     public void SupportArrays()
     {
         // Arrange
-        var toDoItemProperties = new Dictionary<string, OpenApiComponentProperty>
+        var responseSchema = new OpenApiSchema
         {
-            { "things", new OpenApiComponentProperty("array", new OpenApiComponentPropertyType(null, "string"),  default, default) },
+            Type = "object",
+            Properties = new Dictionary<string, OpenApiSchema>
+            {
+                { "things", new OpenApiSchema
+                    {
+                        Type = "array",
+                        Items = new OpenApiSchema { Type = "string" },
+                    }
+                },
+            },
         };
-        var componentSchemas = new Dictionary<string, OpenApiComponentSchema>
-        {
-            { "ToDoItem", new OpenApiComponentSchema("object", toDoItemProperties) }
-        };
-        var components = new OpenApiComponent(componentSchemas);
-        var spec = new OpenApiSpec(new Dictionary<string, OpenApiPath>(), components);
+
+        var document = OpenApiMockBuilder.BuildDocument()
+            .WithComponentSchema("ToDoItem", responseSchema);
 
         // Act
-        var recordDeclarationSyntaxes = ApiGenerator.GenerateModels(spec).ToList();
+        var recordDeclarationSyntaxes = ApiGenerator.GenerateModels(document).ToList();
 
         // Assert
         var typeRecordDeclarationSyntax = Assert.Single(recordDeclarationSyntaxes);

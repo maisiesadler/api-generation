@@ -1,5 +1,7 @@
 using System.Collections.Generic;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
+using Microsoft.OpenApi.Models;
+using OpenApiSpecGeneration.ApiGeneration.OpenApiMocks;
 using Xunit;
 
 namespace OpenApiSpecGeneration.ApiGeneration.Test;
@@ -10,19 +12,23 @@ public class GenerateModelsFileTests
     public void ModelFileNamespacesAndFileNameCorrect()
     {
         // Arrange
-        var toDoItemProperties = new Dictionary<string, OpenApiComponentProperty>
+        var responseSchema = new OpenApiSchema
         {
-            { "id", new OpenApiComponentProperty("integer", default, default, default) },
+            Type = "array",
+            Items = new OpenApiSchema
+            {
+                Properties = new Dictionary<string, OpenApiSchema>
+                {
+                    { "id", new OpenApiSchema { Type ="integer" } },
+                },
+            },
         };
-        var componentSchemas = new Dictionary<string, OpenApiComponentSchema>
-        {
-            { "ToDoItem", new OpenApiComponentSchema("object", toDoItemProperties) }
-        };
-        var components = new OpenApiComponent(componentSchemas);
-        var spec = new OpenApiSpec(new Dictionary<string, OpenApiPath>(), components);
+
+        var document = OpenApiMockBuilder.BuildDocument()
+            .WithComponentSchema("ToDoItem", responseSchema);
 
         // Act
-        var writableFiles = FileGenerator.GenerateModels("MyNamespace", spec);
+        var writableFiles = FileGenerator.GenerateModels("MyNamespace", document);
 
         // Assert
         var writableFile = Assert.Single(writableFiles);

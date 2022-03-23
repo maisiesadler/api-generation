@@ -1,26 +1,24 @@
 using System.Collections.Generic;
 using System.IO;
-using System.Text.Json;
+using System.Threading.Tasks;
+using Microsoft.OpenApi.Models;
+using Microsoft.OpenApi.Readers;
 
 namespace OpenApiSpecGeneration.ApiGeneration.Test;
 
 public static class TestDataCache
 {
-    private static Dictionary<string, string> _loaded = new();
+    private static Dictionary<string, OpenApiDocument> _loaded = new();
 
-    public static string Get(string fileName)
+    public static async Task<OpenApiDocument> Get(string fileName)
     {
-        if (_loaded.TryGetValue(fileName, out var contents)) return contents;
+        if (_loaded.TryGetValue(fileName, out var cached)) return cached;
 
-        var fileContents = File.ReadAllText($"TestData/{fileName}.json");
-        _loaded[fileName] = fileContents;
+        await using var fileStream = File.OpenRead($"TestData/{fileName}.json");
+        var openApiDocument = new OpenApiStreamReader().Read(fileStream, out var diagnostic);
 
-        return fileContents;
-    }
+        _loaded[fileName] = openApiDocument;
 
-    public static T Get<T>(string fileName)
-    {
-       var contents = Get(fileName);
-       return JsonSerializer.Deserialize<T>(contents)!; 
+        return openApiDocument;
     }
 }

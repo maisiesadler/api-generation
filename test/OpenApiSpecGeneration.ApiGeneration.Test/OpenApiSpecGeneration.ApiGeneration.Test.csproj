@@ -18,10 +18,12 @@
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
       <PrivateAssets>all</PrivateAssets>
     </PackageReference>
+    <PackageReference Include="Microsoft.OpenApi.Readers" Version="1.2.3" />
   </ItemGroup>
 
   <ItemGroup>
     <ProjectReference Include="..\..\src\OpenApiSpecGeneration.ApiGeneration\OpenApiSpecGeneration.ApiGeneration.csproj" />
+    <ProjectReference Include="..\OpenApiSpecGeneration.ApiGeneration.OpenApiMocks\OpenApiSpecGeneration.ApiGeneration.OpenApiMocks.csproj" />
   </ItemGroup>
 
   <ItemGroup>

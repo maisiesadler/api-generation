@@ -1,5 +1,6 @@
-using System.Collections.Generic;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
+using Microsoft.OpenApi.Models;
+using OpenApiSpecGeneration.ApiGeneration.OpenApiMocks;
 using Xunit;
 
 namespace OpenApiSpecGeneration.ApiGeneration.Test;
@@ -10,18 +11,14 @@ public class GenerateControllerFileTests
     public void ControllerFileNamespacesAndFileNameCorrect()
     {
         // Arrange
-        var apiTestPath = new OpenApiPath
-        {
-            get = new OpenApiMethod { },
-        };
-        var paths = new Dictionary<string, OpenApiPath>
-        {
-            { "/api/test", apiTestPath },
-        };
-        var spec = new OpenApiSpec(paths, new OpenApiComponent(new Dictionary<string, OpenApiComponentSchema>()));
+        var apiTestPathItem = OpenApiMockBuilder.BuildPathItem()
+           .WithOperation(OperationType.Get);
+
+        var document = OpenApiMockBuilder.BuildDocument()
+            .WithPath("/api/test", apiTestPathItem);
 
         // Act
-        var writableFiles = FileGenerator.GenerateControllers("MyNamespace", spec);
+        var writableFiles = FileGenerator.GenerateControllers("MyNamespace", document);
 
         // Assert
         var writableFile = Assert.Single(writableFiles);

@@ -1,6 +1,8 @@
 using System.Collections.Generic;
 using System.Linq;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
+using Microsoft.OpenApi.Models;
+using OpenApiSpecGeneration.ApiGeneration.OpenApiMocks;
 using Xunit;
 
 namespace OpenApiSpecGeneration.ApiGeneration.Test;
@@ -11,18 +13,14 @@ public class GenerateControllersTests
     public void ClassSignatureIsCorrect()
     {
         // Arrange
-        var apiTestPath = new OpenApiPath
-        {
-            get = new OpenApiMethod { },
-        };
-        var paths = new Dictionary<string, OpenApiPath>
-        {
-            { "/api/test", apiTestPath },
-        };
-        var spec = new OpenApiSpec(paths, new OpenApiComponent(new Dictionary<string, OpenApiComponentSchema>()));
+        var apiTestPathItem = OpenApiMockBuilder.BuildPathItem()
+           .WithOperation(OperationType.Get);
+
+        var document = OpenApiMockBuilder.BuildDocument()
+            .WithPath("/api/test", apiTestPathItem);
 
         // Act
-        var classDeclarationSyntaxes = ApiGenerator.GenerateControllers(spec);
+        var classDeclarationSyntaxes = ApiGenerator.GenerateControllers(document);
 
         // Assert
         var classDeclarationSyntax = Assert.Single(classDeclarationSyntaxes);
@@ -41,18 +39,14 @@ public class GenerateControllersTests
     public void MethodSignatureIsCorrect()
     {
         // Arrange
-        var apiTestPath = new OpenApiPath
-        {
-            get = new OpenApiMethod { },
-        };
-        var paths = new Dictionary<string, OpenApiPath>
-        {
-            { "/api/test", apiTestPath },
-        };
-        var spec = new OpenApiSpec(paths, new OpenApiComponent(new Dictionary<string, OpenApiComponentSchema>()));
+        var apiTestPathItem = OpenApiMockBuilder.BuildPathItem()
+           .WithOperation(OperationType.Get);
+
+        var document = OpenApiMockBuilder.BuildDocument()
+            .WithPath("/api/test", apiTestPathItem);
 
         // Act
-        var classDeclarationSyntaxes = ApiGenerator.GenerateControllers(spec);
+        var classDeclarationSyntaxes = ApiGenerator.GenerateControllers(document);
 
         // Assert
         var classDeclarationSyntax = Assert.Single(classDeclarationSyntaxes);
@@ -74,19 +68,17 @@ public class GenerateControllersTests
     public void TwoPathsGeneratedAsSeparateFiles()
     {
         // Arrange
-        var apiTestPath = new OpenApiPath
-        {
-            get = new OpenApiMethod { tags = new List<string> { "peas" } },
-        };
-        var paths = new Dictionary<string, OpenApiPath>
-        {
-            { "/api/test", apiTestPath },
-            { "/api/test/{id}", apiTestPath },
-        };
-        var spec = new OpenApiSpec(paths, new OpenApiComponent(new Dictionary<string, OpenApiComponentSchema>()));
+        var apiTestPathItem = OpenApiMockBuilder.BuildPathItem()
+           .WithOperation(
+               OperationType.Get,
+               operation => operation.Tags.Add(new OpenApiTag { Name = "peas" }));
+
+        var document = OpenApiMockBuilder.BuildDocument()
+            .WithPath("/api/test", apiTestPathItem)
+            .WithPath("/api/test/{id}", apiTestPathItem);
 
         // Act
-        var classDeclarationSyntaxes = ApiGenerator.GenerateControllers(spec).ToList();
+        var classDeclarationSyntaxes = ApiGenerator.GenerateControllers(document).ToList();
 
         // Assert
         Assert.Equal(2, classDeclarationSyntaxes.Count);
@@ -99,18 +91,16 @@ public class GenerateControllersTests
     public void ClassHasPublicConstructor()
     {
         // Arrange
-        var apiTestPath = new OpenApiPath
-        {
-            get = new OpenApiMethod { tags = new List<string> { "peas" } },
-        };
-        var paths = new Dictionary<string, OpenApiPath>
-        {
-            { "/api/test", apiTestPath },
-        };
-        var spec = new OpenApiSpec(paths, new OpenApiComponent(new Dictionary<string, OpenApiComponentSchema>()));
+        var apiTestPathItem = OpenApiMockBuilder.BuildPathItem()
+           .WithOperation(
+               OperationType.Get,
+               operation => operation.Tags.Add(new OpenApiTag { Name = "peas" }));
+
+        var document = OpenApiMockBuilder.BuildDocument()
+            .WithPath("/api/test", apiTestPathItem);
 
         // Act
-        var classDeclarationSyntaxes = ApiGenerator.GenerateControllers(spec);
+        var classDeclarationSyntaxes = ApiGenerator.GenerateControllers(document);
 
         // Assert
         var classDeclarationSyntax = Assert.Single(classDeclarationSyntaxes);
@@ -124,27 +114,29 @@ public class GenerateControllersTests
     public void PublicConstructorHasInteractorAsParameter()
     {
         // Arrange
-        var openApiContentSchema = new OpenApiContentSchema("array", new Dictionary<string, string>
+        var responseSchema = new OpenApiSchema
         {
-            { "$ref", "#/components/schemas/ToDoItem" },
-        });
-        var openApiResponse = new OpenApiResponse("Success", new Dictionary<string, OpenApiContent>
-        {
-            { "text/plain", new OpenApiContent(openApiContentSchema) }
-        });
-        var openApiResponses = new Dictionary<string, OpenApiResponse> { { "200", openApiResponse } };
-        var apiTestPath = new OpenApiPath
-        {
-            get = new OpenApiMethod { responses = openApiResponses },
+            Type = "array",
+            Items = new OpenApiSchema
+            {
+                Reference = new OpenApiReference { Id = "ToDoItem", },
+            },
         };
-        var paths = new Dictionary<string, OpenApiPath>
-        {
-            { "/api/test", apiTestPath },
-        };
-        var spec = new OpenApiSpec(paths, new OpenApiComponent(new Dictionary<string, OpenApiComponentSchema>()));
+
+        var response = OpenApiMockBuilder.BuildResponse("Success")
+             .AddContent("text/plain", responseSchema);
+
+        var apiTestPathItem = OpenApiMockBuilder.BuildPathItem()
+            .WithOperation(
+                OperationType.Get,
+                operation => operation.Responses.Add("200", response)
+            );
+
+        var document = OpenApiMockBuilder.BuildDocument()
+            .WithPath("/api/test", apiTestPathItem);
 
         // Act
-        var classDeclarationSyntaxes = ApiGenerator.GenerateControllers(spec);
+        var classDeclarationSyntaxes = ApiGenerator.GenerateControllers(document);
 
         // Assert
         var classDeclarationSyntax = Assert.Single(classDeclarationSyntaxes);
@@ -159,27 +151,29 @@ public class GenerateControllersTests
     public void PublicConstructorHasInteractorsAsPrivateFields()
     {
         // Arrange
-        var openApiContentSchema = new OpenApiContentSchema("array", new Dictionary<string, string>
+        var responseSchema = new OpenApiSchema
         {
-            { "$ref", "#/components/schemas/ToDoItem" },
-        });
-        var openApiResponse = new OpenApiResponse("Success", new Dictionary<string, OpenApiContent>
-        {
-            { "text/plain", new OpenApiContent(openApiContentSchema) }
-        });
-        var openApiResponses = new Dictionary<string, OpenApiResponse> { { "200", openApiResponse } };
-        var apiTestPath = new OpenApiPath
-        {
-            get = new OpenApiMethod { responses = openApiResponses },
+            Type = "array",
+            Items = new OpenApiSchema
+            {
+                Reference = new OpenApiReference { Id = "ToDoItem", },
+            },
         };
-        var paths = new Dictionary<string, OpenApiPath>
-        {
-            { "/api/test", apiTestPath },
-        };
-        var spec = new OpenApiSpec(paths, new OpenApiComponent(new Dictionary<string, OpenApiComponentSchema>()));
+
+        var response = OpenApiMockBuilder.BuildResponse("Success")
+             .AddContent("text/plain", responseSchema);
+
+        var apiTestPathItem = OpenApiMockBuilder.BuildPathItem()
+            .WithOperation(
+                OperationType.Get,
+                operation => operation.Responses.Add("200", response)
+            );
+
+        var document = OpenApiMockBuilder.BuildDocument()
+            .WithPath("/api/test", apiTestPathItem);
 
         // Act
-        var classDeclarationSyntaxes = ApiGenerator.GenerateControllers(spec);
+        var classDeclarationSyntaxes = ApiGenerator.GenerateControllers(document);
 
         // Assert
         var classDeclarationSyntax = Assert.Single(classDeclarationSyntaxes);
@@ -198,27 +192,29 @@ public class GenerateControllersTests
     public void PublicConstructorHasInteractorsSetsPrivateFields()
     {
         // Arrange
-        var openApiContentSchema = new OpenApiContentSchema("array", new Dictionary<string, string>
+        var responseSchema = new OpenApiSchema
         {
-            { "$ref", "#/components/schemas/ToDoItem" },
-        });
-        var openApiResponse = new OpenApiResponse("Success", new Dictionary<string, OpenApiContent>
-        {
-            { "text/plain", new OpenApiContent(openApiContentSchema) }
-        });
-        var openApiResponses = new Dictionary<string, OpenApiResponse> { { "200", openApiResponse } };
-        var apiTestPath = new OpenApiPath
-        {
-            get = new OpenApiMethod { responses = openApiResponses },
+            Type = "array",
+            Items = new OpenApiSchema
+            {
+                Reference = new OpenApiReference { Id = "ToDoItem", },
+            },
         };
-        var paths = new Dictionary<string, OpenApiPath>
-        {
-            { "/api/test", apiTestPath },
-        };
-        var spec = new OpenApiSpec(paths, new OpenApiComponent(new Dictionary<string, OpenApiComponentSchema>()));
+
+        var response = OpenApiMockBuilder.BuildResponse("Success")
+             .AddContent("text/plain", responseSchema);
+
+        var apiTestPathItem = OpenApiMockBuilder.BuildPathItem()
+            .WithOperation(
+                OperationType.Get,
+                operation => operation.Responses.Add("200", response)
+            );
+
+        var document = OpenApiMockBuilder.BuildDocument()
+            .WithPath("/api/test", apiTestPathItem);
 
         // Act
-        var classDeclarationSyntaxes = ApiGenerator.GenerateControllers(spec);
+        var classDeclarationSyntaxes = ApiGenerator.GenerateControllers(document);
 
         // Assert
         var classDeclarationSyntax = Assert.Single(classDeclarationSyntaxes);
@@ -236,18 +232,14 @@ public class GenerateControllersTests
     public void ControllerHasApiControllerAttribute()
     {
         // Arrange
-        var apiTestPath = new OpenApiPath
-        {
-            get = new OpenApiMethod { tags = new List<string> { "peas" } },
-        };
-        var paths = new Dictionary<string, OpenApiPath>
-        {
-            { "/api/test", apiTestPath },
-        };
-        var spec = new OpenApiSpec(paths, new OpenApiComponent(new Dictionary<string, OpenApiComponentSchema>()));
+        var apiTestPathItem = OpenApiMockBuilder.BuildPathItem()
+           .WithOperation(OperationType.Get);
+
+        var document = OpenApiMockBuilder.BuildDocument()
+            .WithPath("/api/test", apiTestPathItem);
 
         // Act
-        var classDeclarationSyntaxes = ApiGenerator.GenerateControllers(spec);
+        var classDeclarationSyntaxes = ApiGenerator.GenerateControllers(document);
 
         // Assert
         var classDeclarationSyntax = Assert.Single(classDeclarationSyntaxes);
@@ -274,26 +266,21 @@ public class GenerateControllersTests
     }
 
     [Theory]
-    [InlineData("get", "Get", "HttpGet")]
-    [InlineData("post", "Post", "HttpPost")]
-    [InlineData("put", "Put", "HttpPut")]
-    [InlineData("delete", "Delete", "HttpDelete")]
-    public void MethodHasRouteAttribute(string method, string expectedMethodName, string expectedRouteAttribute)
+    [InlineData(OperationType.Get, "Get", "HttpGet")]
+    [InlineData(OperationType.Post, "Post", "HttpPost")]
+    [InlineData(OperationType.Put, "Put", "HttpPut")]
+    [InlineData(OperationType.Delete, "Delete", "HttpDelete")]
+    public void MethodHasRouteAttribute(OperationType operationType, string expectedMethodName, string expectedRouteAttribute)
     {
         // Arrange
-        var apiTestPath = new OpenApiPath();
-        if (method == "get") apiTestPath.get = new OpenApiMethod();
-        else if (method == "post") apiTestPath.post = new OpenApiMethod();
-        else if (method == "put") apiTestPath.put = new OpenApiMethod();
-        else if (method == "delete") apiTestPath.delete = new OpenApiMethod();
-        var paths = new Dictionary<string, OpenApiPath>
-        {
-            { "/api/test", apiTestPath },
-        };
-        var spec = new OpenApiSpec(paths, new OpenApiComponent(new Dictionary<string, OpenApiComponentSchema>()));
+        var apiTestPathItem = OpenApiMockBuilder.BuildPathItem()
+           .WithOperation(operationType);
+
+        var document = OpenApiMockBuilder.BuildDocument()
+            .WithPath("/api/test", apiTestPathItem);
 
         // Act
-        var classDeclarationSyntaxes = ApiGenerator.GenerateControllers(spec);
+        var classDeclarationSyntaxes = ApiGenerator.GenerateControllers(document);
 
         // Assert
         var classDeclarationSyntax = Assert.Single(classDeclarationSyntaxes);
@@ -312,27 +299,29 @@ public class GenerateControllersTests
     public void MethodBodyCallsInteractor()
     {
         // Arrange
-        var openApiContentSchema = new OpenApiContentSchema("array", new Dictionary<string, string>
+        var responseSchema = new OpenApiSchema
         {
-            { "$ref", "#/components/schemas/ToDoItem" },
-        });
-        var openApiResponse = new OpenApiResponse("Success", new Dictionary<string, OpenApiContent>
-        {
-            { "text/plain", new OpenApiContent(openApiContentSchema) }
-        });
-        var openApiResponses = new Dictionary<string, OpenApiResponse> { { "200", openApiResponse } };
-        var apiTestPath = new OpenApiPath
-        {
-            get = new OpenApiMethod { responses = openApiResponses },
+            Type = "array",
+            Items = new OpenApiSchema
+            {
+                Reference = new OpenApiReference { Id = "ToDoItem", },
+            },
         };
-        var paths = new Dictionary<string, OpenApiPath>
-        {
-            { "/api/test", apiTestPath },
-        };
-        var spec = new OpenApiSpec(paths, new OpenApiComponent(new Dictionary<string, OpenApiComponentSchema>()));
+
+        var response = OpenApiMockBuilder.BuildResponse("Success")
+             .AddContent("text/plain", responseSchema);
+
+        var apiTestPathItem = OpenApiMockBuilder.BuildPathItem()
+            .WithOperation(
+                OperationType.Get,
+                operation => operation.Responses.Add("200", response)
+            );
+
+        var document = OpenApiMockBuilder.BuildDocument()
+            .WithPath("/api/test", apiTestPathItem);
 
         // Act
-        var classDeclarationSyntaxes = ApiGenerator.GenerateControllers(spec);
+        var classDeclarationSyntaxes = ApiGenerator.GenerateControllers(document);
 
         // Assert
         var classDeclarationSyntax = Assert.Single(classDeclarationSyntaxes);
@@ -379,18 +368,14 @@ public class GenerateControllersTests
     public void ResultNotSetIfReturnTypeIsVoid()
     {
         // Arrange
-        var apiTestPath = new OpenApiPath
-        {
-            get = new OpenApiMethod { },
-        };
-        var paths = new Dictionary<string, OpenApiPath>
-        {
-            { "/api/test", apiTestPath },
-        };
-        var spec = new OpenApiSpec(paths, new OpenApiComponent(new Dictionary<string, OpenApiComponentSchema>()));
+        var apiTestPathItem = OpenApiMockBuilder.BuildPathItem()
+           .WithOperation(OperationType.Get);
+
+        var document = OpenApiMockBuilder.BuildDocument()
+            .WithPath("/api/test", apiTestPathItem);
 
         // Act
-        var classDeclarationSyntaxes = ApiGenerator.GenerateControllers(spec);
+        var classDeclarationSyntaxes = ApiGenerator.GenerateControllers(document);
 
         // Assert
         var classDeclarationSyntax = Assert.Single(classDeclarationSyntaxes);

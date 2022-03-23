@@ -1,4 +1,5 @@
 using System.Text.RegularExpressions;
+using Microsoft.OpenApi.Models;
 
 namespace OpenApiSpecGeneration
 {
@@ -10,9 +11,9 @@ namespace OpenApiSpecGeneration
             return string.Join("", split.Select(RemoveParameters).Select(FirstLetterToUpper));
         }
 
-        internal static string PathToInteractorType(string apiPath, string method)
+        internal static string PathToInteractorType(string apiPath, OperationType operationType)
         {
-            return $"I{FirstLetterToUpper(method)}{PathToClassName(apiPath)}Interactor";
+            return $"I{FirstLetterToUpper(operationType.ToString())}{PathToClassName(apiPath)}Interactor";
         }
 
         internal static string InterfaceToPropertyName(string interfaceTypeName)

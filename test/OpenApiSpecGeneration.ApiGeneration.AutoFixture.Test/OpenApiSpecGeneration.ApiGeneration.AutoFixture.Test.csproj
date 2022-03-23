@@ -22,6 +22,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\..\src\OpenApiSpecGeneration.ApiGeneration.AutoFixture\OpenApiSpecGeneration.ApiGeneration.AutoFixture.csproj" />
+    <ProjectReference Include="..\OpenApiSpecGeneration.ApiGeneration.OpenApiMocks\OpenApiSpecGeneration.ApiGeneration.OpenApiMocks.csproj" />
   </ItemGroup>
 
 </Project>

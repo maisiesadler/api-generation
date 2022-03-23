@@ -1,5 +1,7 @@
 using System.Collections.Generic;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
+using Microsoft.OpenApi.Models;
+using OpenApiSpecGeneration.ApiGeneration.OpenApiMocks;
 using Xunit;
 
 namespace OpenApiSpecGeneration.ApiGeneration.Test;
@@ -10,27 +12,29 @@ public class GenerateInteractorsTests
     public void ValidInteractorCreatedForOnePath()
     {
         // Arrange
-        var openApiContentSchema = new OpenApiContentSchema("array", new Dictionary<string, string>
+        var responseSchema = new OpenApiSchema
         {
-            { "$ref", "#/components/schemas/ToDoItem" },
-        });
-        var openApiResponse = new OpenApiResponse("Success", new Dictionary<string, OpenApiContent>
-        {
-            { "text/plain", new OpenApiContent(openApiContentSchema) }
-        });
-        var openApiResponses = new Dictionary<string, OpenApiResponse> { { "200", openApiResponse } };
-        var apiTestPath = new OpenApiPath
-        {
-            get = new OpenApiMethod { responses = openApiResponses },
+            Type = "array",
+            Items = new OpenApiSchema
+            {
+                Reference = new OpenApiReference { Id = "ToDoItem", },
+            },
         };
-        var paths = new Dictionary<string, OpenApiPath>
-        {
-            { "/api/test", apiTestPath },
-        };
-        var spec = new OpenApiSpec(paths, new OpenApiComponent(new Dictionary<string, OpenApiComponentSchema>()));
+
+        var response = OpenApiMockBuilder.BuildResponse("Success")
+             .AddContent("text/plain", responseSchema);
+
+        var apiTestPathItem = OpenApiMockBuilder.BuildPathItem()
+            .WithOperation(
+                OperationType.Get,
+                operation => operation.Responses.Add("200", response)
+            );
+
+        var document = OpenApiMockBuilder.BuildDocument()
+            .WithPath("/api/test", apiTestPathItem);
 
         // Act
-        var interfaceDeclarationSyntaxes = ApiGenerator.GenerateInteractors(spec);
+        var interfaceDeclarationSyntaxes = ApiGenerator.GenerateInteractors(document);
 
         // Assert
         var interfaceDeclarationSyntax = Assert.Single(interfaceDeclarationSyntaxes);
@@ -56,27 +60,29 @@ public class GenerateInteractorsTests
     public void SetReturnTypeAsArray()
     {
         // Arrange
-        var openApiContentSchema = new OpenApiContentSchema("array", new Dictionary<string, string>
+        var responseSchema = new OpenApiSchema
         {
-            { "$ref", "#/components/schemas/ToDoItem" },
-        });
-        var openApiResponse = new OpenApiResponse("Success", new Dictionary<string, OpenApiContent>
-        {
-            { "text/plain", new OpenApiContent(openApiContentSchema) }
-        });
-        var openApiResponses = new Dictionary<string, OpenApiResponse> { { "200", openApiResponse } };
-        var apiTestPath = new OpenApiPath
-        {
-            get = new OpenApiMethod { responses = openApiResponses },
+            Type = "array",
+            Items = new OpenApiSchema
+            {
+                Reference = new OpenApiReference { Id = "ToDoItem", },
+            },
         };
-        var paths = new Dictionary<string, OpenApiPath>
-        {
-            { "/api/test", apiTestPath },
-        };
-        var spec = new OpenApiSpec(paths, new OpenApiComponent(new Dictionary<string, OpenApiComponentSchema>()));
+
+        var response = OpenApiMockBuilder.BuildResponse("Success")
+             .AddContent("text/plain", responseSchema);
+
+        var apiTestPathItem = OpenApiMockBuilder.BuildPathItem()
+            .WithOperation(
+                OperationType.Get,
+                operation => operation.Responses.Add("200", response)
+            );
+
+        var document = OpenApiMockBuilder.BuildDocument()
+            .WithPath("/api/test", apiTestPathItem);
 
         // Act
-        var interfaceDeclarationSyntaxes = ApiGenerator.GenerateInteractors(spec);
+        var interfaceDeclarationSyntaxes = ApiGenerator.GenerateInteractors(document);
 
         // Assert
         var interfaceDeclarationSyntax = Assert.Single(interfaceDeclarationSyntaxes);
@@ -95,27 +101,26 @@ public class GenerateInteractorsTests
     public void ReturnTypeSchemaRefDirectlyInSchema()
     {
         // Arrange
-        var openApiContentSchema = new OpenApiContentSchema
+        var responseSchema = new OpenApiSchema
         {
-            Ref = "#/components/schemas/ToDoItem",
+            Type = "object",
+            Reference = new OpenApiReference { Id = "ToDoItem", },
         };
-        var openApiResponse = new OpenApiResponse("Success", new Dictionary<string, OpenApiContent>
-        {
-            { "text/plain", new OpenApiContent(openApiContentSchema) }
-        });
-        var openApiResponses = new Dictionary<string, OpenApiResponse> { { "200", openApiResponse } };
-        var apiTestPath = new OpenApiPath
-        {
-            get = new OpenApiMethod { responses = openApiResponses },
-        };
-        var paths = new Dictionary<string, OpenApiPath>
-        {
-            { "/api/test", apiTestPath },
-        };
-        var spec = new OpenApiSpec(paths, new OpenApiComponent(new Dictionary<string, OpenApiComponentSchema>()));
+
+        var response = OpenApiMockBuilder.BuildResponse("Success")
+             .AddContent("text/plain", responseSchema);
+
+        var apiTestPathItem = OpenApiMockBuilder.BuildPathItem()
+            .WithOperation(
+                OperationType.Get,
+                operation => operation.Responses.Add("200", response)
+            );
+
+        var document = OpenApiMockBuilder.BuildDocument()
+            .WithPath("/api/test", apiTestPathItem);
 
         // Act
-        var interfaceDeclarationSyntaxes = ApiGenerator.GenerateInteractors(spec);
+        var interfaceDeclarationSyntaxes = ApiGenerator.GenerateInteractors(document);
 
         // Assert
         var interfaceDeclarationSyntax = Assert.Single(interfaceDeclarationSyntaxes);
@@ -136,24 +141,25 @@ public class GenerateInteractorsTests
     public void NoReturnTypeSetTask()
     {
         // Arrange
-        var openApiContentSchema = new OpenApiContentSchema("array", new Dictionary<string, string>());
-        var openApiResponse = new OpenApiResponse("Success", new Dictionary<string, OpenApiContent>
+        var responseSchema = new OpenApiSchema
         {
-            { "text/plain", new OpenApiContent(openApiContentSchema) }
-        });
-        var openApiResponses = new Dictionary<string, OpenApiResponse> { { "200", openApiResponse } };
-        var apiTestPath = new OpenApiPath
-        {
-            get = new OpenApiMethod { responses = openApiResponses },
+            Type = "array",
         };
-        var paths = new Dictionary<string, OpenApiPath>
-        {
-            { "/api/test", apiTestPath },
-        };
-        var spec = new OpenApiSpec(paths, new OpenApiComponent(new Dictionary<string, OpenApiComponentSchema>()));
+
+        var response = OpenApiMockBuilder.BuildResponse("Success")
+             .AddContent("text/plain", responseSchema);
+
+        var apiTestPathItem = OpenApiMockBuilder.BuildPathItem()
+            .WithOperation(
+                OperationType.Get,
+                operation => operation.Responses.Add("200", response)
+            );
+
+        var document = OpenApiMockBuilder.BuildDocument()
+            .WithPath("/api/test", apiTestPathItem);
 
         // Act
-        var interfaceDeclarationSyntaxes = ApiGenerator.GenerateInteractors(spec);
+        var interfaceDeclarationSyntaxes = ApiGenerator.GenerateInteractors(document);
 
         // Assert
         var interfaceDeclarationSyntax = Assert.Single(interfaceDeclarationSyntaxes);
@@ -177,31 +183,23 @@ public class GenerateInteractorsTests
     public void ParametersSetIfAvailable(string paramName, string expectedGeneratedParam)
     {
         // Arrange
-        var apiTestPath = new OpenApiPath
-        {
-            get = new OpenApiMethod
-            {
-                parameters = new[]
+        var apiTestPathItem = OpenApiMockBuilder.BuildPathItem()
+            .WithOperation(
+                OperationType.Get,
+                operation => operation.Parameters.Add(new OpenApiParameter
                 {
-                    new OpenApiMethodParameter
-                    {
-                        In = "path",
-                        name = paramName,
-                        required = true,
-                        description = "something",
-                        schema = new OpenApiMethodParameterSchema("integer", null)
-                    }
-                }
-            },
-        };
-        var paths = new Dictionary<string, OpenApiPath>
-        {
-            { "/api/test", apiTestPath },
-        };
-        var spec = new OpenApiSpec(paths, new OpenApiComponent(new Dictionary<string, OpenApiComponentSchema>()));
+                    In = ParameterLocation.Path,
+                    Name = paramName,
+                    Required = true,
+                    Description = "something",
+                    Schema = new OpenApiSchema { Type = "integer" },
+                }));
+
+        var document = OpenApiMockBuilder.BuildDocument()
+            .WithPath("/api/test", apiTestPathItem);
 
         // Act
-        var interfaceDeclarationSyntaxes = ApiGenerator.GenerateInteractors(spec);
+        var interfaceDeclarationSyntaxes = ApiGenerator.GenerateInteractors(document);
 
         // Assert
         var interfaceDeclarationSyntax = Assert.Single(interfaceDeclarationSyntaxes);

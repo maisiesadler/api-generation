@@ -1,5 +1,7 @@
 using System.Collections.Generic;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
+using Microsoft.OpenApi.Models;
+using OpenApiSpecGeneration.ApiGeneration.OpenApiMocks;
 using Xunit;
 
 namespace OpenApiSpecGeneration.ApiGeneration.Test;
@@ -10,24 +12,26 @@ public class GenerateInteractorsFileTests
     public void InteractorFileNamespacesAndFileNameCorrect()
     {
         // Arrange
-        var openApiContentSchema = new OpenApiContentSchema("array", new Dictionary<string, string>());
-        var openApiResponse = new OpenApiResponse("Success", new Dictionary<string, OpenApiContent>
+        var responseSchema = new OpenApiSchema
         {
-            { "text/plain", new OpenApiContent(openApiContentSchema) }
-        });
-        var openApiResponses = new Dictionary<string, OpenApiResponse> { { "200", openApiResponse } };
-        var apiTestPath = new OpenApiPath
-        {
-            get = new OpenApiMethod { responses = openApiResponses },
+            Type = "array",
+            Items = new OpenApiSchema(),
         };
-        var paths = new Dictionary<string, OpenApiPath>
-        {
-            { "/api/test", apiTestPath },
-        };
-        var spec = new OpenApiSpec(paths, new OpenApiComponent(new Dictionary<string, OpenApiComponentSchema>()));
+
+        var response = OpenApiMockBuilder.BuildResponse("Success")
+             .AddContent("text/plain", responseSchema);
+
+        var apiTestPathItem = OpenApiMockBuilder.BuildPathItem()
+            .WithOperation(
+                OperationType.Get,
+                operation => operation.Responses.Add("200", response)
+            );
+
+        var document = OpenApiMockBuilder.BuildDocument()
+            .WithPath("/api/test", apiTestPathItem);
 
         // Act
-        var writableFiles = FileGenerator.GenerateInteractors("MyNamespace", spec);
+        var writableFiles = FileGenerator.GenerateInteractors("MyNamespace", document);
 
         // Assert
         var writableFile = Assert.Single(writableFiles);

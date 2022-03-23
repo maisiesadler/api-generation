@@ -1,4 +1,5 @@
 using Microsoft.CodeAnalysis.CSharp.Syntax;
+using Microsoft.OpenApi.Models;
 using OpenApiSpecGeneration.Controller;
 using OpenApiSpecGeneration.Interactor;
 using OpenApiSpecGeneration.Model;
@@ -7,13 +8,13 @@ namespace OpenApiSpecGeneration
 {
     public class ApiGenerator
     {
-        public static IEnumerable<ClassDeclarationSyntax> GenerateControllers(OpenApiSpec spec)
-            => ControllerGenerator.GenerateControllers(spec);
+        public static IEnumerable<ClassDeclarationSyntax> GenerateControllers(OpenApiDocument document)
+            => ControllerGenerator.GenerateControllers(document);
 
-        public static IEnumerable<RecordDeclarationSyntax> GenerateModels(OpenApiSpec spec)
-            => ModelGenerator.GenerateModels(spec);
+        public static IEnumerable<RecordDeclarationSyntax> GenerateModels(OpenApiDocument document)
+            => ModelGenerator.GenerateModels(document);
 
-        public static IEnumerable<InterfaceDeclarationSyntax> GenerateInteractors(OpenApiSpec spec)
-            => InteractorGenerator.GenerateInteractors(spec);
+        public static IEnumerable<InterfaceDeclarationSyntax> GenerateInteractors(OpenApiDocument document)
+            => InteractorGenerator.GenerateInteractors(document);
     }
 }

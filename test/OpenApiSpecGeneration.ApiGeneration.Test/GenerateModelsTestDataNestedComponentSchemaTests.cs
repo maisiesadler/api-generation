@@ -1,5 +1,5 @@
-using System.Collections.Generic;
 using System.Linq;
+using System.Threading.Tasks;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
 using Xunit;
 
@@ -8,20 +8,13 @@ namespace OpenApiSpecGeneration.ApiGeneration.Test;
 public class GenerateModelsTestDataNestedComponentSchemaTests
 {
     [Fact]
-    public void GeneratedModelNamesCorrect()
+    public async Task GeneratedModelNamesCorrect()
     {
         // Arrange
-        var componentSchema = TestDataCache.Get<OpenApiComponentSchema>("NestedComponentSchema");
-        var componentSchemas = new Dictionary<string, OpenApiComponentSchema>
-        {
-            { "ToDoItem", componentSchema },
-        };
-        var components = new OpenApiComponent(componentSchemas);
-
-        var spec = new OpenApiSpec(new Dictionary<string, OpenApiPath>(), components);
+        var document = await TestDataCache.Get("NestedComponentSchema");
 
         // Act
-        var recordDeclarationSyntaxes = ApiGenerator.GenerateModels(spec).ToArray();
+        var recordDeclarationSyntaxes = ApiGenerator.GenerateModels(document).ToArray();
 
         // Assert
         Assert.Equal(3, recordDeclarationSyntaxes.Length);
@@ -35,20 +28,13 @@ public class GenerateModelsTestDataNestedComponentSchemaTests
     }
 
     [Fact]
-    public void RootModelPropertiesCorrect()
+    public async Task RootModelPropertiesCorrect()
     {
         // Arrange
-        var componentSchema = TestDataCache.Get<OpenApiComponentSchema>("NestedComponentSchema");
-        var componentSchemas = new Dictionary<string, OpenApiComponentSchema>
-        {
-            { "ToDoItem", componentSchema },
-        };
-        var components = new OpenApiComponent(componentSchemas);
-
-        var spec = new OpenApiSpec(new Dictionary<string, OpenApiPath>(), components);
+        var document = await TestDataCache.Get("NestedComponentSchema");
 
         // Act
-        var recordDeclarationSyntaxes = ApiGenerator.GenerateModels(spec).ToArray();
+        var recordDeclarationSyntaxes = ApiGenerator.GenerateModels(document).ToArray();
 
         // Assert
         Assert.Equal(3, recordDeclarationSyntaxes.Length);
@@ -69,20 +55,13 @@ public class GenerateModelsTestDataNestedComponentSchemaTests
     }
 
     [Fact]
-    public void NestedModelPropertiesCorrect()
+    public async Task NestedModelPropertiesCorrect()
     {
         // Arrange
-        var componentSchema = TestDataCache.Get<OpenApiComponentSchema>("NestedComponentSchema");
-        var componentSchemas = new Dictionary<string, OpenApiComponentSchema>
-        {
-            { "ToDoItem", componentSchema },
-        };
-        var components = new OpenApiComponent(componentSchemas);
-
-        var spec = new OpenApiSpec(new Dictionary<string, OpenApiPath>(), components);
+        var document = await TestDataCache.Get("NestedComponentSchema");
 
         // Act
-        var recordDeclarationSyntaxes = ApiGenerator.GenerateModels(spec).ToArray();
+        var recordDeclarationSyntaxes = ApiGenerator.GenerateModels(document).ToArray();
 
         // Assert
         Assert.Equal(3, recordDeclarationSyntaxes.Length);
@@ -103,20 +82,13 @@ public class GenerateModelsTestDataNestedComponentSchemaTests
     }
 
     [Fact]
-    public void NestedNestedModelPropertiesCorrect()
+    public async Task NestedNestedModelPropertiesCorrect()
     {
         // Arrange
-        var componentSchema = TestDataCache.Get<OpenApiComponentSchema>("NestedComponentSchema");
-        var componentSchemas = new Dictionary<string, OpenApiComponentSchema>
-        {
-            { "ToDoItem", componentSchema },
-        };
-        var components = new OpenApiComponent(componentSchemas);
-
-        var spec = new OpenApiSpec(new Dictionary<string, OpenApiPath>(), components);
+        var document = await TestDataCache.Get("NestedComponentSchema");
 
         // Act
-        var recordDeclarationSyntaxes = ApiGenerator.GenerateModels(spec).ToArray();
+        var recordDeclarationSyntaxes = ApiGenerator.GenerateModels(document).ToArray();
 
         // Assert
         Assert.Equal(3, recordDeclarationSyntaxes.Length);

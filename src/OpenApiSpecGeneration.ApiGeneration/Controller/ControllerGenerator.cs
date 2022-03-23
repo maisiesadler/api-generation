@@ -1,14 +1,15 @@
 using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
+using Microsoft.OpenApi.Models;
 
 namespace OpenApiSpecGeneration.Controller
 {
     internal class ControllerGenerator
     {
-        internal static IEnumerable<ClassDeclarationSyntax> GenerateControllers(OpenApiSpec spec)
+        internal static IEnumerable<ClassDeclarationSyntax> GenerateControllers(OpenApiDocument document)
         {
             var members = new List<ClassDeclarationSyntax>();
-            foreach (var (apiPath, openApiPath) in spec.paths)
+            foreach (var (apiPath, openApiPath) in document.Paths)
             {
                 var normalisedName = CsharpNamingExtensions.PathToClassName(apiPath);
 
@@ -17,12 +18,12 @@ namespace OpenApiSpecGeneration.Controller
                 var parameters = new List<ParameterSyntax>();
                 var fields = new List<MemberDeclarationSyntax>();
 
-                foreach (var (method, openApiMethod) in openApiPath.GetMethods())
+                foreach (var (operationType, operation) in openApiPath.Operations)
                 {
-                    var propertyType = CsharpNamingExtensions.PathToInteractorType(apiPath, method);
+                    var propertyType = CsharpNamingExtensions.PathToInteractorType(apiPath, operationType);
                     var propertyName = CsharpNamingExtensions.InterfaceToPropertyName(propertyType);
 
-                    classMethods.Add(MethodGenerator.CreateMethod(method, openApiMethod, propertyType, propertyName));
+                    classMethods.Add(MethodGenerator.CreateMethod(operationType, operation, propertyType, propertyName));
                     fields.Add(CreateField(propertyType, propertyName));
                     assignments.Add(CreateAssignment(propertyName));
                     parameters.Add(CreateConstructorParameter(propertyType, propertyName));

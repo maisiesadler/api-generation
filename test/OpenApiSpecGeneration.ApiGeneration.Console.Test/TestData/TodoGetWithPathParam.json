@@ -38,6 +38,17 @@
         }
     },
     "components": {
-        "schemas": {}
+        "schemas": {
+            "ToDoItem": {
+                "type": "object",
+                "properties": {
+                    "id": {
+                        "type": "integer",
+                        "format": "int32"
+                    }
+                },
+                "additionalProperties": false
+            }
+        }
     }
 }

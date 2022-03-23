@@ -1,12 +1,13 @@
 using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
+using Microsoft.OpenApi.Models;
 
 namespace OpenApiSpecGeneration.ApiGeneration.AutoFixture
 {
     public class FileGenerator
     {
-        public static IEnumerable<WritableFile> GenerateImplementation(string @namespace, OpenApiSpec spec)
-           => ApiGenerator.GenerateImplementations(spec)
+        public static IEnumerable<WritableFile> GenerateImplementation(string @namespace, OpenApiDocument document)
+           => ApiGenerator.GenerateImplementations(document)
             .Select(c =>
             {
                 var usings = SyntaxFactory.List<UsingDirectiveSyntax>(new[]{
