@@ -14,7 +14,7 @@ namespace OpenApiSpecGeneration.Model
 
         private static IEnumerable<RecordDeclarationSyntax> GenerateRecords(OpenApiDocument document)
         {
-            foreach (var (name, openApiComponentSchema) in document.Components.Schemas)
+            foreach (var (name, openApiComponentSchema) in GetAllSchemas(document))
             {
                 var (record, subtypes) = TryGenerateRecord(name, GetProperties(openApiComponentSchema.Properties));
                 yield return record;
@@ -30,6 +30,35 @@ namespace OpenApiSpecGeneration.Model
                         yield return _subtypeRecord;
                     }
                 }
+            }
+        }
+
+        private static IEnumerable<(string name, OpenApiSchema schema)> GetAllSchemas(OpenApiDocument document)
+        {
+            foreach (var (pathName, openApiPathItem) in document.Paths)
+            {
+                foreach (var (operationType, operation) in openApiPathItem.Operations)
+                {
+                    foreach (var (responseName, response) in operation.Responses)
+                    {
+                        foreach (var (contentType, content) in response.Content)
+                        {
+                            if (content.Schema != null
+                            && (content.Schema.Type == "object" || content.Schema.Type == "array")
+                            && (content.Schema.Properties?.Any() == true))
+                            {
+                                var name = CsharpNamingExtensions.PathEtcToClassName(
+                                    new[] { pathName, operationType.ToString(), responseName, contentType, "Response" });
+                                yield return (name, content.Schema);
+                            }
+                        }
+                    }
+                }
+            }
+
+            foreach (var (name, openApiComponentSchema) in document.Components.Schemas)
+            {
+                yield return (name, openApiComponentSchema);
             }
         }
 
@@ -126,25 +155,25 @@ namespace OpenApiSpecGeneration.Model
             switch (propertyType)
             {
                 case "integer":
-                {
-                    predefinedTypeSyntax = SyntaxFactory.PredefinedType(SyntaxFactory.Token(SyntaxKind.IntKeyword));
-                    return true;
-                }
+                    {
+                        predefinedTypeSyntax = SyntaxFactory.PredefinedType(SyntaxFactory.Token(SyntaxKind.IntKeyword));
+                        return true;
+                    }
                 case "string":
-                {
-                    predefinedTypeSyntax = SyntaxFactory.PredefinedType(SyntaxFactory.Token(SyntaxKind.StringKeyword));
-                    return true;
-                }
+                    {
+                        predefinedTypeSyntax = SyntaxFactory.PredefinedType(SyntaxFactory.Token(SyntaxKind.StringKeyword));
+                        return true;
+                    }
                 case "boolean":
-                {
-                    predefinedTypeSyntax = SyntaxFactory.PredefinedType(SyntaxFactory.Token(SyntaxKind.BoolKeyword));
-                    return true;
-                }
+                    {
+                        predefinedTypeSyntax = SyntaxFactory.PredefinedType(SyntaxFactory.Token(SyntaxKind.BoolKeyword));
+                        return true;
+                    }
                 default:
-                {
-                    predefinedTypeSyntax = null;
-                    return false;
-                }
+                    {
+                        predefinedTypeSyntax = null;
+                        return false;
+                    }
             };
         }
 

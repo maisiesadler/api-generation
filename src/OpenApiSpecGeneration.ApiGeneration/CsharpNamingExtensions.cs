@@ -1,3 +1,4 @@
+using System.Text;
 using System.Text.RegularExpressions;
 using Microsoft.OpenApi.Models;
 
@@ -9,6 +10,19 @@ namespace OpenApiSpecGeneration
         {
             var split = apiPath.Split("/", StringSplitOptions.RemoveEmptyEntries);
             return string.Join("", split.Select(RemoveParameters).Select(FirstLetterToUpper));
+        }
+
+        internal static string PathEtcToClassName(string?[] parts)
+        {
+            var sofar = new StringBuilder();
+            foreach (var part in parts)
+            {
+                if (part == null) continue;
+                var split = part.Split("/", StringSplitOptions.RemoveEmptyEntries);
+                sofar.Append(string.Join("", split.Select(RemoveParameters).Select(FirstLetterToUpper)));
+            }
+
+            return sofar.ToString();
         }
 
         internal static string PathToInteractorType(string apiPath, OperationType operationType)

@@ -213,45 +213,49 @@ public class GenerateModelsTests
         Assert.Equal("string", predefinedTypeSyntax.Keyword.Value);
     }
 
-    // public void PathSchema()
-    // {
-    //     // Arrange
-    //     var openApiContentSchema = new OpenApiContentSchema("array", new Dictionary<string, string>
-    //     {
-    //         { "$ref", "#/components/schemas/ToDoItem" },
-    //     });
-    //     var openApiResponse = new OpenApiResponse("Success", new Dictionary<string, OpenApiContent>
-    //     {
-    //         { "text/plain", new OpenApiContent(openApiContentSchema) }
-    //     });
-    //     var openApiResponses = new Dictionary<string, OpenApiResponse> { { "200", openApiResponse } };
-    //     var apiTestPath = new OpenApiPath
-    //     {
-    //         { "get", new OpenApiMethod { responses = openApiResponses } },
-    //     };
-    //     var paths = new Dictionary<string, OpenApiPath>
-    //     {
-    //         { "/api/test", apiTestPath },
-    //     };
 
-    //     var componentSchemas = new Dictionary<string, OpenApiComponentSchema>();
-    //     var components = new OpenApiComponent(componentSchemas);
-    //     var spec = new OpenApiSpec(paths, components);
+    [Fact]
+    public void PathSchemaGenerated()
+    {
+        // Arrange
+        var responseSchema = new OpenApiSchema
+        {
+            Type = "object",
+            Properties = new Dictionary<string, OpenApiSchema>
+            {
+                { "id", new OpenApiSchema { Type = "string" }},
+            }
+        };
 
-    //     // Act
-    //     var classDeclarationSyntaxes = ApiGenerator.GenerateControllers(spec);
+        var response = OpenApiMockBuilder.BuildResponse("Success")
+             .AddContent("text/plain", responseSchema);
 
-    //     // Assert
-    //     var classDeclarationSyntax = Assert.Single(classDeclarationSyntaxes);
-    //     Assert.Equal("ApiTest", classDeclarationSyntax.Identifier.Value);
-    //     var classModifier = Assert.Single(classDeclarationSyntax.Modifiers);
-    //     Assert.Equal("public", classModifier.Value);
+        var apiTestPathItem = OpenApiMockBuilder.BuildPathItem()
+            .WithOperation(
+                OperationType.Get,
+                operation => operation.Responses.Add("200", response)
+            );
 
-    //     Assert.Equal(2, classDeclarationSyntax.Members.Count);
-    //     var memberDeclarationSyntax = classDeclarationSyntax.Members[1]; // first is ctor, skip here
-    //     var methodDeclarationSyntax = Assert.IsType<MethodDeclarationSyntax>(memberDeclarationSyntax);
-    //     Assert.Equal("Get", methodDeclarationSyntax.Identifier.Value);
-    //     var methodModifier = Assert.Single(methodDeclarationSyntax.Modifiers);
-    //     Assert.Equal("public", methodModifier.Value);
-    // }
+        var document = OpenApiMockBuilder.BuildDocument()
+            .WithPath("/api/test", apiTestPathItem);
+
+        // Act
+        var recordDeclarationSyntaxes = ApiGenerator.GenerateModels(document);
+
+        // Assert
+        var recordDeclarationSyntax = Assert.Single(recordDeclarationSyntaxes);
+        Assert.Equal("ApiTestGet200TextPlainResponse", recordDeclarationSyntax.Identifier.Value);
+        var classModifier = Assert.Single(recordDeclarationSyntax.Modifiers);
+        Assert.Equal("public", classModifier.Value);
+
+        Assert.Equal("{", recordDeclarationSyntax.OpenBraceToken.Value);
+        Assert.Equal("}", recordDeclarationSyntax.CloseBraceToken.Value);
+        var subtypeMemberDeclarationSyntax = Assert.Single(recordDeclarationSyntax.Members);
+        var subTypePropertyDeclarationSyntax = Assert.IsType<PropertyDeclarationSyntax>(subtypeMemberDeclarationSyntax);
+        Assert.Equal("Id", subTypePropertyDeclarationSyntax.Identifier.Value);
+        var subTypePropertyMethodModifier = Assert.Single(subTypePropertyDeclarationSyntax.Modifiers);
+        Assert.Equal("public", subTypePropertyMethodModifier.Value);
+        var subTypePropertyTypeSyntax = Assert.IsType<PredefinedTypeSyntax>(subTypePropertyDeclarationSyntax.Type);
+        Assert.Equal("string", subTypePropertyTypeSyntax.Keyword.Value);
+    }
 }
