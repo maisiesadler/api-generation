@@ -1,220 +1,218 @@
-// using System.Collections.Generic;
-// using Microsoft.CodeAnalysis.CSharp.Syntax;
-// using Xunit;
+using System.Collections.Generic;
+using Microsoft.CodeAnalysis.CSharp.Syntax;
+using Microsoft.OpenApi.Models;
+using OpenApiSpecGeneration.ApiGeneration.OpenApiMocks;
+using Xunit;
 
-// namespace OpenApiSpecGeneration.ApiGeneration.Test;
+namespace OpenApiSpecGeneration.ApiGeneration.Test;
 
-// public class GenerateInteractorsTests
-// {
-//     [Fact]
-//     public void ValidInteractorCreatedForOnePath()
-//     {
-//         // Arrange
-//         var openApiContentSchema = new OpenApiContentSchema("array", new Dictionary<string, string>
-//         {
-//             { "$ref", "#/components/schemas/ToDoItem" },
-//         });
-//         var openApiResponse = new OpenApiResponse("Success", new Dictionary<string, OpenApiContent>
-//         {
-//             { "text/plain", new OpenApiContent(openApiContentSchema) }
-//         });
-//         var openApiResponses = new Dictionary<string, OpenApiResponse> { { "200", openApiResponse } };
-//         var apiTestPath = new OpenApiPath
-//         {
-//             get = new OpenApiMethod { responses = openApiResponses },
-//         };
-//         var paths = new Dictionary<string, OpenApiPath>
-//         {
-//             { "/api/test", apiTestPath },
-//         };
-//         var spec = new OpenApiSpec(paths, new OpenApiComponent(new Dictionary<string, OpenApiComponentSchema>()));
+public class GenerateInteractorsTests
+{
+    [Fact]
+    public void ValidInteractorCreatedForOnePath()
+    {
+        // Arrange
+        var responseSchema = new OpenApiSchema
+        {
+            Type = "array",
+            Items = new OpenApiSchema
+            {
+                Reference = new OpenApiReference { Id = "ToDoItem", },
+            },
+        };
 
-//         // Act
-//         var interfaceDeclarationSyntaxes = ApiGenerator.GenerateInteractors(spec);
+        var response = OpenApiMockBuilder.BuildResponse("Success")
+             .AddContent("text/plain", responseSchema);
 
-//         // Assert
-//         var interfaceDeclarationSyntax = Assert.Single(interfaceDeclarationSyntaxes);
-//         Assert.Equal("IGetApiTestInteractor", interfaceDeclarationSyntax.Identifier.Value);
-//         var classModifier = Assert.Single(interfaceDeclarationSyntax.Modifiers);
-//         Assert.Equal("public", classModifier.Value);
+        var apiTestPathItem = OpenApiMockBuilder.BuildPathItem()
+            .WithOperation(
+                OperationType.Get,
+                operation => operation.Responses.Add("200", response)
+            );
 
-//         Assert.Equal("{", interfaceDeclarationSyntax.OpenBraceToken.Value);
-//         Assert.Equal("}", interfaceDeclarationSyntax.CloseBraceToken.Value);
-//         var memberDeclarationSyntax = Assert.Single(interfaceDeclarationSyntax.Members);
-//         var methodDeclarationSyntax = Assert.IsType<MethodDeclarationSyntax>(memberDeclarationSyntax);
-//         Assert.Equal("Execute", methodDeclarationSyntax.Identifier.Value);
-//         Assert.Empty(methodDeclarationSyntax.Modifiers);
-//         var genericNameSyntax = Assert.IsType<GenericNameSyntax>(methodDeclarationSyntax.ReturnType);
-//         Assert.Equal("Task", genericNameSyntax.Identifier.Value);
-//         var typeArgument = Assert.Single(genericNameSyntax.TypeArgumentList.Arguments);
-//         var arrayTypeSyntax = Assert.IsType<ArrayTypeSyntax>(typeArgument);
-//         var identifierNameSyntax = Assert.IsType<IdentifierNameSyntax>(arrayTypeSyntax.ElementType);
-//         Assert.Equal("ToDoItem", identifierNameSyntax.Identifier.Value);
-//     }
+        var document = OpenApiMockBuilder.BuildDocument()
+            .WithPath("/api/test", apiTestPathItem);
 
-//     [Fact]
-//     public void SetReturnTypeAsArray()
-//     {
-//         // Arrange
-//         var openApiContentSchema = new OpenApiContentSchema("array", new Dictionary<string, string>
-//         {
-//             { "$ref", "#/components/schemas/ToDoItem" },
-//         });
-//         var openApiResponse = new OpenApiResponse("Success", new Dictionary<string, OpenApiContent>
-//         {
-//             { "text/plain", new OpenApiContent(openApiContentSchema) }
-//         });
-//         var openApiResponses = new Dictionary<string, OpenApiResponse> { { "200", openApiResponse } };
-//         var apiTestPath = new OpenApiPath
-//         {
-//             get = new OpenApiMethod { responses = openApiResponses },
-//         };
-//         var paths = new Dictionary<string, OpenApiPath>
-//         {
-//             { "/api/test", apiTestPath },
-//         };
-//         var spec = new OpenApiSpec(paths, new OpenApiComponent(new Dictionary<string, OpenApiComponentSchema>()));
+        // Act
+        var interfaceDeclarationSyntaxes = ApiGenerator.GenerateInteractors(document);
 
-//         // Act
-//         var interfaceDeclarationSyntaxes = ApiGenerator.GenerateInteractors(spec);
+        // Assert
+        var interfaceDeclarationSyntax = Assert.Single(interfaceDeclarationSyntaxes);
+        Assert.Equal("IGetApiTestInteractor", interfaceDeclarationSyntax.Identifier.Value);
+        var classModifier = Assert.Single(interfaceDeclarationSyntax.Modifiers);
+        Assert.Equal("public", classModifier.Value);
 
-//         // Assert
-//         var interfaceDeclarationSyntax = Assert.Single(interfaceDeclarationSyntaxes);
-//         var memberDeclarationSyntax = Assert.Single(interfaceDeclarationSyntax.Members);
-//         var methodDeclarationSyntax = Assert.IsType<MethodDeclarationSyntax>(memberDeclarationSyntax);
+        Assert.Equal("{", interfaceDeclarationSyntax.OpenBraceToken.Value);
+        Assert.Equal("}", interfaceDeclarationSyntax.CloseBraceToken.Value);
+        var memberDeclarationSyntax = Assert.Single(interfaceDeclarationSyntax.Members);
+        var methodDeclarationSyntax = Assert.IsType<MethodDeclarationSyntax>(memberDeclarationSyntax);
+        Assert.Equal("Execute", methodDeclarationSyntax.Identifier.Value);
+        Assert.Empty(methodDeclarationSyntax.Modifiers);
+        var genericNameSyntax = Assert.IsType<GenericNameSyntax>(methodDeclarationSyntax.ReturnType);
+        Assert.Equal("Task", genericNameSyntax.Identifier.Value);
+        var typeArgument = Assert.Single(genericNameSyntax.TypeArgumentList.Arguments);
+        var arrayTypeSyntax = Assert.IsType<ArrayTypeSyntax>(typeArgument);
+        var identifierNameSyntax = Assert.IsType<IdentifierNameSyntax>(arrayTypeSyntax.ElementType);
+        Assert.Equal("ToDoItem", identifierNameSyntax.Identifier.Value);
+    }
 
-//         var genericNameSyntax = Assert.IsType<GenericNameSyntax>(methodDeclarationSyntax.ReturnType);
-//         Assert.Equal("Task", genericNameSyntax.Identifier.Value);
-//         var typeArgument = Assert.Single(genericNameSyntax.TypeArgumentList.Arguments);
-//         var arrayTypeSyntax = Assert.IsType<ArrayTypeSyntax>(typeArgument);
-//         var identifierNameSyntax = Assert.IsType<IdentifierNameSyntax>(arrayTypeSyntax.ElementType);
-//         Assert.Equal("ToDoItem", identifierNameSyntax.Identifier.Value);
-//     }
+    [Fact]
+    public void SetReturnTypeAsArray()
+    {
+        // Arrange
+        var responseSchema = new OpenApiSchema
+        {
+            Type = "array",
+            Items = new OpenApiSchema
+            {
+                Reference = new OpenApiReference { Id = "ToDoItem", },
+            },
+        };
 
-//     [Fact]
-//     public void ReturnTypeSchemaRefDirectlyInSchema()
-//     {
-//         // Arrange
-//         var openApiContentSchema = new OpenApiContentSchema
-//         {
-//             Ref = "#/components/schemas/ToDoItem",
-//         };
-//         var openApiResponse = new OpenApiResponse("Success", new Dictionary<string, OpenApiContent>
-//         {
-//             { "text/plain", new OpenApiContent(openApiContentSchema) }
-//         });
-//         var openApiResponses = new Dictionary<string, OpenApiResponse> { { "200", openApiResponse } };
-//         var apiTestPath = new OpenApiPath
-//         {
-//             get = new OpenApiMethod { responses = openApiResponses },
-//         };
-//         var paths = new Dictionary<string, OpenApiPath>
-//         {
-//             { "/api/test", apiTestPath },
-//         };
-//         var spec = new OpenApiSpec(paths, new OpenApiComponent(new Dictionary<string, OpenApiComponentSchema>()));
+        var response = OpenApiMockBuilder.BuildResponse("Success")
+             .AddContent("text/plain", responseSchema);
 
-//         // Act
-//         var interfaceDeclarationSyntaxes = ApiGenerator.GenerateInteractors(spec);
+        var apiTestPathItem = OpenApiMockBuilder.BuildPathItem()
+            .WithOperation(
+                OperationType.Get,
+                operation => operation.Responses.Add("200", response)
+            );
 
-//         // Assert
-//         var interfaceDeclarationSyntax = Assert.Single(interfaceDeclarationSyntaxes);
+        var document = OpenApiMockBuilder.BuildDocument()
+            .WithPath("/api/test", apiTestPathItem);
 
-//         Assert.Equal("}", interfaceDeclarationSyntax.CloseBraceToken.Value);
-//         var memberDeclarationSyntax = Assert.Single(interfaceDeclarationSyntax.Members);
-//         var methodDeclarationSyntax = Assert.IsType<MethodDeclarationSyntax>(memberDeclarationSyntax);
-//         Assert.Equal("Execute", methodDeclarationSyntax.Identifier.Value);
-//         Assert.Empty(methodDeclarationSyntax.Modifiers);
-//         var genericNameSyntax = Assert.IsType<GenericNameSyntax>(methodDeclarationSyntax.ReturnType);
-//         Assert.Equal("Task", genericNameSyntax.Identifier.Value);
-//         var typeArgument = Assert.Single(genericNameSyntax.TypeArgumentList.Arguments);
-//         var identifierNameSyntax = Assert.IsType<IdentifierNameSyntax>(typeArgument);
-//         Assert.Equal("ToDoItem", identifierNameSyntax.Identifier.Value);
-//     }
+        // Act
+        var interfaceDeclarationSyntaxes = ApiGenerator.GenerateInteractors(document);
 
-//     [Fact]
-//     public void NoReturnTypeSetTask()
-//     {
-//         // Arrange
-//         var openApiContentSchema = new OpenApiContentSchema("array", new Dictionary<string, string>());
-//         var openApiResponse = new OpenApiResponse("Success", new Dictionary<string, OpenApiContent>
-//         {
-//             { "text/plain", new OpenApiContent(openApiContentSchema) }
-//         });
-//         var openApiResponses = new Dictionary<string, OpenApiResponse> { { "200", openApiResponse } };
-//         var apiTestPath = new OpenApiPath
-//         {
-//             get = new OpenApiMethod { responses = openApiResponses },
-//         };
-//         var paths = new Dictionary<string, OpenApiPath>
-//         {
-//             { "/api/test", apiTestPath },
-//         };
-//         var spec = new OpenApiSpec(paths, new OpenApiComponent(new Dictionary<string, OpenApiComponentSchema>()));
+        // Assert
+        var interfaceDeclarationSyntax = Assert.Single(interfaceDeclarationSyntaxes);
+        var memberDeclarationSyntax = Assert.Single(interfaceDeclarationSyntax.Members);
+        var methodDeclarationSyntax = Assert.IsType<MethodDeclarationSyntax>(memberDeclarationSyntax);
 
-//         // Act
-//         var interfaceDeclarationSyntaxes = ApiGenerator.GenerateInteractors(spec);
+        var genericNameSyntax = Assert.IsType<GenericNameSyntax>(methodDeclarationSyntax.ReturnType);
+        Assert.Equal("Task", genericNameSyntax.Identifier.Value);
+        var typeArgument = Assert.Single(genericNameSyntax.TypeArgumentList.Arguments);
+        var arrayTypeSyntax = Assert.IsType<ArrayTypeSyntax>(typeArgument);
+        var identifierNameSyntax = Assert.IsType<IdentifierNameSyntax>(arrayTypeSyntax.ElementType);
+        Assert.Equal("ToDoItem", identifierNameSyntax.Identifier.Value);
+    }
 
-//         // Assert
-//         var interfaceDeclarationSyntax = Assert.Single(interfaceDeclarationSyntaxes);
-//         Assert.Equal("IGetApiTestInteractor", interfaceDeclarationSyntax.Identifier.Value);
-//         var classModifier = Assert.Single(interfaceDeclarationSyntax.Modifiers);
-//         Assert.Equal("public", classModifier.Value);
+    [Fact]
+    public void ReturnTypeSchemaRefDirectlyInSchema()
+    {
+        // Arrange
+        var responseSchema = new OpenApiSchema
+        {
+            Type = "object",
+            Reference = new OpenApiReference { Id = "ToDoItem", },
+        };
 
-//         Assert.Equal("{", interfaceDeclarationSyntax.OpenBraceToken.Value);
-//         Assert.Equal("}", interfaceDeclarationSyntax.CloseBraceToken.Value);
-//         var memberDeclarationSyntax = Assert.Single(interfaceDeclarationSyntax.Members);
-//         var methodDeclarationSyntax = Assert.IsType<MethodDeclarationSyntax>(memberDeclarationSyntax);
-//         Assert.Equal("Execute", methodDeclarationSyntax.Identifier.Value);
-//         Assert.Empty(methodDeclarationSyntax.Modifiers);
-//         var genericNameSyntax = Assert.IsType<IdentifierNameSyntax>(methodDeclarationSyntax.ReturnType);
-//         Assert.Equal("Task", genericNameSyntax.Identifier.Value);
-//     }
+        var response = OpenApiMockBuilder.BuildResponse("Success")
+             .AddContent("text/plain", responseSchema);
 
-//     [Theory]
-//     [InlineData("test", "test")]
-//     [InlineData("x-request-id", "xRequestId")]
-//     public void ParametersSetIfAvailable(string paramName, string expectedGeneratedParam)
-//     {
-//         // Arrange
-//         var apiTestPath = new OpenApiPath
-//         {
-//             get = new OpenApiMethod
-//             {
-//                 parameters = new[]
-//                 {
-//                     new OpenApiMethodParameter
-//                     {
-//                         In = "path",
-//                         name = paramName,
-//                         required = true,
-//                         description = "something",
-//                         schema = new OpenApiMethodParameterSchema("integer", null)
-//                     }
-//                 }
-//             },
-//         };
-//         var paths = new Dictionary<string, OpenApiPath>
-//         {
-//             { "/api/test", apiTestPath },
-//         };
-//         var spec = new OpenApiSpec(paths, new OpenApiComponent(new Dictionary<string, OpenApiComponentSchema>()));
+        var apiTestPathItem = OpenApiMockBuilder.BuildPathItem()
+            .WithOperation(
+                OperationType.Get,
+                operation => operation.Responses.Add("200", response)
+            );
 
-//         // Act
-//         var interfaceDeclarationSyntaxes = ApiGenerator.GenerateInteractors(spec);
+        var document = OpenApiMockBuilder.BuildDocument()
+            .WithPath("/api/test", apiTestPathItem);
 
-//         // Assert
-//         var interfaceDeclarationSyntax = Assert.Single(interfaceDeclarationSyntaxes);
-//         Assert.Equal("IGetApiTestInteractor", interfaceDeclarationSyntax.Identifier.Value);
+        // Act
+        var interfaceDeclarationSyntaxes = ApiGenerator.GenerateInteractors(document);
 
-//         var memberDeclarationSyntax = Assert.Single(interfaceDeclarationSyntax.Members);
-//         var methodDeclarationSyntax = Assert.IsType<MethodDeclarationSyntax>(memberDeclarationSyntax);
+        // Assert
+        var interfaceDeclarationSyntax = Assert.Single(interfaceDeclarationSyntaxes);
 
-//         Assert.Equal("Execute", methodDeclarationSyntax.Identifier.Value);
-//         var parameterSyntax = Assert.Single(methodDeclarationSyntax.ParameterList.Parameters);
+        Assert.Equal("}", interfaceDeclarationSyntax.CloseBraceToken.Value);
+        var memberDeclarationSyntax = Assert.Single(interfaceDeclarationSyntax.Members);
+        var methodDeclarationSyntax = Assert.IsType<MethodDeclarationSyntax>(memberDeclarationSyntax);
+        Assert.Equal("Execute", methodDeclarationSyntax.Identifier.Value);
+        Assert.Empty(methodDeclarationSyntax.Modifiers);
+        var genericNameSyntax = Assert.IsType<GenericNameSyntax>(methodDeclarationSyntax.ReturnType);
+        Assert.Equal("Task", genericNameSyntax.Identifier.Value);
+        var typeArgument = Assert.Single(genericNameSyntax.TypeArgumentList.Arguments);
+        var identifierNameSyntax = Assert.IsType<IdentifierNameSyntax>(typeArgument);
+        Assert.Equal("ToDoItem", identifierNameSyntax.Identifier.Value);
+    }
 
-//         Assert.Equal(expectedGeneratedParam, parameterSyntax.Identifier.ValueText);
-//         var parameterTypeSyntax = Assert.IsType<PredefinedTypeSyntax>(parameterSyntax.Type);
-//         Assert.Equal("int", parameterTypeSyntax.Keyword.Value);
-//     }
-// }
+    [Fact]
+    public void NoReturnTypeSetTask()
+    {
+        // Arrange
+        var responseSchema = new OpenApiSchema
+        {
+            Type = "array",
+        };
+
+        var response = OpenApiMockBuilder.BuildResponse("Success")
+             .AddContent("text/plain", responseSchema);
+
+        var apiTestPathItem = OpenApiMockBuilder.BuildPathItem()
+            .WithOperation(
+                OperationType.Get,
+                operation => operation.Responses.Add("200", response)
+            );
+
+        var document = OpenApiMockBuilder.BuildDocument()
+            .WithPath("/api/test", apiTestPathItem);
+
+        // Act
+        var interfaceDeclarationSyntaxes = ApiGenerator.GenerateInteractors(document);
+
+        // Assert
+        var interfaceDeclarationSyntax = Assert.Single(interfaceDeclarationSyntaxes);
+        Assert.Equal("IGetApiTestInteractor", interfaceDeclarationSyntax.Identifier.Value);
+        var classModifier = Assert.Single(interfaceDeclarationSyntax.Modifiers);
+        Assert.Equal("public", classModifier.Value);
+
+        Assert.Equal("{", interfaceDeclarationSyntax.OpenBraceToken.Value);
+        Assert.Equal("}", interfaceDeclarationSyntax.CloseBraceToken.Value);
+        var memberDeclarationSyntax = Assert.Single(interfaceDeclarationSyntax.Members);
+        var methodDeclarationSyntax = Assert.IsType<MethodDeclarationSyntax>(memberDeclarationSyntax);
+        Assert.Equal("Execute", methodDeclarationSyntax.Identifier.Value);
+        Assert.Empty(methodDeclarationSyntax.Modifiers);
+        var genericNameSyntax = Assert.IsType<IdentifierNameSyntax>(methodDeclarationSyntax.ReturnType);
+        Assert.Equal("Task", genericNameSyntax.Identifier.Value);
+    }
+
+    [Theory]
+    [InlineData("test", "test")]
+    [InlineData("x-request-id", "xRequestId")]
+    public void ParametersSetIfAvailable(string paramName, string expectedGeneratedParam)
+    {
+        // Arrange
+        var apiTestPathItem = OpenApiMockBuilder.BuildPathItem()
+            .WithOperation(
+                OperationType.Get,
+                operation => operation.Parameters.Add(new OpenApiParameter
+                {
+                    In = ParameterLocation.Path,
+                    Name = paramName,
+                    Required = true,
+                    Description = "something",
+                    Schema = new OpenApiSchema { Type = "integer" },
+                }));
+
+        var document = OpenApiMockBuilder.BuildDocument()
+            .WithPath("/api/test", apiTestPathItem);
+
+        // Act
+        var interfaceDeclarationSyntaxes = ApiGenerator.GenerateInteractors(document);
+
+        // Assert
+        var interfaceDeclarationSyntax = Assert.Single(interfaceDeclarationSyntaxes);
+        Assert.Equal("IGetApiTestInteractor", interfaceDeclarationSyntax.Identifier.Value);
+
+        var memberDeclarationSyntax = Assert.Single(interfaceDeclarationSyntax.Members);
+        var methodDeclarationSyntax = Assert.IsType<MethodDeclarationSyntax>(memberDeclarationSyntax);
+
+        Assert.Equal("Execute", methodDeclarationSyntax.Identifier.Value);
+        var parameterSyntax = Assert.Single(methodDeclarationSyntax.ParameterList.Parameters);
+
+        Assert.Equal(expectedGeneratedParam, parameterSyntax.Identifier.ValueText);
+        var parameterTypeSyntax = Assert.IsType<PredefinedTypeSyntax>(parameterSyntax.Type);
+        Assert.Equal("int", parameterTypeSyntax.Keyword.Value);
+    }
+}
