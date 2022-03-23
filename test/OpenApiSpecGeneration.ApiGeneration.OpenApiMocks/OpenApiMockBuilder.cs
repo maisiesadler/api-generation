@@ -4,13 +4,28 @@ namespace OpenApiSpecGeneration.ApiGeneration.OpenApiMocks;
 
 public static class OpenApiMockBuilder
 {
-    public static OpenApiDocument BuildDocument() => new OpenApiDocument { Paths = new OpenApiPaths() };
+    public static OpenApiDocument BuildDocument()
+        => new OpenApiDocument
+        {
+            Paths = new OpenApiPaths(),
+            Components = new OpenApiComponents { Schemas = new Dictionary<string, OpenApiSchema>() },
+        };
+
     public static OpenApiDocument WithPath(
         this OpenApiDocument openApiDocument,
         string path,
         OpenApiPathItem pathItem)
     {
         openApiDocument.Paths.Add(path, pathItem);
+        return openApiDocument;
+    }
+
+    public static OpenApiDocument WithComponentSchema(
+        this OpenApiDocument openApiDocument,
+        string key,
+        OpenApiSchema schema)
+    {
+        openApiDocument.Components.Schemas.Add(key, schema);
         return openApiDocument;
     }
 
