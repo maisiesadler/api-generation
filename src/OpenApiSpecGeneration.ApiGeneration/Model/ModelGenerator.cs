@@ -14,7 +14,7 @@ namespace OpenApiSpecGeneration.Model
 
         private static IEnumerable<RecordDeclarationSyntax> GenerateRecords(OpenApiDocument document)
         {
-            foreach (var (name, openApiComponentSchema) in GetAllSchemas(document))
+            foreach (var (name, openApiComponentSchema) in GetAllSchemas.Execute(document))
             {
                 var (record, subtypes) = TryGenerateRecord(name, GetProperties(openApiComponentSchema.Properties));
                 yield return record;
@@ -30,46 +30,6 @@ namespace OpenApiSpecGeneration.Model
                         yield return _subtypeRecord;
                     }
                 }
-            }
-        }
-
-        private static IEnumerable<(string name, OpenApiSchema schema)> GetAllSchemas(OpenApiDocument document)
-        {
-            foreach (var (pathName, openApiPathItem) in document.Paths)
-            {
-                foreach (var (operationType, operation) in openApiPathItem.Operations)
-                {
-                    if (operation.RequestBody != null)
-                    {
-                        foreach (var (contentType, content) in operation.RequestBody.Content)
-                        {
-                            if (ShouldCreateModel(content.Schema))
-                            {
-                                var name = CsharpNamingExtensions.PathEtcToClassName(
-                                    new[] { pathName, operationType.ToString(), contentType, "Request" });
-                                yield return (name, content.Schema);
-                            }
-                        }
-                    }
-
-                    foreach (var (responseName, response) in operation.Responses)
-                    {
-                        foreach (var (contentType, content) in response.Content)
-                        {
-                            if (ShouldCreateModel(content.Schema))
-                            {
-                                var name = CsharpNamingExtensions.PathEtcToClassName(
-                                    new[] { pathName, operationType.ToString(), responseName, contentType, "Response" });
-                                yield return (name, content.Schema);
-                            }
-                        }
-                    }
-                }
-            }
-
-            foreach (var (name, openApiComponentSchema) in document.Components.Schemas)
-            {
-                yield return (name, openApiComponentSchema);
             }
         }
 
