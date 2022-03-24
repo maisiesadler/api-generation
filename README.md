@@ -29,8 +29,8 @@ The first can be used as a package (soon) and the second is a console app that t
 
 ## What's supported
 
+Uses [Microsoft.OpenApi](https://github.com/microsoft/OpenAPI.NET) models and reader and so JSON and YAML open api specs are supported through that library.
+
 ### Reading open api specs
 
 The [console app](src/OpenApiSpecGeneration.ApiGeneration.Console) takes an input json openapi spec and outputs C# files to the given output directory.
-
-Our API specs are defined in YAML, since this is not easily parsed in dotnet I have created a tool [yamltojson](./yamltojson) that takes a YAML file and outputs a JSON file which can then be used by the console app.
