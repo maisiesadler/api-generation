@@ -213,9 +213,53 @@ public class GenerateModelsTests
         Assert.Equal("string", predefinedTypeSyntax.Keyword.Value);
     }
 
+    [Fact]
+    public void PathRequestSchemaGenerated()
+    {
+        // Arrange
+        var requestBodySchema = new OpenApiSchema
+        {
+            Type = "object",
+            Properties = new Dictionary<string, OpenApiSchema>
+            {
+                { "id", new OpenApiSchema { Type = "string" }},
+            }
+        };
+
+        var requestBody = OpenApiMockBuilder.BuildRequestBody("This is the request")
+             .AddContent("text/plain", requestBodySchema);
+
+        var apiTestPathItem = OpenApiMockBuilder.BuildPathItem()
+            .WithOperation(
+                OperationType.Post,
+                operation => operation.RequestBody = requestBody
+            );
+
+        var document = OpenApiMockBuilder.BuildDocument()
+            .WithPath("/api/test", apiTestPathItem);
+
+        // Act
+        var recordDeclarationSyntaxes = ApiGenerator.GenerateModels(document);
+
+        // Assert
+        var recordDeclarationSyntax = Assert.Single(recordDeclarationSyntaxes);
+        Assert.Equal("ApiTestPostTextPlainRequest", recordDeclarationSyntax.Identifier.Value);
+        var classModifier = Assert.Single(recordDeclarationSyntax.Modifiers);
+        Assert.Equal("public", classModifier.Value);
+
+        Assert.Equal("{", recordDeclarationSyntax.OpenBraceToken.Value);
+        Assert.Equal("}", recordDeclarationSyntax.CloseBraceToken.Value);
+        var subtypeMemberDeclarationSyntax = Assert.Single(recordDeclarationSyntax.Members);
+        var subTypePropertyDeclarationSyntax = Assert.IsType<PropertyDeclarationSyntax>(subtypeMemberDeclarationSyntax);
+        Assert.Equal("Id", subTypePropertyDeclarationSyntax.Identifier.Value);
+        var subTypePropertyMethodModifier = Assert.Single(subTypePropertyDeclarationSyntax.Modifiers);
+        Assert.Equal("public", subTypePropertyMethodModifier.Value);
+        var subTypePropertyTypeSyntax = Assert.IsType<PredefinedTypeSyntax>(subTypePropertyDeclarationSyntax.Type);
+        Assert.Equal("string", subTypePropertyTypeSyntax.Keyword.Value);
+    }
 
     [Fact]
-    public void PathSchemaGenerated()
+    public void PathResponseSchemaGenerated()
     {
         // Arrange
         var responseSchema = new OpenApiSchema

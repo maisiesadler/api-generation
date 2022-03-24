@@ -29,17 +29,44 @@ public static class OpenApiMockBuilder
         return openApiDocument;
     }
 
-    public static Microsoft.OpenApi.Models.OpenApiResponse BuildResponse(string description)
+    public static OpenApiRequestBody BuildRequestBody(string description)
     {
-        return new Microsoft.OpenApi.Models.OpenApiResponse
+        return new OpenApiRequestBody
         {
             Description = description,
             Content = new Dictionary<string, OpenApiMediaType>(),
         };
     }
 
-    public static Microsoft.OpenApi.Models.OpenApiResponse AddContent(
-        this Microsoft.OpenApi.Models.OpenApiResponse openApiResponse,
+    public static OpenApiResponse BuildResponse(string description)
+    {
+        return new OpenApiResponse
+        {
+            Description = description,
+            Content = new Dictionary<string, OpenApiMediaType>(),
+        };
+    }
+
+    public static OpenApiRequestBody AddContent(
+        this OpenApiRequestBody openApiRequestBody,
+        string contentType,
+        OpenApiSchema schema)
+    {
+        openApiRequestBody.Content.AddContent(contentType, schema);
+        return openApiRequestBody;
+    }
+
+    public static OpenApiResponse AddContent(
+        this OpenApiResponse openApiResponse,
+        string contentType,
+        OpenApiSchema schema)
+    {
+        openApiResponse.Content.AddContent(contentType, schema);
+        return openApiResponse;
+    }
+
+    private static IDictionary<string, OpenApiMediaType> AddContent(
+        this IDictionary<string, OpenApiMediaType> content,
         string contentType,
         OpenApiSchema schema)
     {
@@ -48,8 +75,8 @@ public static class OpenApiMockBuilder
             Schema = schema,
         };
 
-        openApiResponse.Content.Add(contentType, openApiMediaType);
-        return openApiResponse;
+        content.Add(contentType, openApiMediaType);
+        return content;
     }
 
     public static OpenApiPathItem BuildPathItem()

@@ -39,13 +39,24 @@ namespace OpenApiSpecGeneration.Model
             {
                 foreach (var (operationType, operation) in openApiPathItem.Operations)
                 {
+                    if (operation.RequestBody != null)
+                    {
+                        foreach (var (contentType, content) in operation.RequestBody.Content)
+                        {
+                            if (ShouldCreateModel(content.Schema))
+                            {
+                                var name = CsharpNamingExtensions.PathEtcToClassName(
+                                    new[] { pathName, operationType.ToString(), contentType, "Request" });
+                                yield return (name, content.Schema);
+                            }
+                        }
+                    }
+
                     foreach (var (responseName, response) in operation.Responses)
                     {
                         foreach (var (contentType, content) in response.Content)
                         {
-                            if (content.Schema != null
-                            && (content.Schema.Type == "object" || content.Schema.Type == "array")
-                            && (content.Schema.Properties?.Any() == true))
+                            if (ShouldCreateModel(content.Schema))
                             {
                                 var name = CsharpNamingExtensions.PathEtcToClassName(
                                     new[] { pathName, operationType.ToString(), responseName, contentType, "Response" });
@@ -187,6 +198,12 @@ namespace OpenApiSpecGeneration.Model
 
         private static bool ShouldCreateSubType(string? propertyType, string? itemsType)
             => propertyType == "object" || propertyType == "array" && !TryGetPredefinedTypeSyntax(itemsType, out _);
+
+
+        private static bool ShouldCreateModel(OpenApiSchema schema)
+            => schema != null
+                && (schema.Type == "object" || schema.Type == "array")
+                && schema.Properties?.Any() == true;
 
         private static AttributeSyntax JsonPropertyNameAttributeSyntax(string propertyName)
         {
