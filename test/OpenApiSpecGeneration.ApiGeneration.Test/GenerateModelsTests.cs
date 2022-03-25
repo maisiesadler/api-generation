@@ -302,4 +302,136 @@ public class GenerateModelsTests
         var subTypePropertyTypeSyntax = Assert.IsType<PredefinedTypeSyntax>(subTypePropertyDeclarationSyntax.Type);
         Assert.Equal("string", subTypePropertyTypeSyntax.Keyword.Value);
     }
+
+    [Fact]
+    public void NestedLocalModel()
+    {
+        // Arrange
+        var responseSchema = new OpenApiSchema
+        {
+            Type = "object",
+            Properties = new Dictionary<string, OpenApiSchema>
+            {
+                {
+                    "address",
+                    new OpenApiSchema
+                    {
+                        Type = "object",
+                        Properties = new Dictionary<string, OpenApiSchema>
+                        {
+                            {
+                                "house_number",
+                                new OpenApiSchema
+                                {
+                                    Type = "integer",
+                                }
+                            },
+                        },
+                    }
+                },
+            },
+        };
+
+        var document = OpenApiMockBuilder.BuildDocument()
+            .WithComponentSchema("ToDoItem", responseSchema);
+
+        // Act
+        var recordDeclarationSyntaxes = ApiGenerator.GenerateModels(document).ToArray();
+
+        // Assert
+        Assert.Equal(2, recordDeclarationSyntaxes.Length);
+
+        var recordSyntax0 = recordDeclarationSyntaxes[0];
+        Assert.Equal("ToDoItem", recordSyntax0.Identifier.Value);
+
+        var typeMemberDeclarationSyntax0 = Assert.Single(recordSyntax0.Members);
+        var typePropertyDeclarationSyntax0 = Assert.IsType<PropertyDeclarationSyntax>(typeMemberDeclarationSyntax0);
+        Assert.Equal("Address", typePropertyDeclarationSyntax0.Identifier.Value);
+        var typePropertyMethodModifier0 = Assert.Single(typePropertyDeclarationSyntax0.Modifiers);
+        Assert.Equal("public", typePropertyMethodModifier0.Value);
+        var typePropertyType0 = Assert.IsType<IdentifierNameSyntax>(typePropertyDeclarationSyntax0.Type);
+        Assert.Equal("ToDoItemAddressSubType", typePropertyType0.Identifier.Value);
+
+        var recordSyntax1 = recordDeclarationSyntaxes[1];
+        Assert.Equal("ToDoItemAddressSubType", recordSyntax1.Identifier.Value);
+
+        var typeMemberDeclarationSyntax1 = Assert.Single(recordSyntax1.Members);
+        var typePropertyDeclarationSyntax1 = Assert.IsType<PropertyDeclarationSyntax>(typeMemberDeclarationSyntax1);
+        Assert.Equal("HouseNumber", typePropertyDeclarationSyntax1.Identifier.Value);
+        var typePropertyMethodModifier1 = Assert.Single(typePropertyDeclarationSyntax1.Modifiers);
+        Assert.Equal("public", typePropertyMethodModifier1.Value);
+        var typePropertyType1 = Assert.IsType<PredefinedTypeSyntax>(typePropertyDeclarationSyntax1.Type);
+        Assert.Equal("int", typePropertyType1.Keyword.Value);
+    }
+
+    [Fact]
+    public void NestedModelReferencingAnotherSchema()
+    {
+        // Arrange
+        var propertySchema = new OpenApiSchema
+        {
+            Type = "object",
+            Properties = new Dictionary<string, OpenApiSchema>
+            {
+                {
+                    "house_number",
+                    new OpenApiSchema
+                    {
+                        Type = "integer",
+                    }
+                },
+            },
+        };
+        var responseSchema = new OpenApiSchema
+        {
+            Type = "object",
+            Properties = new Dictionary<string, OpenApiSchema>
+            {
+                {
+                    "address",
+                    new OpenApiSchema
+                    {
+                        Type = "object",
+                        Reference = new OpenApiReference
+                        {
+                            Id = "Address",
+                        }
+                    }
+                },
+            },
+        };
+
+        var document = OpenApiMockBuilder.BuildDocument()
+            .WithComponentSchema("Address", propertySchema)
+            .WithComponentSchema("ToDoItem", responseSchema);
+
+        // Act
+        var recordDeclarationSyntaxes = ApiGenerator.GenerateModels(document).ToArray();
+
+        // Assert
+        Assert.Equal(2, recordDeclarationSyntaxes.Length);
+
+        var recordSyntax0 = recordDeclarationSyntaxes[0];
+        Assert.Equal("Address", recordSyntax0.Identifier.Value);
+
+        var typeMemberDeclarationSyntax0 = Assert.Single(recordSyntax0.Members);
+        var typePropertyDeclarationSyntax0 = Assert.IsType<PropertyDeclarationSyntax>(typeMemberDeclarationSyntax0);
+        Assert.Equal("HouseNumber", typePropertyDeclarationSyntax0.Identifier.Value);
+        var typePropertyMethodModifier0 = Assert.Single(typePropertyDeclarationSyntax0.Modifiers);
+        Assert.Equal("public", typePropertyMethodModifier0.Value);
+        var typePropertyType0 = Assert.IsType<PredefinedTypeSyntax>(typePropertyDeclarationSyntax0.Type);
+        Assert.Equal("int", typePropertyType0.Keyword.Value);
+
+
+        var recordSyntax1 = recordDeclarationSyntaxes[1];
+        Assert.Equal("ToDoItem", recordSyntax1.Identifier.Value);
+
+        var typeMemberDeclarationSyntax1 = Assert.Single(recordSyntax1.Members);
+        var typePropertyDeclarationSyntax1 = Assert.IsType<PropertyDeclarationSyntax>(typeMemberDeclarationSyntax1);
+        Assert.Equal("Address", typePropertyDeclarationSyntax1.Identifier.Value);
+        var typePropertyMethodModifier1 = Assert.Single(typePropertyDeclarationSyntax1.Modifiers);
+        Assert.Equal("public", typePropertyMethodModifier1.Value);
+        var typePropertyType1 = Assert.IsType<IdentifierNameSyntax>(typePropertyDeclarationSyntax1.Type);
+        Assert.Equal("Address", typePropertyType1.Identifier.Value);
+    }
 }
