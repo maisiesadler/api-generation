@@ -23,7 +23,7 @@ namespace OpenApiSpecGeneration.Controller
                     var propertyType = CsharpNamingExtensions.PathToInteractorType(apiPath, operationType);
                     var propertyName = CsharpNamingExtensions.InterfaceToPropertyName(propertyType);
 
-                    classMethods.Add(MethodGenerator.CreateMethod(operationType, operation, propertyType, propertyName));
+                    classMethods.Add(MethodGenerator.CreateMethod(apiPath, operationType, operation, propertyType, propertyName));
                     fields.Add(CreateField(propertyType, propertyName));
                     assignments.Add(CreateAssignment(propertyName));
                     parameters.Add(CreateConstructorParameter(propertyType, propertyName));

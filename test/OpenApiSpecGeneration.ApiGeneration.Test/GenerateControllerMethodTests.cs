@@ -218,6 +218,56 @@ public class GenerateControllerMethodTests
         Assert.Equal($"Unknown openapi type 'potatoes'", exception.Message);
     }
 
+    [Fact]
+    public void LocalRequestBodyAddedToController()
+    {
+        // Arrange
+        var requestBodySchema = new OpenApiSchema
+        {
+            Type = "object",
+            Properties = new Dictionary<string, OpenApiSchema>
+            {
+                { "id", new OpenApiSchema { Type = "string" }},
+            }
+        };
+
+        var requestBody = OpenApiMockBuilder.BuildRequestBody("This is the request")
+             .AddContent("text/plain", requestBodySchema);
+
+        var apiTestPathItem = OpenApiMockBuilder.BuildPathItem()
+            .WithOperation(
+                OperationType.Post,
+                operation => operation.RequestBody = requestBody
+            );
+
+        var document = OpenApiMockBuilder.BuildDocument()
+            .WithPath("/api/test", apiTestPathItem);
+
+        // Act
+        var classDeclarationSyntaxes = ApiGenerator.GenerateControllers(document);
+
+        // Assert
+        var classDeclarationSyntax = Assert.Single(classDeclarationSyntaxes);
+
+        var methodDeclarationSyntax = Assert.Single(classDeclarationSyntax.Members.GetMembersOfType<MethodDeclarationSyntax>());
+        Assert.Equal("Post", methodDeclarationSyntax.Identifier.Value);
+        Assert.Equal(2, methodDeclarationSyntax.Modifiers.Count);
+        Assert.Equal("public", methodDeclarationSyntax.Modifiers[0].Value);
+        Assert.Equal("async", methodDeclarationSyntax.Modifiers[1].Value);
+
+        var parameterSyntax = Assert.Single(methodDeclarationSyntax.ParameterList.Parameters);
+        Assert.Equal("request", parameterSyntax.Identifier.Value);
+        var parameterSyntaxType = Assert.IsType<IdentifierNameSyntax>(parameterSyntax.Type);
+        Assert.Equal("ApiTestPostTextPlainRequest", parameterSyntaxType.Identifier.Value);
+
+        var parameterAttributeListSyntax = Assert.Single(parameterSyntax.AttributeLists);
+        var parameterAttributeSyntax = Assert.Single(parameterAttributeListSyntax.Attributes);
+
+        var parameterIdentifierNameSyntax = Assert.IsType<IdentifierNameSyntax>(parameterAttributeSyntax.Name);
+        Assert.Equal("FromBody", parameterIdentifierNameSyntax.Identifier.Value);
+        Assert.Null(parameterAttributeSyntax.ArgumentList);
+    }
+
     // [Fact]
     // public void InvalidParameterTypeThrows()
     // {

@@ -8,11 +8,15 @@ namespace OpenApiSpecGeneration.Controller
     internal class MethodGenerator
     {
         internal static MethodDeclarationSyntax CreateMethod(
-            OperationType operationType, OpenApiOperation? operation, string propertyType, string propertyName)
+            string pathName,
+            OperationType operationType,
+            OpenApiOperation? operation,
+            string propertyType,
+            string propertyName)
         {
             var hasReturnType = ReturnTypeExtensions.HasReturnType(operation?.Responses);
             var methodBody = CreateMethodBody(propertyName, operation?.Parameters, hasReturnType);
-            var parameterList = CreateParameterList(operation?.Parameters);
+            var parameterList = CreateParameterList(pathName, operationType, operation?.RequestBody, operation?.Parameters);
             return SyntaxFactory.MethodDeclaration(SyntaxFactory.ParseTypeName("Task<IActionResult>"), operationType.ToString())
                 .AddModifiers(
                     SyntaxFactory.Token(SyntaxKind.PublicKeyword),
@@ -52,31 +56,59 @@ namespace OpenApiSpecGeneration.Controller
                 : CallAndReturnOk(awaitExpressionSyntax);
         }
 
-        private static SeparatedSyntaxList<ParameterSyntax> CreateParameterList(IList<OpenApiParameter>? openApiMethodParameters)
+        private static SeparatedSyntaxList<ParameterSyntax> CreateParameterList(
+            string pathName,
+            OperationType operationType,
+            OpenApiRequestBody? requestBody,
+            IList<OpenApiParameter>? openApiMethodParameters)
         {
-            if (openApiMethodParameters == null) return SyntaxFactory.SeparatedList<ParameterSyntax>();
-
             var parameters = new List<ParameterSyntax>();
 
-            foreach (var openApiMethodParameter in openApiMethodParameters)
+            var firstContentType = requestBody?.Content.FirstOrDefault();
+            if (requestBody != null && firstContentType.HasValue)
             {
-                var attribute = ParamAttribute(openApiMethodParameter.In, openApiMethodParameter.Name);
+                var attribute = SyntaxFactory.Attribute(SyntaxFactory.IdentifierName("FromBody"));
                 var attributeList = SyntaxFactory.List<AttributeListSyntax>(
-                    new[]{ SyntaxFactory.AttributeList(
+                       new[]{ SyntaxFactory.AttributeList(
                         SyntaxFactory.SingletonSeparatedList<AttributeSyntax>(attribute)
                     )}
-                );
-                var name = CsharpNamingExtensions.HeaderToParameter(openApiMethodParameter.Name);
-                var typeSyntax = CsharpTypeExtensions.ParseTypeSyntax(openApiMethodParameter.Schema?.Type);
+                   );
+                var name = "request";
+                var typeName = CsharpNamingExtensions.PathEtcToClassName(
+                    new[] { pathName, operationType.ToString(), firstContentType.Value.Key, "Request" });
                 var parameter = SyntaxFactory.Parameter(
                         attributeList,
                         default,
-                        typeSyntax,
+                        SyntaxFactory.ParseTypeName(typeName),
                         SyntaxFactory.Identifier(name),
                         default
                     );
 
                 parameters.Add(parameter);
+            }
+
+            if (openApiMethodParameters != null)
+            {
+                foreach (var openApiMethodParameter in openApiMethodParameters)
+                {
+                    var attribute = ParamAttribute(openApiMethodParameter.In, openApiMethodParameter.Name);
+                    var attributeList = SyntaxFactory.List<AttributeListSyntax>(
+                        new[]{ SyntaxFactory.AttributeList(
+                        SyntaxFactory.SingletonSeparatedList<AttributeSyntax>(attribute)
+                    )}
+                    );
+                    var name = CsharpNamingExtensions.HeaderToParameter(openApiMethodParameter.Name);
+                    var typeSyntax = CsharpTypeExtensions.ParseTypeSyntax(openApiMethodParameter.Schema?.Type);
+                    var parameter = SyntaxFactory.Parameter(
+                            attributeList,
+                            default,
+                            typeSyntax,
+                            SyntaxFactory.Identifier(name),
+                            default
+                        );
+
+                    parameters.Add(parameter);
+                }
             }
 
             return SyntaxFactory.SeparatedList<ParameterSyntax>(parameters);
