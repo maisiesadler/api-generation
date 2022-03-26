@@ -15,8 +15,9 @@ namespace OpenApiSpecGeneration.Controller
             string propertyName)
         {
             var hasReturnType = ReturnTypeExtensions.HasReturnType(operation?.Responses);
-            var methodBody = CreateMethodBody(propertyName, operation?.Parameters, hasReturnType);
-            var parameterList = CreateParameterList(pathName, operationType, operation?.RequestBody, operation?.Parameters);
+            var argumentDefinitions = CreateArgumentDefinitions(pathName, operationType, operation?.RequestBody, operation?.Parameters).ToArray();
+            var methodBody = CreateMethodBody(propertyName, argumentDefinitions, hasReturnType);
+            var parameterList = CreateParameterList(argumentDefinitions);
             return SyntaxFactory.MethodDeclaration(SyntaxFactory.ParseTypeName("Task<IActionResult>"), operationType.ToString())
                 .AddModifiers(
                     SyntaxFactory.Token(SyntaxKind.PublicKeyword),
@@ -30,7 +31,7 @@ namespace OpenApiSpecGeneration.Controller
                 .AddAttributeLists(GetMethodAttributeList(operationType));
         }
 
-        private static BlockSyntax CreateMethodBody(string propertyName, IList<OpenApiParameter>? parameters, bool hasReturnType)
+        private static BlockSyntax CreateMethodBody(string propertyName, ArgumentDefinition[] argumentDefinitions, bool hasReturnType)
         {
             var memberAccessExpressionSyntax = SyntaxFactory.MemberAccessExpression(
                 SyntaxKind.SimpleMemberAccessExpression,
@@ -39,7 +40,7 @@ namespace OpenApiSpecGeneration.Controller
                 SyntaxFactory.IdentifierName("Execute")
             );
 
-            var argumentList = CreateArgumentList(parameters);
+            var argumentList = CreateArgumentList(argumentDefinitions);
 
             var invocationExpressionSyntax = SyntaxFactory.InvocationExpression(
                 memberAccessExpressionSyntax,
@@ -56,14 +57,14 @@ namespace OpenApiSpecGeneration.Controller
                 : CallAndReturnOk(awaitExpressionSyntax);
         }
 
-        private static SeparatedSyntaxList<ParameterSyntax> CreateParameterList(
-            string pathName,
-            OperationType operationType,
-            OpenApiRequestBody? requestBody,
-            IList<OpenApiParameter>? openApiMethodParameters)
-        {
-            var parameters = new List<ParameterSyntax>();
+        private record ArgumentDefinition(AttributeSyntax attributeSyntax, TypeSyntax parameterTypeSyntax, string name);
 
+        private static IEnumerable<ArgumentDefinition> CreateArgumentDefinitions(
+           string pathName,
+           OperationType operationType,
+           OpenApiRequestBody? requestBody,
+           IList<OpenApiParameter>? openApiMethodParameters)
+        {
             var firstContentType = requestBody?.Content.FirstOrDefault();
             if (requestBody != null && firstContentType.HasValue)
             {
@@ -71,9 +72,7 @@ namespace OpenApiSpecGeneration.Controller
                 var name = "request";
                 var typeName = CsharpNamingExtensions.PathEtcToClassName(
                     new[] { pathName, operationType.ToString(), firstContentType.Value.Key, "Request" });
-                var parameter = CreateParameterWithAttribute(attribute, SyntaxFactory.ParseTypeName(typeName), name);
-
-                parameters.Add(parameter);
+                yield return new ArgumentDefinition(attribute, SyntaxFactory.ParseTypeName(typeName), name);
             }
 
             if (openApiMethodParameters != null)
@@ -83,47 +82,52 @@ namespace OpenApiSpecGeneration.Controller
                     var attribute = ParamAttribute(openApiMethodParameter.In, openApiMethodParameter.Name);
                     var name = CsharpNamingExtensions.HeaderToParameter(openApiMethodParameter.Name);
                     var typeSyntax = CsharpTypeExtensions.ParseTypeSyntax(openApiMethodParameter.Schema?.Type);
-                    var parameter = CreateParameterWithAttribute(attribute, typeSyntax, name);
-
-                    parameters.Add(parameter);
+                    yield return new ArgumentDefinition(attribute, typeSyntax, name);
                 }
             }
-
-            return SyntaxFactory.SeparatedList<ParameterSyntax>(parameters);
         }
 
-        private static ParameterSyntax CreateParameterWithAttribute(
-            AttributeSyntax attributeSyntax,
-            TypeSyntax parameterTypeSyntax,
-            string parameterName)
+        private static ParameterSyntax CreateParameterWithAttribute(ArgumentDefinition argumentDefinition)
         {
             var attributeList = SyntaxFactory.List<AttributeListSyntax>(
                 new[]{ SyntaxFactory.AttributeList(
-                        SyntaxFactory.SingletonSeparatedList<AttributeSyntax>(attributeSyntax)
+                        SyntaxFactory.SingletonSeparatedList<AttributeSyntax>(argumentDefinition.attributeSyntax)
                     )}
             );
 
-            return SyntaxFactory.Parameter(SyntaxFactory.Identifier(parameterName))
-                .WithType(parameterTypeSyntax)
+            return SyntaxFactory.Parameter(SyntaxFactory.Identifier(argumentDefinition.name))
+                .WithType(argumentDefinition.parameterTypeSyntax)
                 .WithAttributeLists(attributeList);
         }
 
-        private static ArgumentListSyntax CreateArgumentList(IList<OpenApiParameter>? openApiMethodParameters)
+        private static ArgumentListSyntax CreateArgumentList(ArgumentDefinition[] argumentDefinitions)
         {
-            if (openApiMethodParameters == null) return SyntaxFactory.ArgumentList();
+            if (argumentDefinitions.Length == 0) return SyntaxFactory.ArgumentList();
 
             var arguments = new List<ArgumentSyntax>();
 
-            foreach (var openApiMethodParameter in openApiMethodParameters)
+            foreach (var argumentDefinition in argumentDefinitions)
             {
-                var name = CsharpNamingExtensions.HeaderToParameter(openApiMethodParameter.Name);
-                var argument = SyntaxFactory.Argument(SyntaxFactory.IdentifierName(name));
+                var argument = SyntaxFactory.Argument(SyntaxFactory.IdentifierName(argumentDefinition.name));
 
                 arguments.Add(argument);
             }
 
             var argumentSyntaxList = SyntaxFactory.SeparatedList<ArgumentSyntax>(arguments);
             return SyntaxFactory.ArgumentList(argumentSyntaxList);
+        }
+
+        private static SeparatedSyntaxList<ParameterSyntax> CreateParameterList(ArgumentDefinition[] argumentDefinitions)
+        {
+            var parameters = new List<ParameterSyntax>();
+
+            foreach (var argumentDefinition in argumentDefinitions)
+            {
+                var parameter = CreateParameterWithAttribute(argumentDefinition);
+                parameters.Add(parameter);
+            }
+
+            return SyntaxFactory.SeparatedList<ParameterSyntax>(parameters);
         }
 
         private static BlockSyntax CallAndReturnOk(AwaitExpressionSyntax awaitExpressionSyntax)

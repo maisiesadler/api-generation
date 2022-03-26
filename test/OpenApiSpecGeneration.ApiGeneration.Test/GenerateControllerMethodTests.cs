@@ -268,6 +268,55 @@ public class GenerateControllerMethodTests
         Assert.Null(parameterAttributeSyntax.ArgumentList);
     }
 
+    [Fact]
+    public void RequestBodyPassedToInteractor()
+    {
+        // Arrange
+        var requestBodySchema = new OpenApiSchema
+        {
+            Type = "object",
+            Properties = new Dictionary<string, OpenApiSchema>
+            {
+                { "id", new OpenApiSchema { Type = "string" }},
+            }
+        };
+
+        var requestBody = OpenApiMockBuilder.BuildRequestBody("This is the request")
+             .AddContent("text/plain", requestBodySchema);
+
+        var apiTestPathItem = OpenApiMockBuilder.BuildPathItem()
+            .WithOperation(
+                OperationType.Post,
+                operation => operation.RequestBody = requestBody
+            );
+
+        var document = OpenApiMockBuilder.BuildDocument()
+            .WithPath("/api/test", apiTestPathItem);
+
+        // Act
+        var classDeclarationSyntaxes = ApiGenerator.GenerateControllers(document);
+
+        // Assert
+        var classDeclarationSyntax = Assert.Single(classDeclarationSyntaxes);
+        var methodDeclarationSyntax = Assert.Single(classDeclarationSyntax.Members.GetMembersOfType<MethodDeclarationSyntax>());
+
+        Assert.Equal(2, methodDeclarationSyntax.Body!.Statements.Count);
+
+        // await _interactor.Execute(request);
+        var expressionStatementSyntax = Assert.IsType<ExpressionStatementSyntax>(methodDeclarationSyntax.Body!.Statements[0]);
+
+        var awaitExpressionSyntax = Assert.IsType<AwaitExpressionSyntax>(expressionStatementSyntax.Expression);
+        var invocationExpressionSyntax = Assert.IsType<InvocationExpressionSyntax>(awaitExpressionSyntax.Expression);
+        var memberAccessExpressionSyntax = Assert.IsType<MemberAccessExpressionSyntax>(invocationExpressionSyntax.Expression);
+        var methodIdentifierNameSyntax = Assert.IsType<IdentifierNameSyntax>(memberAccessExpressionSyntax.Name);
+
+        Assert.Equal("Execute", methodIdentifierNameSyntax.Identifier.Value);
+
+        var argumentSyntax = Assert.Single(invocationExpressionSyntax.ArgumentList.Arguments);
+        var argumentSyntaxExpression = Assert.IsType<IdentifierNameSyntax>(argumentSyntax.Expression);
+        Assert.Equal("request", argumentSyntaxExpression.Identifier.Value);
+    }
+
     // [Fact]
     // public void InvalidParameterTypeThrows()
     // {
