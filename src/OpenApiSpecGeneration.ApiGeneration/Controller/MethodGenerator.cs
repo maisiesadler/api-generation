@@ -68,21 +68,10 @@ namespace OpenApiSpecGeneration.Controller
             if (requestBody != null && firstContentType.HasValue)
             {
                 var attribute = SyntaxFactory.Attribute(SyntaxFactory.IdentifierName("FromBody"));
-                var attributeList = SyntaxFactory.List<AttributeListSyntax>(
-                       new[]{ SyntaxFactory.AttributeList(
-                        SyntaxFactory.SingletonSeparatedList<AttributeSyntax>(attribute)
-                    )}
-                   );
                 var name = "request";
                 var typeName = CsharpNamingExtensions.PathEtcToClassName(
                     new[] { pathName, operationType.ToString(), firstContentType.Value.Key, "Request" });
-                var parameter = SyntaxFactory.Parameter(
-                        attributeList,
-                        default,
-                        SyntaxFactory.ParseTypeName(typeName),
-                        SyntaxFactory.Identifier(name),
-                        default
-                    );
+                var parameter = CreateParameterWithAttribute(attribute, SyntaxFactory.ParseTypeName(typeName), name);
 
                 parameters.Add(parameter);
             }
@@ -92,26 +81,31 @@ namespace OpenApiSpecGeneration.Controller
                 foreach (var openApiMethodParameter in openApiMethodParameters)
                 {
                     var attribute = ParamAttribute(openApiMethodParameter.In, openApiMethodParameter.Name);
-                    var attributeList = SyntaxFactory.List<AttributeListSyntax>(
-                        new[]{ SyntaxFactory.AttributeList(
-                        SyntaxFactory.SingletonSeparatedList<AttributeSyntax>(attribute)
-                    )}
-                    );
                     var name = CsharpNamingExtensions.HeaderToParameter(openApiMethodParameter.Name);
                     var typeSyntax = CsharpTypeExtensions.ParseTypeSyntax(openApiMethodParameter.Schema?.Type);
-                    var parameter = SyntaxFactory.Parameter(
-                            attributeList,
-                            default,
-                            typeSyntax,
-                            SyntaxFactory.Identifier(name),
-                            default
-                        );
+                    var parameter = CreateParameterWithAttribute(attribute, typeSyntax, name);
 
                     parameters.Add(parameter);
                 }
             }
 
             return SyntaxFactory.SeparatedList<ParameterSyntax>(parameters);
+        }
+
+        private static ParameterSyntax CreateParameterWithAttribute(
+            AttributeSyntax attributeSyntax,
+            TypeSyntax parameterTypeSyntax,
+            string parameterName)
+        {
+            var attributeList = SyntaxFactory.List<AttributeListSyntax>(
+                new[]{ SyntaxFactory.AttributeList(
+                        SyntaxFactory.SingletonSeparatedList<AttributeSyntax>(attributeSyntax)
+                    )}
+            );
+
+            return SyntaxFactory.Parameter(SyntaxFactory.Identifier(parameterName))
+                .WithType(parameterTypeSyntax)
+                .WithAttributeLists(attributeList);
         }
 
         private static ArgumentListSyntax CreateArgumentList(IList<OpenApiParameter>? openApiMethodParameters)
