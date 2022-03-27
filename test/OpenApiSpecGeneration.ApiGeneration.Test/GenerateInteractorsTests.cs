@@ -215,4 +215,47 @@ public class GenerateInteractorsTests
         var parameterTypeSyntax = Assert.IsType<PredefinedTypeSyntax>(parameterSyntax.Type);
         Assert.Equal("int", parameterTypeSyntax.Keyword.Value);
     }
+
+    [Fact]
+    public void RequestBodyParameterCreated()
+    {
+        // Arrange
+        var requestBodySchema = new OpenApiSchema
+        {
+            Type = "object",
+            Properties = new Dictionary<string, OpenApiSchema>
+            {
+                { "id", new OpenApiSchema { Type = "string" }},
+            }
+        };
+
+        var requestBody = OpenApiMockBuilder.BuildRequestBody("This is the request")
+             .AddContent("text/plain", requestBodySchema);
+
+        var apiTestPathItem = OpenApiMockBuilder.BuildPathItem()
+            .WithOperation(
+                OperationType.Post,
+                operation => operation.RequestBody = requestBody
+            );
+
+        var document = OpenApiMockBuilder.BuildDocument()
+            .WithPath("/api/test", apiTestPathItem);
+
+        // Act
+        var interfaceDeclarationSyntaxes = ApiGenerator.GenerateInteractors(document);
+
+        // Assert
+        var interfaceDeclarationSyntax = Assert.Single(interfaceDeclarationSyntaxes);
+        Assert.Equal("IPostApiTestInteractor", interfaceDeclarationSyntax.Identifier.Value);
+
+        var memberDeclarationSyntax = Assert.Single(interfaceDeclarationSyntax.Members);
+        var methodDeclarationSyntax = Assert.IsType<MethodDeclarationSyntax>(memberDeclarationSyntax);
+
+        Assert.Equal("Execute", methodDeclarationSyntax.Identifier.Value);
+        var parameterSyntax = Assert.Single(methodDeclarationSyntax.ParameterList.Parameters);
+
+        Assert.Equal("request", parameterSyntax.Identifier.ValueText);
+        var parameterTypeSyntax = Assert.IsType<IdentifierNameSyntax>(parameterSyntax.Type);
+        Assert.Equal("ApiTestPostTextPlainRequest", parameterTypeSyntax.Identifier.Value);
+    }
 }
