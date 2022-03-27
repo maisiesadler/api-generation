@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
 using Microsoft.OpenApi.Models;
@@ -213,5 +214,50 @@ public class GenerateImplementationTests
         var methodDeclarationSyntax = Assert.Single(classDeclarationSyntax.Members.GetMembersOfType<MethodDeclarationSyntax>());
 
         Assert.Empty(methodDeclarationSyntax.Body!.Statements);
+    }
+
+    [Fact]
+    public void RequestBodyMethodSignatureIsCorrect()
+    {
+        // Arrange
+        var requestBodySchema = new OpenApiSchema
+        {
+            Type = "object",
+            Properties = new Dictionary<string, OpenApiSchema>
+            {
+                { "id", new OpenApiSchema { Type = "string" }},
+            }
+        };
+
+        var requestBody = OpenApiMockBuilder.BuildRequestBody("This is the request")
+             .AddContent("text/plain", requestBodySchema);
+
+        var apiTestPathItem = OpenApiMockBuilder.BuildPathItem()
+            .WithOperation(
+                OperationType.Post,
+                operation => operation.RequestBody = requestBody
+            );
+
+        var document = OpenApiMockBuilder.BuildDocument()
+            .WithPath("/api/test", apiTestPathItem);
+
+        // Act
+        var classDeclarationSyntaxes = ApiGenerator.GenerateImplementations(document);
+
+        // Assert
+        var classDeclarationSyntax = Assert.Single(classDeclarationSyntaxes);
+
+        var methodDeclarationSyntax = Assert.Single(classDeclarationSyntax.Members.GetMembersOfType<MethodDeclarationSyntax>());
+        Assert.Equal("Execute", methodDeclarationSyntax.Identifier.Value);
+        Assert.Equal(2, methodDeclarationSyntax.Modifiers.Count);
+        Assert.Equal("public", methodDeclarationSyntax.Modifiers[0].Value);
+        Assert.Equal("async", methodDeclarationSyntax.Modifiers[1].Value);
+
+        var parameterSyntax = Assert.Single(methodDeclarationSyntax.ParameterList.Parameters);
+        Assert.Equal("request", parameterSyntax.Identifier.Value);
+        var parameterSyntaxType = Assert.IsType<IdentifierNameSyntax>(parameterSyntax.Type);
+        Assert.Equal("ApiTestPostTextPlainRequest", parameterSyntaxType.Identifier.Value);
+
+        Assert.Empty(parameterSyntax.AttributeLists);
     }
 }

@@ -8,7 +8,7 @@ namespace OpenApiSpecGeneration.ApiGeneration.AutoFixture.Test;
 public class GenerateImplementationFileTests
 {
     [Fact]
-    public void ControllerFileNamespacesAndFileNameCorrect()
+    public void ImplementationFileNamespacesAndFileNameCorrect()
     {
         // Arrange
         var apiTestPathItem = new OpenApiPathItem
