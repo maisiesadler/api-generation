@@ -2,6 +2,7 @@ using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
 using Microsoft.OpenApi.Models;
+using OpenApiSpecGeneration.Generatable;
 
 namespace OpenApiSpecGeneration.Controller
 {
@@ -15,7 +16,7 @@ namespace OpenApiSpecGeneration.Controller
             string propertyName)
         {
             var hasReturnType = ReturnTypeExtensions.HasReturnType(operation?.Responses);
-            var argumentDefinitions = CreateArgumentDefinitions(pathName, operationType, operation?.RequestBody, operation?.Parameters).ToArray();
+            var argumentDefinitions = ArgumentDefinitionGenerator.Create(pathName, operationType, operation?.RequestBody, operation?.Parameters).ToArray();
             var methodBody = CreateMethodBody(propertyName, argumentDefinitions, hasReturnType);
             var parameterList = CreateParameterList(argumentDefinitions);
             return SyntaxFactory.MethodDeclaration(SyntaxFactory.ParseTypeName("Task<IActionResult>"), operationType.ToString())
@@ -55,36 +56,6 @@ namespace OpenApiSpecGeneration.Controller
             return hasReturnType
                 ? SaveAndReturnResult(awaitExpressionSyntax)
                 : CallAndReturnOk(awaitExpressionSyntax);
-        }
-
-        private record ArgumentDefinition(AttributeSyntax attributeSyntax, TypeSyntax parameterTypeSyntax, string name);
-
-        private static IEnumerable<ArgumentDefinition> CreateArgumentDefinitions(
-           string pathName,
-           OperationType operationType,
-           OpenApiRequestBody? requestBody,
-           IList<OpenApiParameter>? openApiMethodParameters)
-        {
-            var firstContentType = requestBody?.Content.FirstOrDefault();
-            if (requestBody != null && firstContentType.HasValue)
-            {
-                var attribute = SyntaxFactory.Attribute(SyntaxFactory.IdentifierName("FromBody"));
-                var name = "request";
-                var typeName = CsharpNamingExtensions.PathEtcToClassName(
-                    new[] { pathName, operationType.ToString(), firstContentType.Value.Key, "Request" });
-                yield return new ArgumentDefinition(attribute, SyntaxFactory.ParseTypeName(typeName), name);
-            }
-
-            if (openApiMethodParameters != null)
-            {
-                foreach (var openApiMethodParameter in openApiMethodParameters)
-                {
-                    var attribute = ParamAttribute(openApiMethodParameter.In, openApiMethodParameter.Name);
-                    var name = CsharpNamingExtensions.HeaderToParameter(openApiMethodParameter.Name);
-                    var typeSyntax = CsharpTypeExtensions.ParseTypeSyntax(openApiMethodParameter.Schema?.Type);
-                    yield return new ArgumentDefinition(attribute, typeSyntax, name);
-                }
-            }
         }
 
         private static ParameterSyntax CreateParameterWithAttribute(ArgumentDefinition argumentDefinition)
@@ -216,39 +187,6 @@ namespace OpenApiSpecGeneration.Controller
                 OperationType.Put => "HttpPut",
                 OperationType.Delete => "HttpDelete",
                 _ => throw new InvalidOperationException($"Unsupported operation type '{operationType}'"),
-            };
-        }
-
-        private static AttributeSyntax ParamAttribute(ParameterLocation? parameterLocation, string? parameterName)
-        {
-            AttributeSyntax AsAttribute(string attributeName, string? name = null)
-            {
-                if (name == null)
-                    return SyntaxFactory.Attribute(SyntaxFactory.IdentifierName(attributeName));
-
-                return SyntaxFactory.Attribute(SyntaxFactory.IdentifierName(attributeName))
-                    .WithArgumentList(
-                        SyntaxFactory.AttributeArgumentList(
-                            SyntaxFactory.SingletonSeparatedList<AttributeArgumentSyntax>(
-                                SyntaxFactory
-                                    .AttributeArgument(
-                                        SyntaxFactory.LiteralExpression(
-                                            SyntaxKind.StringLiteralExpression,
-                                            SyntaxFactory.Literal(parameterName ?? string.Empty)))
-                                    .WithNameEquals(
-                                        SyntaxFactory.NameEquals(SyntaxFactory.IdentifierName(name))
-                                    )
-                            )
-                        )
-                    );
-            }
-
-            return parameterLocation switch
-            {
-                ParameterLocation.Path => AsAttribute("FromRoute"),
-                ParameterLocation.Query => AsAttribute("FromQuery"),
-                ParameterLocation.Header => AsAttribute("FromHeader", "Name"),
-                _ => throw new InvalidOperationException($"Unknown parameter type '{parameterLocation}'"),
             };
         }
     }

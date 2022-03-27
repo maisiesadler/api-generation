@@ -1,6 +1,7 @@
 using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
 using Microsoft.OpenApi.Models;
+using OpenApiSpecGeneration.Generatable;
 
 namespace OpenApiSpecGeneration.Interactor
 {
@@ -12,7 +13,8 @@ namespace OpenApiSpecGeneration.Interactor
             {
                 foreach (var (operationType, operation) in openApiPath.Operations)
                 {
-                    var parameters = CreateParameterList(operation.Parameters);
+                    var argumentDefinitions = ArgumentDefinitionGenerator.Create(apiPath, operationType, operation.RequestBody, operation.Parameters).ToArray();
+                    var parameters = CreateParameterList(argumentDefinitions);
                     var returnType = ReturnTypeExtensions.GetReturnTypeSyntaxWrapped(operation.Responses);
                     var methodDeclaration = SyntaxFactory.MethodDeclaration(
                             returnType,
@@ -42,7 +44,7 @@ namespace OpenApiSpecGeneration.Interactor
             }
         }
 
-        private static ParameterListSyntax CreateParameterList(IList<OpenApiParameter>? openApiMethodParameters)
+        private static ParameterListSyntax CreateParameterList(IList<ArgumentDefinition> openApiMethodParameters)
         {
             if (openApiMethodParameters == null) return SyntaxFactory.ParameterList();
 
@@ -51,13 +53,11 @@ namespace OpenApiSpecGeneration.Interactor
             foreach (var openApiMethodParameter in openApiMethodParameters)
             {
                 var attributeList = SyntaxFactory.List<AttributeListSyntax>();
-                var name = CsharpNamingExtensions.HeaderToParameter(openApiMethodParameter.Name);
-                var typeSyntax = CsharpTypeExtensions.ParseTypeSyntax(openApiMethodParameter.Schema?.Type);
                 var parameter = SyntaxFactory.Parameter(
                         attributeList,
                         default,
-                        typeSyntax,
-                        SyntaxFactory.Identifier(name),
+                        openApiMethodParameter.parameterTypeSyntax,
+                        SyntaxFactory.Identifier(openApiMethodParameter.name),
                         default
                     );
 
