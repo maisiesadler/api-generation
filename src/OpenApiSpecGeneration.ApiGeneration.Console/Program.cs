@@ -26,6 +26,7 @@ namespace OpenApiSpecGeneration.Console
             var services = new ServiceCollection();
             services.AddSingleton<GetOpenApiSpecFile>();
             services.AddSingleton<WriteToFile>();
+            services.AddSingleton<GenerateFromOpenApiSpec>();
             return services;
         }
     }

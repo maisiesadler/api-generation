@@ -105,7 +105,7 @@ public class GetApiTodoInteractor : IGetApiTodoInteractor
 
 ---
 
-Generated files for [definition.yaml](./definition.yaml) can be found [here](./example/generated)
+Generated files for [definition.yaml](./definition.yaml) can be found [here](./example/generated/README.md)
 
 This can then be implemented in the project with any custom logic, [e.g.](example/implementations/GetApiTodoInteractor.cs).
 

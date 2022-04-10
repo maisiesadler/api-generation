@@ -32,4 +32,15 @@ internal class WriteToFile
 
         writableFile.namespaceDeclarationSyntax.NormalizeWhitespace().WriteTo(streamWriter);
     }
+
+    public async Task Execute(
+        string outputDirectory,
+        string fileLocation,
+        string[] lines)
+    {
+        await using var streamWriter = new StreamWriter($"{outputDirectory}/{fileLocation}");
+
+        foreach (var line in lines)
+            await streamWriter.WriteLineAsync(line);
+    }
 }

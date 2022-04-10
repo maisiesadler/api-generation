@@ -1,7 +1,5 @@
 using System.ComponentModel;
 using System.Diagnostics.CodeAnalysis;
-using Microsoft.CodeAnalysis;
-using OpenApiSpecGeneration.Console.Commands.Helpers;
 using Spectre.Console;
 using Spectre.Console.Cli;
 
@@ -33,63 +31,36 @@ public class GenerateOpenApiSpecWithMockImplementationSettings : CommandSettings
 
 internal class GenerateOpenApiSpecWithMockImplementation : AsyncCommand<GenerateOpenApiSpecSettings>
 {
-    private readonly GetOpenApiSpecFile _getOpenApiSpecFile;
-    private readonly WriteToFile _writeToFile;
+    private readonly GenerateFromOpenApiSpec _generateFromOpenApiSpec;
 
     public GenerateOpenApiSpecWithMockImplementation(
-        GetOpenApiSpecFile getOpenApiSpecFile,
-        WriteToFile writeToFile)
+        GenerateFromOpenApiSpec generateFromOpenApiSpec)
     {
-        _getOpenApiSpecFile = getOpenApiSpecFile;
-        _writeToFile = writeToFile;
+        _generateFromOpenApiSpec = generateFromOpenApiSpec;
     }
 
     public override async Task<int> ExecuteAsync([NotNull] CommandContext context, [NotNull] GenerateOpenApiSpecSettings settings)
     {
         try
         {
-            AnsiConsole.MarkupLine("Reading from [yellow]{0}[/] and writing to [yellow]{1}[/] with namespace [yellow]{2}[/]", settings.InputFileName, settings.OutputDirectory, settings.Namespace);
-
-            _writeToFile.Initialize(settings.OutputDirectory, new[] { "models", "implementations", "interactors" });
-
-            var path = Directory.GetCurrentDirectory();
-            var result = await _getOpenApiSpecFile.Execute(Path.Combine(path, settings.InputFileName));
-            if (!result.IsSuccess)
+            var generateFromOpenApiSpecSettings = new GenerateFromOpenApiSpecSettings
             {
-                System.Console.WriteLine("Could not read file");
-                return 1;
-            }
+                GenerateReadme = true,
+                GenerateControllers = true,
+                GenerateImplementations = true,
+                GenerateModels = true,
+                GenerateInteractors = true,
+                InputFileName = settings.InputFileName,
+                OutputDirectory = settings.OutputDirectory,
+                Namespace = settings.Namespace,
+            };
 
-            var openApiSpec = result.Value!;
-
-            foreach (var file in FileGenerator.GenerateControllers(settings.Namespace, openApiSpec))
-            {
-                await _writeToFile.Execute(settings.OutputDirectory, file);
-            }
-
-            foreach (var file in FileGenerator.GenerateModels(settings.Namespace, openApiSpec))
-            {
-                await _writeToFile.Execute(settings.OutputDirectory, file);
-            }
-
-            foreach (var file in FileGenerator.GenerateInteractors(settings.Namespace, openApiSpec))
-            {
-                await _writeToFile.Execute(settings.OutputDirectory, file);
-            }
-
-            foreach (var file in ApiGeneration.AutoFixture.FileGenerator.GenerateImplementation(settings.Namespace, openApiSpec))
-            {
-                await _writeToFile.Execute(settings.OutputDirectory, file);
-            }
-
-            AnsiConsole.MarkupLine("[green]Done :magic_wand:[/]");
+            return await _generateFromOpenApiSpec.ExecuteAsync(generateFromOpenApiSpecSettings);
         }
         catch (Exception ex)
         {
             AnsiConsole.WriteException(ex);
             return 1;
         }
-
-        return 0;
     }
 }
