@@ -105,11 +105,7 @@ public class GetApiTodoInteractor : IGetApiTodoInteractor
 
 ---
 
-More examples:
-
-- [Controller](example/generated/ApiTodoController.cs) created for [path](./definition.yaml#L8)
-- [Model](example/generated/models/ToDoItem.cs) created for [schema](./definition.yaml#L56)
-- [Interface](example/generated/interactors/IGetApiTodoInteractor.cs) describing each [route](./definition.yaml#L8)
+Generated files for [definition.yaml](./definition.yaml) can be found [here](./example/generated)
 
 This can then be implemented in the project with any custom logic, [e.g.](example/implementations/GetApiTodoInteractor.cs).
 
