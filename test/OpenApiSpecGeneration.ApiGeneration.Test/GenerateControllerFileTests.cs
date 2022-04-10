@@ -22,7 +22,7 @@ public class GenerateControllerFileTests
 
         // Assert
         var writableFile = Assert.Single(writableFiles);
-        Assert.Equal("ApiTestController.cs", writableFile.fileLocation);
+        Assert.Equal("/ApiTestController.cs", writableFile.fileLocation);
         Assert.Equal("namespace", writableFile.namespaceDeclarationSyntax.NamespaceKeyword.Value);
         var namespaceIdentifier = Assert.IsType<IdentifierNameSyntax>(writableFile.namespaceDeclarationSyntax.Name);
         Assert.Equal("MyNamespace", namespaceIdentifier.Identifier.Value);
