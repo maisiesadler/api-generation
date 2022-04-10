@@ -124,7 +124,7 @@ internal class GenerateFromOpenApiSpec
             var location = Regex.Replace(first.fileLocation, "/(:?[^/]+)$", "");
             if (location.Length == 0) location = "/";
 
-            lines.Add($"[{location}]({location})");
+            lines.Add($"[{location}](.{location})");
 
             foreach (var file in files)
             {

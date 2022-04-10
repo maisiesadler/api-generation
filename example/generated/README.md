@@ -1,7 +1,7 @@
 # Generated Files
 
 ## Generated Controllers
-[/](/)
+[/](./)
 - `ApiTodoController.cs`
 - `ApiTodoController.cs`
 
@@ -10,7 +10,7 @@
 - `ToDoItem.cs`
 
 ## Generated Interactors
-[/interactors](/interactors)
+[/interactors](./interactors)
 - `IGetApiTodoInteractor.cs`
 - `IGetApiTodoInteractor.cs`
 - `IGetApiTodoInteractor.cs`
@@ -18,7 +18,7 @@
 - `IGetApiTodoInteractor.cs`
 
 ## Generated Implementations
-[/implementations](/implementations)
+[/implementations](./implementations)
 - `GetApiTodoInteractor.cs`
 - `GetApiTodoInteractor.cs`
 - `GetApiTodoInteractor.cs`
