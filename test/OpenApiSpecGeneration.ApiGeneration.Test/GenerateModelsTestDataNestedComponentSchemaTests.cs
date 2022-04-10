@@ -49,7 +49,8 @@ public class GenerateModelsTestDataNestedComponentSchemaTests
         Assert.Equal("Report", typePropertyDeclarationSyntax.Identifier.Value);
         var typePropertyMethodModifier = Assert.Single(typePropertyDeclarationSyntax.Modifiers);
         Assert.Equal("public", typePropertyMethodModifier.Value);
-        var typePropertyArrayTypeSyntax = Assert.IsType<ArrayTypeSyntax>(typePropertyDeclarationSyntax.Type);
+        var nullableTypeSyntax = Assert.IsType<NullableTypeSyntax>(typePropertyDeclarationSyntax.Type);
+        var typePropertyArrayTypeSyntax = Assert.IsType<ArrayTypeSyntax>(nullableTypeSyntax.ElementType);
         var typePropertyArrayElementType = Assert.IsType<IdentifierNameSyntax>(typePropertyArrayTypeSyntax.ElementType);
         Assert.Equal("ToDoItemReportSubType", typePropertyArrayElementType.Identifier.Value);
     }
@@ -76,7 +77,8 @@ public class GenerateModelsTestDataNestedComponentSchemaTests
         Assert.Equal("AccountHolders", typePropertyDeclarationSyntax.Identifier.Value);
         var typePropertyMethodModifier = Assert.Single(typePropertyDeclarationSyntax.Modifiers);
         Assert.Equal("public", typePropertyMethodModifier.Value);
-        var typePropertyArrayTypeSyntax = Assert.IsType<ArrayTypeSyntax>(typePropertyDeclarationSyntax.Type);
+        var nullableTypeSyntax = Assert.IsType<NullableTypeSyntax>(typePropertyDeclarationSyntax.Type);
+        var typePropertyArrayTypeSyntax = Assert.IsType<ArrayTypeSyntax>(nullableTypeSyntax.ElementType);
         var typePropertyArrayElementType = Assert.IsType<IdentifierNameSyntax>(typePropertyArrayTypeSyntax.ElementType);
         Assert.Equal("ToDoItemReportSubTypeAccountHoldersSubType", typePropertyArrayElementType.Identifier.Value);
     }
@@ -103,7 +105,8 @@ public class GenerateModelsTestDataNestedComponentSchemaTests
         Assert.Equal("Name", typePropertyDeclarationSyntax.Identifier.Value);
         var typePropertyMethodModifier = Assert.Single(typePropertyDeclarationSyntax.Modifiers);
         Assert.Equal("public", typePropertyMethodModifier.Value);
-        var predefinedTypeSyntax = Assert.IsType<PredefinedTypeSyntax>(typePropertyDeclarationSyntax.Type);
+        var nullableTypeSyntax = Assert.IsType<NullableTypeSyntax>(typePropertyDeclarationSyntax.Type);
+        var predefinedTypeSyntax = Assert.IsType<PredefinedTypeSyntax>(nullableTypeSyntax.ElementType);
         Assert.Equal("string", predefinedTypeSyntax.Keyword.Value);
     }
 }

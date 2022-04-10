@@ -41,7 +41,8 @@ public class GenerateModelsTests
         Assert.Equal("Id", propertyDeclarationSyntax.Identifier.Value);
         var methodModifier = Assert.Single(propertyDeclarationSyntax.Modifiers);
         Assert.Equal("public", methodModifier.Value);
-        var predefinedTypeSyntax = Assert.IsType<PredefinedTypeSyntax>(propertyDeclarationSyntax.Type);
+        var nullableTypeSyntax = Assert.IsType<NullableTypeSyntax>(propertyDeclarationSyntax.Type);
+        var predefinedTypeSyntax = Assert.IsType<PredefinedTypeSyntax>(nullableTypeSyntax.ElementType);
         Assert.Equal("int", predefinedTypeSyntax.Keyword.Value);
     }
 
@@ -105,7 +106,8 @@ public class GenerateModelsTests
         var recordDeclarationSyntax = Assert.Single(recordDeclarationSyntaxes);
         var memberDeclarationSyntax = Assert.Single(recordDeclarationSyntax.Members);
         var propertyDeclarationSyntax = Assert.IsType<PropertyDeclarationSyntax>(memberDeclarationSyntax);
-        var predefinedTypeSyntax = Assert.IsType<PredefinedTypeSyntax>(propertyDeclarationSyntax.Type);
+        var nullableTypeSyntax = Assert.IsType<NullableTypeSyntax>(propertyDeclarationSyntax.Type);
+        var predefinedTypeSyntax = Assert.IsType<PredefinedTypeSyntax>(nullableTypeSyntax.ElementType);
         Assert.Equal(expectedCsharpType, predefinedTypeSyntax.Keyword.Value);
     }
 
@@ -156,7 +158,8 @@ public class GenerateModelsTests
         Assert.Equal("Id", typePropertyDeclarationSyntax.Identifier.Value);
         var typePropertyMethodModifier = Assert.Single(typePropertyDeclarationSyntax.Modifiers);
         Assert.Equal("public", typePropertyMethodModifier.Value);
-        var typePropertyArrayTypeSyntax = Assert.IsType<ArrayTypeSyntax>(typePropertyDeclarationSyntax.Type);
+        var nullableTypeSyntax = Assert.IsType<NullableTypeSyntax>(typePropertyDeclarationSyntax.Type);
+        var typePropertyArrayTypeSyntax = Assert.IsType<ArrayTypeSyntax>(nullableTypeSyntax.ElementType);
         var typePropertyArrayElementType = Assert.IsType<IdentifierNameSyntax>(typePropertyArrayTypeSyntax.ElementType);
         Assert.Equal("ToDoItemIdSubType", typePropertyArrayElementType.Identifier.Value);
 
@@ -172,7 +175,8 @@ public class GenerateModelsTests
         Assert.Equal("Name", subTypePropertyDeclarationSyntax.Identifier.Value);
         var subTypePropertyMethodModifier = Assert.Single(subTypePropertyDeclarationSyntax.Modifiers);
         Assert.Equal("public", subTypePropertyMethodModifier.Value);
-        var subTypePropertyTypeSyntax = Assert.IsType<PredefinedTypeSyntax>(subTypePropertyDeclarationSyntax.Type);
+        var subTypeNullableTypeSyntax = Assert.IsType<NullableTypeSyntax>(subTypePropertyDeclarationSyntax.Type);
+        var subTypePropertyTypeSyntax = Assert.IsType<PredefinedTypeSyntax>(subTypeNullableTypeSyntax.ElementType);
         Assert.Equal("int", subTypePropertyTypeSyntax.Keyword.Value);
     }
 
@@ -208,7 +212,8 @@ public class GenerateModelsTests
         var propertyDeclarationSyntax = Assert.IsType<PropertyDeclarationSyntax>(memberDeclarationSyntax);
         Assert.Equal("Things", propertyDeclarationSyntax.Identifier.Value);
 
-        var arrayTypeSyntax = Assert.IsType<ArrayTypeSyntax>(propertyDeclarationSyntax.Type);
+        var nullableTypeSyntax = Assert.IsType<NullableTypeSyntax>(propertyDeclarationSyntax.Type);
+        var arrayTypeSyntax = Assert.IsType<ArrayTypeSyntax>(nullableTypeSyntax.ElementType);
         var predefinedTypeSyntax = Assert.IsType<PredefinedTypeSyntax>(arrayTypeSyntax.ElementType);
         Assert.Equal("string", predefinedTypeSyntax.Keyword.Value);
     }
@@ -254,7 +259,8 @@ public class GenerateModelsTests
         Assert.Equal("Id", subTypePropertyDeclarationSyntax.Identifier.Value);
         var subTypePropertyMethodModifier = Assert.Single(subTypePropertyDeclarationSyntax.Modifiers);
         Assert.Equal("public", subTypePropertyMethodModifier.Value);
-        var subTypePropertyTypeSyntax = Assert.IsType<PredefinedTypeSyntax>(subTypePropertyDeclarationSyntax.Type);
+        var nullableTypeSyntax = Assert.IsType<NullableTypeSyntax>(subTypePropertyDeclarationSyntax.Type);
+        var subTypePropertyTypeSyntax = Assert.IsType<PredefinedTypeSyntax>(nullableTypeSyntax.ElementType);
         Assert.Equal("string", subTypePropertyTypeSyntax.Keyword.Value);
     }
 
@@ -299,7 +305,8 @@ public class GenerateModelsTests
         Assert.Equal("Id", subTypePropertyDeclarationSyntax.Identifier.Value);
         var subTypePropertyMethodModifier = Assert.Single(subTypePropertyDeclarationSyntax.Modifiers);
         Assert.Equal("public", subTypePropertyMethodModifier.Value);
-        var subTypePropertyTypeSyntax = Assert.IsType<PredefinedTypeSyntax>(subTypePropertyDeclarationSyntax.Type);
+        var subTypeNullableTypeSyntax = Assert.IsType<NullableTypeSyntax>(subTypePropertyDeclarationSyntax.Type);
+        var subTypePropertyTypeSyntax = Assert.IsType<PredefinedTypeSyntax>(subTypeNullableTypeSyntax.ElementType);
         Assert.Equal("string", subTypePropertyTypeSyntax.Keyword.Value);
     }
 
@@ -349,7 +356,8 @@ public class GenerateModelsTests
         Assert.Equal("Address", typePropertyDeclarationSyntax0.Identifier.Value);
         var typePropertyMethodModifier0 = Assert.Single(typePropertyDeclarationSyntax0.Modifiers);
         Assert.Equal("public", typePropertyMethodModifier0.Value);
-        var typePropertyType0 = Assert.IsType<IdentifierNameSyntax>(typePropertyDeclarationSyntax0.Type);
+        var nullableTypeSyntax0 = Assert.IsType<NullableTypeSyntax>(typePropertyDeclarationSyntax0.Type);
+        var typePropertyType0 = Assert.IsType<IdentifierNameSyntax>(nullableTypeSyntax0.ElementType);
         Assert.Equal("ToDoItemAddressSubType", typePropertyType0.Identifier.Value);
 
         var recordSyntax1 = recordDeclarationSyntaxes[1];
@@ -360,7 +368,8 @@ public class GenerateModelsTests
         Assert.Equal("HouseNumber", typePropertyDeclarationSyntax1.Identifier.Value);
         var typePropertyMethodModifier1 = Assert.Single(typePropertyDeclarationSyntax1.Modifiers);
         Assert.Equal("public", typePropertyMethodModifier1.Value);
-        var typePropertyType1 = Assert.IsType<PredefinedTypeSyntax>(typePropertyDeclarationSyntax1.Type);
+        var nullableTypeSyntax1 = Assert.IsType<NullableTypeSyntax>(typePropertyDeclarationSyntax1.Type);
+        var typePropertyType1 = Assert.IsType<PredefinedTypeSyntax>(nullableTypeSyntax1.ElementType);
         Assert.Equal("int", typePropertyType1.Keyword.Value);
     }
 
@@ -419,7 +428,8 @@ public class GenerateModelsTests
         Assert.Equal("HouseNumber", typePropertyDeclarationSyntax0.Identifier.Value);
         var typePropertyMethodModifier0 = Assert.Single(typePropertyDeclarationSyntax0.Modifiers);
         Assert.Equal("public", typePropertyMethodModifier0.Value);
-        var typePropertyType0 = Assert.IsType<PredefinedTypeSyntax>(typePropertyDeclarationSyntax0.Type);
+        var nullableTypeSyntax0 = Assert.IsType<NullableTypeSyntax>(typePropertyDeclarationSyntax0.Type);
+        var typePropertyType0 = Assert.IsType<PredefinedTypeSyntax>(nullableTypeSyntax0.ElementType);
         Assert.Equal("int", typePropertyType0.Keyword.Value);
 
 
@@ -431,7 +441,8 @@ public class GenerateModelsTests
         Assert.Equal("Address", typePropertyDeclarationSyntax1.Identifier.Value);
         var typePropertyMethodModifier1 = Assert.Single(typePropertyDeclarationSyntax1.Modifiers);
         Assert.Equal("public", typePropertyMethodModifier1.Value);
-        var typePropertyType1 = Assert.IsType<IdentifierNameSyntax>(typePropertyDeclarationSyntax1.Type);
+        var nullableTypeSyntax1 = Assert.IsType<NullableTypeSyntax>(typePropertyDeclarationSyntax1.Type);
+        var typePropertyType1 = Assert.IsType<IdentifierNameSyntax>(nullableTypeSyntax1.ElementType);
         Assert.Equal("Address", typePropertyType1.Identifier.Value);
     }
 }

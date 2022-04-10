@@ -75,7 +75,7 @@ namespace OpenApiSpecGeneration.Model
                 var typeSyntax = GetTypeSyntax(createObjectSubType, createArraySubType, potentialSubtypeName, openApiProperty);
 
                 var propertyDeclaration = SyntaxFactory.PropertyDeclaration(
-                        typeSyntax,
+                        SyntaxFactory.NullableType(typeSyntax),
                         SyntaxFactory.Identifier(CsharpNamingExtensions.SnakeCaseToCamel(propertyName)))
                     .AddModifiers(SyntaxFactory.Token(SyntaxKind.PublicKeyword))
                     .AddAccessorListAccessors(
