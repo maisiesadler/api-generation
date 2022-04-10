@@ -6,7 +6,7 @@
 - `ApiTodoController.cs`
 
 ## Generated Models
-[/models](/models)
+[/models](./models)
 - `ToDoItem.cs`
 
 ## Generated Interactors
