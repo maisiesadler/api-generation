@@ -1,3 +1,4 @@
+using System.Text.RegularExpressions;
 using OpenApiSpecGeneration.Console.Commands.Helpers;
 using Spectre.Console;
 
@@ -116,9 +117,20 @@ internal class GenerateFromOpenApiSpec
         {
             lines.Add($"## Generated {name}");
 
+            if (!files.Any())
+                continue;
+
+            var first = files.First();
+            var location = Regex.Replace(first.fileLocation, "/(:?[^/]+)$", "");
+            if (location.Length == 0) location = "/";
+
+            lines.Add($"[{location}]({location})");
+
             foreach (var file in files)
             {
-                lines.Add($"- {file.fileLocation}");
+                var split = first.fileLocation.Split("/");
+                var fileName = split.Last();
+                lines.Add($"- `{fileName}`");
             }
             lines.Add("");
         }

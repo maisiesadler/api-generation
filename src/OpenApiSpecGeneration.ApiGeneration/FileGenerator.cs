@@ -22,7 +22,7 @@ namespace OpenApiSpecGeneration
                 var ns = SyntaxFactory.NamespaceDeclaration(SyntaxFactory.ParseName($"{@namespace}"))
                     .AddMembers(c);
 
-                return new WritableFile($"{c.Identifier.Value}Controller.cs", usings, ns);
+                return new WritableFile($"/{c.Identifier.Value}Controller.cs", usings, ns);
             });
 
         public static IEnumerable<WritableFile> GenerateModels(string @namespace, OpenApiDocument document)
