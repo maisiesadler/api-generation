@@ -8,10 +8,6 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <None Update="definition.json" CopyToOutputDirectory="Always" />
-  </ItemGroup>
-
-  <ItemGroup>
     <ProjectReference Include="..\OpenApiSpecGeneration.ApiGeneration\OpenApiSpecGeneration.ApiGeneration.csproj" />
     <ProjectReference Include="..\OpenApiSpecGeneration.ApiGeneration.AutoFixture\OpenApiSpecGeneration.ApiGeneration.AutoFixture.csproj" />
   </ItemGroup>
