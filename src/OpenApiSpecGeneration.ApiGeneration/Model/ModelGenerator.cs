@@ -78,20 +78,15 @@ namespace OpenApiSpecGeneration.Model
             }
 
             var record = SyntaxFactory.RecordDeclaration(
-                attributeLists: default,
-                modifiers: SyntaxFactory.TokenList(SyntaxFactory.Token(SyntaxKind.PublicKeyword)),
-                keyword: SyntaxFactory.Token(SyntaxKind.RecordKeyword),
-                identifier: SyntaxFactory.Identifier(schemaDefinition.name),
-                typeParameterList: default,
-                parameterList: default,
-                baseList: null,
-                constraintClauses: default,
-                openBraceToken: SyntaxFactory.Token(SyntaxKind.OpenBraceToken),
-                members: SyntaxFactory.List<MemberDeclarationSyntax>(
-                    properties.ToArray()
-                ),
-                closeBraceToken: SyntaxFactory.Token(SyntaxKind.CloseBraceToken),
-                semicolonToken: default);
+                 SyntaxFactory.Token(SyntaxKind.RecordKeyword),
+                  SyntaxFactory.Identifier(schemaDefinition.name)
+            )
+            .WithModifiers(SyntaxFactory.TokenList(SyntaxFactory.Token(SyntaxKind.PublicKeyword)))
+            .WithOpenBraceToken(SyntaxFactory.Token(SyntaxKind.OpenBraceToken))
+            .WithCloseBraceToken(SyntaxFactory.Token(SyntaxKind.CloseBraceToken))
+            .WithMembers(SyntaxFactory.List<MemberDeclarationSyntax>(
+                properties.ToArray()
+            ));
 
             return (record, subTypes);
         }
