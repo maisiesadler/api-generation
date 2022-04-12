@@ -2,13 +2,12 @@ using System.Diagnostics.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
 using Microsoft.OpenApi.Models;
+using OpenApiSpecGeneration.Generatable;
 
 namespace OpenApiSpecGeneration.Model
 {
     internal class ModelGenerator
     {
-        private record OpenApiProperty(string propertyName, string propertyType, OpenApiSchema property);
-
         internal static IEnumerable<RecordDeclarationSyntax> GenerateModels(OpenApiDocument document)
         {
             return GenerateRecords(document).ToArray();
@@ -16,52 +15,34 @@ namespace OpenApiSpecGeneration.Model
 
         private static IEnumerable<RecordDeclarationSyntax> GenerateRecords(OpenApiDocument document)
         {
-            foreach (var (name, openApiComponentSchema) in GetAllSchemas.Execute(document))
+            foreach (var schemaDefinition in SchemaDefinitionGenerator.Execute(document))
             {
-                var (record, subtypes) = TryGenerateRecord(name, GetProperties(openApiComponentSchema.Properties));
-                yield return record;
-
-                foreach (var (subtypename, subtype) in subtypes)
-                {
-                    var (subtypeRecord, heello) = TryGenerateRecord(subtypename, GetProperties(subtype.Properties));
-                    yield return subtypeRecord;
-
-                    foreach (var (_subtypename, _subtype) in heello)
-                    {
-                        var (_subtypeRecord, _) = TryGenerateRecord(_subtypename, GetProperties(_subtype.Properties));
-                        yield return _subtypeRecord;
-                    }
-                }
+                foreach (var record in GenerateNestedRecords(schemaDefinition))
+                    yield return record;
             }
         }
 
-        private static IEnumerable<OpenApiProperty> GetProperties(IDictionary<string, OpenApiSchema>? openApiProperties)
+        private static IEnumerable<RecordDeclarationSyntax> GenerateNestedRecords(SchemaDefinition schemaDefinition)
         {
-            if (openApiProperties == null) yield break;
+            var (record, subtypes) = TryGenerateRecord(schemaDefinition);
+            yield return record;
 
-            foreach (var (propertyName, openApiProperty) in openApiProperties)
+            foreach (var subTypeSchemaDefinition in subtypes)
             {
-                var type = openApiProperty.Type;
-                if (type == null)
-                    type = openApiProperty.Reference.Id;
-
-                if (type == null)
-                    throw new InvalidOperationException($"{propertyName} missing property type");
-
-                yield return new OpenApiProperty(propertyName, type, openApiProperty);
+                foreach (var subTypeRecord in GenerateNestedRecords(subTypeSchemaDefinition))
+                    yield return subTypeRecord;
             }
         }
 
-        private static (RecordDeclarationSyntax, IList<(string, OpenApiSchema)>) TryGenerateRecord(
-            string name,
-            IEnumerable<OpenApiProperty> openApiProperties)
+        private static (RecordDeclarationSyntax, IList<SchemaDefinition>) TryGenerateRecord(
+            SchemaDefinition schemaDefinition)
         {
             var properties = new List<MemberDeclarationSyntax>();
-            var subTypes = new List<(string, OpenApiSchema)>();
+            var subTypes = new List<SchemaDefinition>();
 
-            foreach (var openApiProperty in openApiProperties)
+            foreach (var propertyDefinition in schemaDefinition.GetProperties())
             {
-                var (propertyName, propertyType, property) = openApiProperty;
+                var (propertyName, propertyType, property) = propertyDefinition;
 
                 var attributes = SyntaxFactory.AttributeList(
                     SyntaxFactory.SingletonSeparatedList<AttributeSyntax>(
@@ -69,10 +50,10 @@ namespace OpenApiSpecGeneration.Model
                     )
                 );
 
-                var potentialSubtypeName = name + CsharpNamingExtensions.SnakeCaseToCamel(propertyName) + "SubType";
+                var potentialSubtypeName = schemaDefinition.name + CsharpNamingExtensions.SnakeCaseToCamel(propertyName) + "SubType";
                 var createArraySubType = ShouldCreateArraySubType(propertyType, property);
                 var createObjectSubType = ShouldCreateObjectSubType(propertyType, property);
-                var typeSyntax = GetTypeSyntax(createObjectSubType, createArraySubType, potentialSubtypeName, openApiProperty);
+                var typeSyntax = GetTypeSyntax(createObjectSubType, createArraySubType, potentialSubtypeName, propertyDefinition);
 
                 var propertyDeclaration = SyntaxFactory.PropertyDeclaration(
                         SyntaxFactory.NullableType(typeSyntax),
@@ -87,12 +68,12 @@ namespace OpenApiSpecGeneration.Model
 
                 if (createObjectSubType)
                 {
-                    subTypes.Add((potentialSubtypeName, property));
+                    subTypes.Add(new SchemaDefinition(potentialSubtypeName, property));
                 }
 
                 if (createArraySubType)
                 {
-                    subTypes.Add((potentialSubtypeName, property.Items));
+                    subTypes.Add(new SchemaDefinition(potentialSubtypeName, property.Items));
                 }
             }
 
@@ -100,7 +81,7 @@ namespace OpenApiSpecGeneration.Model
                 attributeLists: default,
                 modifiers: SyntaxFactory.TokenList(SyntaxFactory.Token(SyntaxKind.PublicKeyword)),
                 keyword: SyntaxFactory.Token(SyntaxKind.RecordKeyword),
-                identifier: SyntaxFactory.Identifier(name),
+                identifier: SyntaxFactory.Identifier(schemaDefinition.name),
                 typeParameterList: default,
                 parameterList: default,
                 baseList: null,
@@ -119,9 +100,9 @@ namespace OpenApiSpecGeneration.Model
             bool createObjectSubType,
             bool createArraySubType,
             string potentialSubtypeName,
-            OpenApiProperty openApiProperty)
+            PropertyDefinition propertyDefinition)
         {
-            var (propertyName, propertyType, property) = openApiProperty;
+            var (propertyName, propertyType, property) = propertyDefinition;
 
             if (createObjectSubType)
             {
