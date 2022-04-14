@@ -1,6 +1,6 @@
 using Microsoft.OpenApi.Models;
 
-namespace OpenApiSpecGeneration.Generatable;
+namespace OpenApiSpecGeneration.Model;
 
 internal class SchemaDefinitionGenerator
 {

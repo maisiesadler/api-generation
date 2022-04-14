@@ -40,27 +40,23 @@ namespace OpenApiSpecGeneration.Model
             var properties = new List<MemberDeclarationSyntax>();
             var subTypes = new List<SchemaDefinition>();
 
-            foreach (var propertyDefinition in schemaDefinition.GetProperties())
+            foreach (var propertyDefinition in PropertyDefinitionGenerator.Execute(schemaDefinition.schema.Properties))
             {
-                var (propertyName, propertyType, property) = propertyDefinition;
+                var potentialSubtypeName = schemaDefinition.name + CsharpNamingExtensions.SnakeCaseToCamel(propertyDefinition.propertyName) + "SubType";
+                var typeSyntax = GetTypeSyntax(potentialSubtypeName, propertyDefinition);
 
-                var potentialSubtypeName = schemaDefinition.name + CsharpNamingExtensions.SnakeCaseToCamel(propertyName) + "SubType";
-                var createArraySubType = ShouldCreateArraySubType(propertyType, property);
-                var createObjectSubType = ShouldCreateObjectSubType(propertyType, property);
-                var typeSyntax = GetTypeSyntax(createObjectSubType, createArraySubType, potentialSubtypeName, propertyDefinition);
-
-                var propertyDeclaration = ModelSyntaxGenerator.CreateProperty(typeSyntax, propertyName);
+                var propertyDeclaration = ModelSyntaxGenerator.CreateProperty(typeSyntax, propertyDefinition.propertyName);
 
                 properties.Add(propertyDeclaration);
 
-                if (createObjectSubType)
+                if (propertyDefinition.createObjectSubType)
                 {
-                    subTypes.Add(new SchemaDefinition(potentialSubtypeName, property));
+                    subTypes.Add(new SchemaDefinition(potentialSubtypeName, propertyDefinition.property));
                 }
 
-                if (createArraySubType)
+                if (propertyDefinition.createArraySubType)
                 {
-                    subTypes.Add(new SchemaDefinition(potentialSubtypeName, property.Items));
+                    subTypes.Add(new SchemaDefinition(potentialSubtypeName, propertyDefinition.property.Items));
                 }
             }
 
@@ -70,23 +66,19 @@ namespace OpenApiSpecGeneration.Model
         }
 
         private static TypeSyntax GetTypeSyntax(
-            bool createObjectSubType,
-            bool createArraySubType,
             string potentialSubtypeName,
             PropertyDefinition propertyDefinition)
         {
-            var (propertyName, propertyType, property) = propertyDefinition;
-
-            if (createObjectSubType)
+            if (propertyDefinition.createObjectSubType)
             {
                 return SyntaxFactory.ParseTypeName(potentialSubtypeName);
             }
 
-            if (propertyType == "array")
+            if (propertyDefinition.propertyType == "array")
             {
-                var elementType = createArraySubType
+                var elementType = propertyDefinition.createArraySubType
                     ? ParseTypeSyntax(potentialSubtypeName)
-                    : ParseTypeSyntax(property.Items?.Type ?? throw new InvalidOperationException("Array element does not have type"));
+                    : ParseTypeSyntax(propertyDefinition.property.Items?.Type ?? throw new InvalidOperationException("Array element does not have type"));
 
                 return SyntaxFactory.ArrayType(elementType)
                     .WithRankSpecifiers(
@@ -96,9 +88,9 @@ namespace OpenApiSpecGeneration.Model
                                     SyntaxFactory.OmittedArraySizeExpression()))));
             }
 
-            return TryGetLocalReference(propertyType, property, out var localSyntax)
+            return TryGetLocalReference(propertyDefinition.propertyType, propertyDefinition.property, out var localSyntax)
                 ? localSyntax
-                : ParseTypeSyntax(propertyType);
+                : ParseTypeSyntax(propertyDefinition.propertyType);
         }
 
         private static bool TryGetPredefinedTypeSyntax(string? propertyType, [NotNullWhen(true)] out PredefinedTypeSyntax? predefinedTypeSyntax)
@@ -136,9 +128,6 @@ namespace OpenApiSpecGeneration.Model
             return SyntaxFactory.ParseTypeName(propertyType);
         }
 
-        private static bool ShouldCreateObjectSubType(string? propertyType, OpenApiSchema property)
-            => propertyType == "object" && property.Reference == null && property.Properties?.Any() == true;
-
         private static bool TryGetLocalReference(string? propertyType, OpenApiSchema property, [NotNullWhen(true)] out TypeSyntax? localReference)
         {
             if (propertyType != "object" || property.Reference == null)
@@ -150,8 +139,5 @@ namespace OpenApiSpecGeneration.Model
             localReference = SyntaxFactory.ParseTypeName(property.Reference.Id);
             return true;
         }
-
-        private static bool ShouldCreateArraySubType(string? propertyType, OpenApiSchema property)
-            => propertyType == "array" && !TryGetPredefinedTypeSyntax(property.Items?.Type, out _);
     }
 }
