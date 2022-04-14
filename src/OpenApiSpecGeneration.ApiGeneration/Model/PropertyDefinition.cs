@@ -7,4 +7,5 @@ internal record PropertyDefinition(
     string propertyType,
     OpenApiSchema property,
     bool createArraySubType,
-    bool createObjectSubType);
+    bool createObjectSubType,
+    string potentialSubtypeName);

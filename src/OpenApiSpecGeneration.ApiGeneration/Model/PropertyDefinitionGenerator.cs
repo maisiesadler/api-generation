@@ -1,13 +1,12 @@
-using System.Diagnostics.CodeAnalysis;
-using Microsoft.CodeAnalysis.CSharp;
-using Microsoft.CodeAnalysis.CSharp.Syntax;
 using Microsoft.OpenApi.Models;
 
 namespace OpenApiSpecGeneration.Model;
 
 internal static class PropertyDefinitionGenerator
 {
-    internal static IEnumerable<PropertyDefinition> Execute(IDictionary<string, OpenApiSchema> properties)
+    internal static IEnumerable<PropertyDefinition> Execute(
+        string schemaDefinitionName,
+        IDictionary<string, OpenApiSchema> properties)
     {
         if (properties == null) yield break;
 
@@ -22,14 +21,15 @@ internal static class PropertyDefinitionGenerator
 
             var createArraySubType = ShouldCreateArraySubType(type, openApiProperty);
             var createObjectSubType = ShouldCreateObjectSubType(type, openApiProperty);
+            var potentialSubtypeName = schemaDefinitionName + CsharpNamingExtensions.SnakeCaseToCamel(propertyName) + "SubType";
 
-            yield return new PropertyDefinition(propertyName, type, openApiProperty, createArraySubType, createObjectSubType);
+            yield return new PropertyDefinition(propertyName, type, openApiProperty, createArraySubType, createObjectSubType, potentialSubtypeName);
         }
     }
 
-        private static bool ShouldCreateObjectSubType(string? propertyType, OpenApiSchema property)
-            => propertyType == "object" && property.Reference == null && property.Properties?.Any() == true;
+    private static bool ShouldCreateObjectSubType(string? propertyType, OpenApiSchema property)
+        => propertyType == "object" && property.Reference == null && property.Properties?.Any() == true;
 
-        private static bool ShouldCreateArraySubType(string? propertyType, OpenApiSchema property)
-            => propertyType == "array" && !CsharpTypeExtensions.TryGetPredefinedTypeSyntax(property.Items?.Type, out _);
+    private static bool ShouldCreateArraySubType(string? propertyType, OpenApiSchema property)
+        => propertyType == "array" && !CsharpTypeExtensions.TryGetPredefinedTypeSyntax(property.Items?.Type, out _);
 }

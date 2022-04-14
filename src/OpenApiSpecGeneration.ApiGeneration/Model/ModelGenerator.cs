@@ -2,7 +2,6 @@ using System.Diagnostics.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
 using Microsoft.OpenApi.Models;
-using OpenApiSpecGeneration.Generatable;
 
 namespace OpenApiSpecGeneration.Model
 {
@@ -24,60 +23,64 @@ namespace OpenApiSpecGeneration.Model
 
         private static IEnumerable<RecordDeclarationSyntax> GenerateNestedRecords(SchemaDefinition schemaDefinition)
         {
-            var (record, subtypes) = GenerateRecord(schemaDefinition);
+            var propertyDefinitions = PropertyDefinitionGenerator.Execute(schemaDefinition.name, schemaDefinition.schema.Properties).ToArray();
+            var record = GenerateRecord(schemaDefinition.name, propertyDefinitions);
             yield return record;
 
-            foreach (var subTypeSchemaDefinition in subtypes)
+            foreach (var subTypeSchemaDefinition in GetSubTypes(schemaDefinition.name, propertyDefinitions))
             {
                 foreach (var subTypeRecord in GenerateNestedRecords(subTypeSchemaDefinition))
                     yield return subTypeRecord;
             }
         }
 
-        private static (RecordDeclarationSyntax, IList<SchemaDefinition>) GenerateRecord(
-            SchemaDefinition schemaDefinition)
+        private static RecordDeclarationSyntax GenerateRecord(
+            string schemaDefinitionName,
+            PropertyDefinition[] propertyDefinitions)
         {
             var properties = new List<MemberDeclarationSyntax>();
-            var subTypes = new List<SchemaDefinition>();
 
-            foreach (var propertyDefinition in PropertyDefinitionGenerator.Execute(schemaDefinition.schema.Properties))
+            foreach (var propertyDefinition in propertyDefinitions)
             {
-                var potentialSubtypeName = schemaDefinition.name + CsharpNamingExtensions.SnakeCaseToCamel(propertyDefinition.propertyName) + "SubType";
-                var typeSyntax = GetTypeSyntax(potentialSubtypeName, propertyDefinition);
-
+                var typeSyntax = GetTypeSyntax(propertyDefinition);
                 var propertyDeclaration = ModelSyntaxGenerator.CreateProperty(typeSyntax, propertyDefinition.propertyName);
 
                 properties.Add(propertyDeclaration);
+            }
 
+            return ModelSyntaxGenerator.CreateRecord(schemaDefinitionName, properties.ToArray());
+        }
+
+        private static IEnumerable<SchemaDefinition> GetSubTypes(
+            string schemaDefinitionName,
+            PropertyDefinition[] propertyDefinitions)
+        {
+            foreach (var propertyDefinition in propertyDefinitions)
+            {
                 if (propertyDefinition.createObjectSubType)
                 {
-                    subTypes.Add(new SchemaDefinition(potentialSubtypeName, propertyDefinition.property));
+                    yield return new SchemaDefinition(propertyDefinition.potentialSubtypeName, propertyDefinition.property);
                 }
 
                 if (propertyDefinition.createArraySubType)
                 {
-                    subTypes.Add(new SchemaDefinition(potentialSubtypeName, propertyDefinition.property.Items));
+                    yield return new SchemaDefinition(propertyDefinition.potentialSubtypeName, propertyDefinition.property.Items);
                 }
             }
-
-            var record = ModelSyntaxGenerator.CreateRecord(schemaDefinition.name, properties.ToArray());
-
-            return (record, subTypes);
         }
 
         private static TypeSyntax GetTypeSyntax(
-            string potentialSubtypeName,
             PropertyDefinition propertyDefinition)
         {
             if (propertyDefinition.createObjectSubType)
             {
-                return SyntaxFactory.ParseTypeName(potentialSubtypeName);
+                return SyntaxFactory.ParseTypeName(propertyDefinition.potentialSubtypeName);
             }
 
             if (propertyDefinition.propertyType == "array")
             {
                 var elementType = propertyDefinition.createArraySubType
-                    ? ParseTypeSyntax(potentialSubtypeName)
+                    ? ParseTypeSyntax(propertyDefinition.potentialSubtypeName)
                     : ParseTypeSyntax(propertyDefinition.property.Items?.Type ?? throw new InvalidOperationException("Array element does not have type"));
 
                 return SyntaxFactory.ArrayType(elementType)
