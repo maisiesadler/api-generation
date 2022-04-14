@@ -24,7 +24,7 @@ namespace OpenApiSpecGeneration.Model
 
         private static IEnumerable<RecordDeclarationSyntax> GenerateNestedRecords(SchemaDefinition schemaDefinition)
         {
-            var (record, subtypes) = TryGenerateRecord(schemaDefinition);
+            var (record, subtypes) = GenerateRecord(schemaDefinition);
             yield return record;
 
             foreach (var subTypeSchemaDefinition in subtypes)
@@ -34,7 +34,7 @@ namespace OpenApiSpecGeneration.Model
             }
         }
 
-        private static (RecordDeclarationSyntax, IList<SchemaDefinition>) TryGenerateRecord(
+        private static (RecordDeclarationSyntax, IList<SchemaDefinition>) GenerateRecord(
             SchemaDefinition schemaDefinition)
         {
             var properties = new List<MemberDeclarationSyntax>();
@@ -44,25 +44,12 @@ namespace OpenApiSpecGeneration.Model
             {
                 var (propertyName, propertyType, property) = propertyDefinition;
 
-                var attributes = SyntaxFactory.AttributeList(
-                    SyntaxFactory.SingletonSeparatedList<AttributeSyntax>(
-                        JsonPropertyNameAttributeSyntax(propertyName)
-                    )
-                );
-
                 var potentialSubtypeName = schemaDefinition.name + CsharpNamingExtensions.SnakeCaseToCamel(propertyName) + "SubType";
                 var createArraySubType = ShouldCreateArraySubType(propertyType, property);
                 var createObjectSubType = ShouldCreateObjectSubType(propertyType, property);
                 var typeSyntax = GetTypeSyntax(createObjectSubType, createArraySubType, potentialSubtypeName, propertyDefinition);
 
-                var propertyDeclaration = SyntaxFactory.PropertyDeclaration(
-                        SyntaxFactory.NullableType(typeSyntax),
-                        SyntaxFactory.Identifier(CsharpNamingExtensions.SnakeCaseToCamel(propertyName)))
-                    .AddModifiers(SyntaxFactory.Token(SyntaxKind.PublicKeyword))
-                    .AddAccessorListAccessors(
-                        SyntaxFactory.AccessorDeclaration(SyntaxKind.GetAccessorDeclaration).WithSemicolonToken(SyntaxFactory.Token(SyntaxKind.SemicolonToken)),
-                        SyntaxFactory.AccessorDeclaration(SyntaxKind.InitAccessorDeclaration).WithSemicolonToken(SyntaxFactory.Token(SyntaxKind.SemicolonToken)))
-                    .AddAttributeLists(attributes);
+                var propertyDeclaration = ModelSyntaxGenerator.CreateProperty(typeSyntax, propertyName);
 
                 properties.Add(propertyDeclaration);
 
@@ -77,16 +64,7 @@ namespace OpenApiSpecGeneration.Model
                 }
             }
 
-            var record = SyntaxFactory.RecordDeclaration(
-                 SyntaxFactory.Token(SyntaxKind.RecordKeyword),
-                  SyntaxFactory.Identifier(schemaDefinition.name)
-            )
-            .WithModifiers(SyntaxFactory.TokenList(SyntaxFactory.Token(SyntaxKind.PublicKeyword)))
-            .WithOpenBraceToken(SyntaxFactory.Token(SyntaxKind.OpenBraceToken))
-            .WithCloseBraceToken(SyntaxFactory.Token(SyntaxKind.CloseBraceToken))
-            .WithMembers(SyntaxFactory.List<MemberDeclarationSyntax>(
-                properties.ToArray()
-            ));
+            var record = ModelSyntaxGenerator.CreateRecord(schemaDefinition.name, properties.ToArray());
 
             return (record, subTypes);
         }
@@ -175,27 +153,5 @@ namespace OpenApiSpecGeneration.Model
 
         private static bool ShouldCreateArraySubType(string? propertyType, OpenApiSchema property)
             => propertyType == "array" && !TryGetPredefinedTypeSyntax(property.Items?.Type, out _);
-
-        private static AttributeSyntax JsonPropertyNameAttributeSyntax(string propertyName)
-        {
-            var quotedPropertyName = $"\"{propertyName}\"";
-            var attributeArgument = SyntaxFactory.AttributeArgument(
-                SyntaxFactory.LiteralExpression(SyntaxKind.StringLiteralExpression,
-                    SyntaxFactory.Token(SyntaxFactory.TriviaList(),
-                        SyntaxKind.StringLiteralToken,
-                        quotedPropertyName,
-                        quotedPropertyName,
-                        SyntaxFactory.TriviaList()
-                    )
-                )
-            );
-
-            return SyntaxFactory.Attribute(
-                SyntaxFactory.IdentifierName("JsonPropertyName"),
-                SyntaxFactory.AttributeArgumentList(
-                    SyntaxFactory.SingletonSeparatedList<AttributeArgumentSyntax>(attributeArgument)
-                )
-            );
-        }
     }
 }
