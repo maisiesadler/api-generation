@@ -7,8 +7,6 @@ namespace OpenApiSpecGeneration.Model
 {
     internal class ModelGenerator
     {
-        private record OpenApiProperty(string propertyName, string propertyType, OpenApiSchema property);
-
         internal static IEnumerable<RecordDeclarationSyntax> GenerateModels(OpenApiDocument document)
         {
             return GenerateRecords(document).ToArray();
@@ -16,123 +14,74 @@ namespace OpenApiSpecGeneration.Model
 
         private static IEnumerable<RecordDeclarationSyntax> GenerateRecords(OpenApiDocument document)
         {
-            foreach (var (name, openApiComponentSchema) in GetAllSchemas.Execute(document))
+            foreach (var schemaDefinition in SchemaDefinitionGenerator.Execute(document))
             {
-                var (record, subtypes) = TryGenerateRecord(name, GetProperties(openApiComponentSchema.Properties));
-                yield return record;
-
-                foreach (var (subtypename, subtype) in subtypes)
-                {
-                    var (subtypeRecord, heello) = TryGenerateRecord(subtypename, GetProperties(subtype.Properties));
-                    yield return subtypeRecord;
-
-                    foreach (var (_subtypename, _subtype) in heello)
-                    {
-                        var (_subtypeRecord, _) = TryGenerateRecord(_subtypename, GetProperties(_subtype.Properties));
-                        yield return _subtypeRecord;
-                    }
-                }
+                foreach (var record in GenerateNestedRecords(schemaDefinition))
+                    yield return record;
             }
         }
 
-        private static IEnumerable<OpenApiProperty> GetProperties(IDictionary<string, OpenApiSchema>? openApiProperties)
+        private static IEnumerable<RecordDeclarationSyntax> GenerateNestedRecords(SchemaDefinition schemaDefinition)
         {
-            if (openApiProperties == null) yield break;
+            var propertyDefinitions = PropertyDefinitionGenerator.Execute(schemaDefinition.name, schemaDefinition.schema.Properties).ToArray();
+            var record = GenerateRecord(schemaDefinition.name, propertyDefinitions);
+            yield return record;
 
-            foreach (var (propertyName, openApiProperty) in openApiProperties)
+            foreach (var subTypeSchemaDefinition in GetSubTypes(schemaDefinition.name, propertyDefinitions))
             {
-                var type = openApiProperty.Type;
-                if (type == null)
-                    type = openApiProperty.Reference.Id;
-
-                if (type == null)
-                    throw new InvalidOperationException($"{propertyName} missing property type");
-
-                yield return new OpenApiProperty(propertyName, type, openApiProperty);
+                foreach (var subTypeRecord in GenerateNestedRecords(subTypeSchemaDefinition))
+                    yield return subTypeRecord;
             }
         }
 
-        private static (RecordDeclarationSyntax, IList<(string, OpenApiSchema)>) TryGenerateRecord(
-            string name,
-            IEnumerable<OpenApiProperty> openApiProperties)
+        private static RecordDeclarationSyntax GenerateRecord(
+            string schemaDefinitionName,
+            PropertyDefinition[] propertyDefinitions)
         {
             var properties = new List<MemberDeclarationSyntax>();
-            var subTypes = new List<(string, OpenApiSchema)>();
 
-            foreach (var openApiProperty in openApiProperties)
+            foreach (var propertyDefinition in propertyDefinitions)
             {
-                var (propertyName, propertyType, property) = openApiProperty;
-
-                var attributes = SyntaxFactory.AttributeList(
-                    SyntaxFactory.SingletonSeparatedList<AttributeSyntax>(
-                        JsonPropertyNameAttributeSyntax(propertyName)
-                    )
-                );
-
-                var potentialSubtypeName = name + CsharpNamingExtensions.SnakeCaseToCamel(propertyName) + "SubType";
-                var createArraySubType = ShouldCreateArraySubType(propertyType, property);
-                var createObjectSubType = ShouldCreateObjectSubType(propertyType, property);
-                var typeSyntax = GetTypeSyntax(createObjectSubType, createArraySubType, potentialSubtypeName, openApiProperty);
-
-                var propertyDeclaration = SyntaxFactory.PropertyDeclaration(
-                        SyntaxFactory.NullableType(typeSyntax),
-                        SyntaxFactory.Identifier(CsharpNamingExtensions.SnakeCaseToCamel(propertyName)))
-                    .AddModifiers(SyntaxFactory.Token(SyntaxKind.PublicKeyword))
-                    .AddAccessorListAccessors(
-                        SyntaxFactory.AccessorDeclaration(SyntaxKind.GetAccessorDeclaration).WithSemicolonToken(SyntaxFactory.Token(SyntaxKind.SemicolonToken)),
-                        SyntaxFactory.AccessorDeclaration(SyntaxKind.InitAccessorDeclaration).WithSemicolonToken(SyntaxFactory.Token(SyntaxKind.SemicolonToken)))
-                    .AddAttributeLists(attributes);
+                var typeSyntax = GetTypeSyntax(propertyDefinition);
+                var propertyDeclaration = ModelSyntaxGenerator.CreateProperty(typeSyntax, propertyDefinition.propertyName);
 
                 properties.Add(propertyDeclaration);
-
-                if (createObjectSubType)
-                {
-                    subTypes.Add((potentialSubtypeName, property));
-                }
-
-                if (createArraySubType)
-                {
-                    subTypes.Add((potentialSubtypeName, property.Items));
-                }
             }
 
-            var record = SyntaxFactory.RecordDeclaration(
-                attributeLists: default,
-                modifiers: SyntaxFactory.TokenList(SyntaxFactory.Token(SyntaxKind.PublicKeyword)),
-                keyword: SyntaxFactory.Token(SyntaxKind.RecordKeyword),
-                identifier: SyntaxFactory.Identifier(name),
-                typeParameterList: default,
-                parameterList: default,
-                baseList: null,
-                constraintClauses: default,
-                openBraceToken: SyntaxFactory.Token(SyntaxKind.OpenBraceToken),
-                members: SyntaxFactory.List<MemberDeclarationSyntax>(
-                    properties.ToArray()
-                ),
-                closeBraceToken: SyntaxFactory.Token(SyntaxKind.CloseBraceToken),
-                semicolonToken: default);
+            return ModelSyntaxGenerator.CreateRecord(schemaDefinitionName, properties.ToArray());
+        }
 
-            return (record, subTypes);
+        private static IEnumerable<SchemaDefinition> GetSubTypes(
+            string schemaDefinitionName,
+            PropertyDefinition[] propertyDefinitions)
+        {
+            foreach (var propertyDefinition in propertyDefinitions)
+            {
+                if (propertyDefinition.createObjectSubType)
+                {
+                    yield return new SchemaDefinition(propertyDefinition.potentialSubtypeName, propertyDefinition.property);
+                }
+
+                if (propertyDefinition.createArraySubType)
+                {
+                    yield return new SchemaDefinition(propertyDefinition.potentialSubtypeName, propertyDefinition.property.Items);
+                }
+            }
         }
 
         private static TypeSyntax GetTypeSyntax(
-            bool createObjectSubType,
-            bool createArraySubType,
-            string potentialSubtypeName,
-            OpenApiProperty openApiProperty)
+            PropertyDefinition propertyDefinition)
         {
-            var (propertyName, propertyType, property) = openApiProperty;
-
-            if (createObjectSubType)
+            if (propertyDefinition.createObjectSubType)
             {
-                return SyntaxFactory.ParseTypeName(potentialSubtypeName);
+                return SyntaxFactory.ParseTypeName(propertyDefinition.potentialSubtypeName);
             }
 
-            if (propertyType == "array")
+            if (propertyDefinition.propertyType == "array")
             {
-                var elementType = createArraySubType
-                    ? ParseTypeSyntax(potentialSubtypeName)
-                    : ParseTypeSyntax(property.Items?.Type ?? throw new InvalidOperationException("Array element does not have type"));
+                var elementType = propertyDefinition.createArraySubType
+                    ? ParseTypeSyntax(propertyDefinition.potentialSubtypeName)
+                    : ParseTypeSyntax(propertyDefinition.property.Items?.Type ?? throw new InvalidOperationException("Array element does not have type"));
 
                 return SyntaxFactory.ArrayType(elementType)
                     .WithRankSpecifiers(
@@ -142,48 +91,18 @@ namespace OpenApiSpecGeneration.Model
                                     SyntaxFactory.OmittedArraySizeExpression()))));
             }
 
-            return TryGetLocalReference(propertyType, property, out var localSyntax)
+            return TryGetLocalReference(propertyDefinition.propertyType, propertyDefinition.property, out var localSyntax)
                 ? localSyntax
-                : ParseTypeSyntax(propertyType);
-        }
-
-        private static bool TryGetPredefinedTypeSyntax(string? propertyType, [NotNullWhen(true)] out PredefinedTypeSyntax? predefinedTypeSyntax)
-        {
-            switch (propertyType)
-            {
-                case "integer":
-                    {
-                        predefinedTypeSyntax = SyntaxFactory.PredefinedType(SyntaxFactory.Token(SyntaxKind.IntKeyword));
-                        return true;
-                    }
-                case "string":
-                    {
-                        predefinedTypeSyntax = SyntaxFactory.PredefinedType(SyntaxFactory.Token(SyntaxKind.StringKeyword));
-                        return true;
-                    }
-                case "boolean":
-                    {
-                        predefinedTypeSyntax = SyntaxFactory.PredefinedType(SyntaxFactory.Token(SyntaxKind.BoolKeyword));
-                        return true;
-                    }
-                default:
-                    {
-                        predefinedTypeSyntax = null;
-                        return false;
-                    }
-            };
+                : ParseTypeSyntax(propertyDefinition.propertyType);
         }
 
         private static TypeSyntax ParseTypeSyntax(string propertyType)
         {
-            if (TryGetPredefinedTypeSyntax(propertyType, out var predefinedTypeSyntax))
+            if (CsharpTypeExtensions.TryGetPredefinedTypeSyntax(propertyType, out var predefinedTypeSyntax))
                 return predefinedTypeSyntax;
 
             return SyntaxFactory.ParseTypeName(propertyType);
         }
-
-        private static bool ShouldCreateObjectSubType(string? propertyType, OpenApiSchema property)
-            => propertyType == "object" && property.Reference == null && property.Properties?.Any() == true;
 
         private static bool TryGetLocalReference(string? propertyType, OpenApiSchema property, [NotNullWhen(true)] out TypeSyntax? localReference)
         {
@@ -195,31 +114,6 @@ namespace OpenApiSpecGeneration.Model
 
             localReference = SyntaxFactory.ParseTypeName(property.Reference.Id);
             return true;
-        }
-
-        private static bool ShouldCreateArraySubType(string? propertyType, OpenApiSchema property)
-            => propertyType == "array" && !TryGetPredefinedTypeSyntax(property.Items?.Type, out _);
-
-        private static AttributeSyntax JsonPropertyNameAttributeSyntax(string propertyName)
-        {
-            var quotedPropertyName = $"\"{propertyName}\"";
-            var attributeArgument = SyntaxFactory.AttributeArgument(
-                SyntaxFactory.LiteralExpression(SyntaxKind.StringLiteralExpression,
-                    SyntaxFactory.Token(SyntaxFactory.TriviaList(),
-                        SyntaxKind.StringLiteralToken,
-                        quotedPropertyName,
-                        quotedPropertyName,
-                        SyntaxFactory.TriviaList()
-                    )
-                )
-            );
-
-            return SyntaxFactory.Attribute(
-                SyntaxFactory.IdentifierName("JsonPropertyName"),
-                SyntaxFactory.AttributeArgumentList(
-                    SyntaxFactory.SingletonSeparatedList<AttributeArgumentSyntax>(attributeArgument)
-                )
-            );
         }
     }
 }
