@@ -93,36 +93,9 @@ namespace OpenApiSpecGeneration.Model
                 : ParseTypeSyntax(propertyDefinition.propertyType);
         }
 
-        private static bool TryGetPredefinedTypeSyntax(string? propertyType, [NotNullWhen(true)] out PredefinedTypeSyntax? predefinedTypeSyntax)
-        {
-            switch (propertyType)
-            {
-                case "integer":
-                    {
-                        predefinedTypeSyntax = SyntaxFactory.PredefinedType(SyntaxFactory.Token(SyntaxKind.IntKeyword));
-                        return true;
-                    }
-                case "string":
-                    {
-                        predefinedTypeSyntax = SyntaxFactory.PredefinedType(SyntaxFactory.Token(SyntaxKind.StringKeyword));
-                        return true;
-                    }
-                case "boolean":
-                    {
-                        predefinedTypeSyntax = SyntaxFactory.PredefinedType(SyntaxFactory.Token(SyntaxKind.BoolKeyword));
-                        return true;
-                    }
-                default:
-                    {
-                        predefinedTypeSyntax = null;
-                        return false;
-                    }
-            };
-        }
-
         private static TypeSyntax ParseTypeSyntax(string propertyType)
         {
-            if (TryGetPredefinedTypeSyntax(propertyType, out var predefinedTypeSyntax))
+            if (CsharpTypeExtensions.TryGetPredefinedTypeSyntax(propertyType, out var predefinedTypeSyntax))
                 return predefinedTypeSyntax;
 
             return SyntaxFactory.ParseTypeName(propertyType);

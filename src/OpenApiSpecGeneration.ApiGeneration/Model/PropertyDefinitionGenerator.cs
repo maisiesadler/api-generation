@@ -27,36 +27,9 @@ internal static class PropertyDefinitionGenerator
         }
     }
 
-    private static bool TryGetPredefinedTypeSyntax(string? propertyType, [NotNullWhen(true)] out PredefinedTypeSyntax? predefinedTypeSyntax)
-        {
-            switch (propertyType)
-            {
-                case "integer":
-                    {
-                        predefinedTypeSyntax = SyntaxFactory.PredefinedType(SyntaxFactory.Token(SyntaxKind.IntKeyword));
-                        return true;
-                    }
-                case "string":
-                    {
-                        predefinedTypeSyntax = SyntaxFactory.PredefinedType(SyntaxFactory.Token(SyntaxKind.StringKeyword));
-                        return true;
-                    }
-                case "boolean":
-                    {
-                        predefinedTypeSyntax = SyntaxFactory.PredefinedType(SyntaxFactory.Token(SyntaxKind.BoolKeyword));
-                        return true;
-                    }
-                default:
-                    {
-                        predefinedTypeSyntax = null;
-                        return false;
-                    }
-            };
-        }
-
         private static bool ShouldCreateObjectSubType(string? propertyType, OpenApiSchema property)
             => propertyType == "object" && property.Reference == null && property.Properties?.Any() == true;
 
         private static bool ShouldCreateArraySubType(string? propertyType, OpenApiSchema property)
-            => propertyType == "array" && !TryGetPredefinedTypeSyntax(property.Items?.Type, out _);
+            => propertyType == "array" && !CsharpTypeExtensions.TryGetPredefinedTypeSyntax(property.Items?.Type, out _);
 }
