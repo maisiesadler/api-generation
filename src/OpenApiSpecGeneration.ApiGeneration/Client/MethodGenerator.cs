@@ -14,6 +14,7 @@ namespace OpenApiSpecGeneration.ApiGeneration.Client
             var statements = new List<StatementSyntax>();
             statements.Add(CreateHttpRequestMessage(operationType));
             statements.Add(CallHttpClient());
+            statements.Add(ReadContent());
             return SyntaxFactory.Block(statements);
         }
 
@@ -82,7 +83,48 @@ namespace OpenApiSpecGeneration.ApiGeneration.Client
 
             var variableDeclarator = SyntaxFactory.VariableDeclarator("response")
                 .WithInitializer(
-                        SyntaxFactory.EqualsValueClause(
+                    SyntaxFactory.EqualsValueClause(
+                        SyntaxFactory.Token(SyntaxKind.EqualsToken),
+                        awaitExpressionSyntax
+                    )
+                );
+
+            return SyntaxFactory.LocalDeclarationStatement(
+                SyntaxFactory.VariableDeclaration(
+                    SyntaxFactory.IdentifierName("var"),
+                    SyntaxFactory.SingletonSeparatedList(variableDeclarator)
+                )
+            );
+        }
+
+        // var content = await response.Content.ReadAsStringAsync();
+        private static StatementSyntax ReadContent()
+        {
+            var memberAccessExpressionSyntax = SyntaxFactory.MemberAccessExpression(
+                SyntaxKind.SimpleMemberAccessExpression,
+                SyntaxFactory.MemberAccessExpression(
+                    SyntaxKind.SimpleMemberAccessExpression,
+                    SyntaxFactory.IdentifierName($"response"),
+                    SyntaxFactory.Token(SyntaxKind.DotToken),
+                    SyntaxFactory.IdentifierName("Content")
+                ),
+                SyntaxFactory.Token(SyntaxKind.DotToken),
+                SyntaxFactory.IdentifierName("ReadAsStringAsync")
+            );
+
+            var invocationExpressionSyntax = SyntaxFactory.InvocationExpression(
+                memberAccessExpressionSyntax,
+                SyntaxFactory.ArgumentList()
+            );
+
+            var awaitExpressionSyntax = SyntaxFactory.AwaitExpression(
+                SyntaxFactory.Token(SyntaxKind.AwaitKeyword),
+                invocationExpressionSyntax
+            );
+
+            var variableDeclarator = SyntaxFactory.VariableDeclarator("content")
+                .WithInitializer(
+                    SyntaxFactory.EqualsValueClause(
                         SyntaxFactory.Token(SyntaxKind.EqualsToken),
                         awaitExpressionSyntax
                     )

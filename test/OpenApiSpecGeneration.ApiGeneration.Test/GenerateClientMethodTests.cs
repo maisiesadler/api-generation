@@ -7,51 +7,6 @@ namespace OpenApiSpecGeneration.ApiGeneration.Test;
 
 public class GenerateClientMethodTests
 {
-    [Fact]
-    public void MethodBodyCallsHttpClient()
-    {
-        // Arrange
-        var apiTestPathItem = OpenApiMockBuilder.BuildPathItem()
-            .WithOperation(OperationType.Get);
-
-        var document = OpenApiMockBuilder.BuildDocument()
-            .WithPath("/api/test", apiTestPathItem);
-
-        // Act
-        var classDeclarationSyntaxes = ApiGenerator.GenerateClients(document);
-
-        // Assert
-        var classDeclarationSyntax = Assert.Single(classDeclarationSyntaxes);
-        var methodDeclarationSyntax = Assert.Single(classDeclarationSyntax.Members.GetMembersOfType<MethodDeclarationSyntax>());
-
-        var methodBodyStatement = methodDeclarationSyntax.Body!.Statements[1];
-
-        // var response = await _httpClient.SendAsync(request);
-        var localDeclarationStatementSyntax = Assert.IsType<LocalDeclarationStatementSyntax>(methodBodyStatement);
-        Assert.Equal(";", localDeclarationStatementSyntax.SemicolonToken.Value);
-        var variableDeclarationSyntax = Assert.IsType<VariableDeclarationSyntax>(localDeclarationStatementSyntax.Declaration);
-        var typeIdentifier = Assert.IsType<IdentifierNameSyntax>(variableDeclarationSyntax.Type);
-        Assert.Equal("var", typeIdentifier.Identifier.Value);
-        var variable = Assert.Single(variableDeclarationSyntax.Variables);
-        // VariableDeclaratorSyntax VariableDeclarator response = await _httpClient.SendAsync(request)
-        Assert.Equal("response", variable.Identifier.Value);
-
-        // EqualsValueClauseSyntax EqualsValueClause = await _httpClient.SendAsync(request)
-        Assert.NotNull(variable.Initializer);
-        Assert.Equal("=", variable.Initializer!.EqualsToken.Value);
-        var awaitExpressionSyntax = Assert.IsType<AwaitExpressionSyntax>(variable.Initializer!.Value);
-        var invocationExpressionSyntax = Assert.IsType<InvocationExpressionSyntax>(awaitExpressionSyntax.Expression);
-        var memberAccessExpressionSyntax = Assert.IsType<MemberAccessExpressionSyntax>(invocationExpressionSyntax.Expression);
-        var identifierNameSyntax = Assert.IsType<IdentifierNameSyntax>(memberAccessExpressionSyntax.Expression);
-        var methodIdentifierNameSyntax = Assert.IsType<IdentifierNameSyntax>(memberAccessExpressionSyntax.Name);
-        Assert.Equal("await", awaitExpressionSyntax.AwaitKeyword.Value);
-        Assert.Equal("_httpClient", identifierNameSyntax.Identifier.Value);
-        Assert.Equal("SendAsync", methodIdentifierNameSyntax.Identifier.Value);
-        var argument = Assert.Single(invocationExpressionSyntax.ArgumentList.Arguments);
-        var argumentIdentifierNameSyntax = Assert.IsType<IdentifierNameSyntax>(argument.Expression);
-        Assert.Equal("request", argumentIdentifierNameSyntax.Identifier.Value);
-    }
-
     [Theory]
     [InlineData(OperationType.Get, "Get")]
     [InlineData(OperationType.Put, "Put")]
@@ -102,6 +57,99 @@ public class GenerateClientMethodTests
         var methodIdentifierNameSyntax = Assert.IsType<IdentifierNameSyntax>(right.Name);
         Assert.Equal("HttpMethod", identifierNameSyntax.Identifier.Value);
         Assert.Equal(expectedMethodType, methodIdentifierNameSyntax.Identifier.Value);
+    }
+
+    [Fact]
+    public void MethodBodyCallsHttpClient()
+    {
+        // Arrange
+        var apiTestPathItem = OpenApiMockBuilder.BuildPathItem()
+            .WithOperation(OperationType.Get);
+
+        var document = OpenApiMockBuilder.BuildDocument()
+            .WithPath("/api/test", apiTestPathItem);
+
+        // Act
+        var classDeclarationSyntaxes = ApiGenerator.GenerateClients(document);
+
+        // Assert
+        var classDeclarationSyntax = Assert.Single(classDeclarationSyntaxes);
+        var methodDeclarationSyntax = Assert.Single(classDeclarationSyntax.Members.GetMembersOfType<MethodDeclarationSyntax>());
+
+        var methodBodyStatement = methodDeclarationSyntax.Body!.Statements[1];
+
+        // var response = await _httpClient.SendAsync(request);
+        var localDeclarationStatementSyntax = Assert.IsType<LocalDeclarationStatementSyntax>(methodBodyStatement);
+        Assert.Equal(";", localDeclarationStatementSyntax.SemicolonToken.Value);
+        var variableDeclarationSyntax = Assert.IsType<VariableDeclarationSyntax>(localDeclarationStatementSyntax.Declaration);
+        var typeIdentifier = Assert.IsType<IdentifierNameSyntax>(variableDeclarationSyntax.Type);
+        Assert.Equal("var", typeIdentifier.Identifier.Value);
+        var variable = Assert.Single(variableDeclarationSyntax.Variables);
+        // VariableDeclaratorSyntax VariableDeclarator response = await _httpClient.SendAsync(request)
+        Assert.Equal("response", variable.Identifier.Value);
+
+        // EqualsValueClauseSyntax EqualsValueClause = await _httpClient.SendAsync(request)
+        Assert.NotNull(variable.Initializer);
+        Assert.Equal("=", variable.Initializer!.EqualsToken.Value);
+        var awaitExpressionSyntax = Assert.IsType<AwaitExpressionSyntax>(variable.Initializer!.Value);
+        var invocationExpressionSyntax = Assert.IsType<InvocationExpressionSyntax>(awaitExpressionSyntax.Expression);
+        var memberAccessExpressionSyntax = Assert.IsType<MemberAccessExpressionSyntax>(invocationExpressionSyntax.Expression);
+        var identifierNameSyntax = Assert.IsType<IdentifierNameSyntax>(memberAccessExpressionSyntax.Expression);
+        var methodIdentifierNameSyntax = Assert.IsType<IdentifierNameSyntax>(memberAccessExpressionSyntax.Name);
+        Assert.Equal("await", awaitExpressionSyntax.AwaitKeyword.Value);
+        Assert.Equal("_httpClient", identifierNameSyntax.Identifier.Value);
+        Assert.Equal("SendAsync", methodIdentifierNameSyntax.Identifier.Value);
+        var argument = Assert.Single(invocationExpressionSyntax.ArgumentList.Arguments);
+        var argumentIdentifierNameSyntax = Assert.IsType<IdentifierNameSyntax>(argument.Expression);
+        Assert.Equal("request", argumentIdentifierNameSyntax.Identifier.Value);
+    }
+
+    [Fact]
+    public void MethodBodyReadsContent()
+    {
+        // Arrange
+        var apiTestPathItem = OpenApiMockBuilder.BuildPathItem()
+            .WithOperation(OperationType.Get);
+
+        var document = OpenApiMockBuilder.BuildDocument()
+            .WithPath("/api/test", apiTestPathItem);
+
+        // Act
+        var classDeclarationSyntaxes = ApiGenerator.GenerateClients(document);
+
+        // Assert
+        var classDeclarationSyntax = Assert.Single(classDeclarationSyntaxes);
+        var methodDeclarationSyntax = Assert.Single(classDeclarationSyntax.Members.GetMembersOfType<MethodDeclarationSyntax>());
+
+        var methodBodyStatement = methodDeclarationSyntax.Body!.Statements[2];
+
+        var localDeclarationStatementSyntax = Assert.IsType<LocalDeclarationStatementSyntax>(methodBodyStatement);
+        Assert.Equal(";", localDeclarationStatementSyntax.SemicolonToken.Value);
+        var variableDeclarationSyntax = Assert.IsType<VariableDeclarationSyntax>(localDeclarationStatementSyntax.Declaration);
+        var typeIdentifier = Assert.IsType<IdentifierNameSyntax>(variableDeclarationSyntax.Type);
+        Assert.Equal("var", typeIdentifier.Identifier.Value);
+        var variable = Assert.Single(variableDeclarationSyntax.Variables);
+        Assert.Equal("content", variable.Identifier.Value);
+
+        Assert.NotNull(variable.Initializer);
+        Assert.Equal("=", variable.Initializer!.EqualsToken.Value);
+        var awaitExpressionSyntax = Assert.IsType<AwaitExpressionSyntax>(variable.Initializer!.Value);
+        Assert.Equal("await", awaitExpressionSyntax.AwaitKeyword.Value);
+
+        var invocationExpressionSyntax = Assert.IsType<InvocationExpressionSyntax>(awaitExpressionSyntax.Expression);
+        Assert.Empty(invocationExpressionSyntax.ArgumentList.Arguments);
+
+        // response.Content.ReadAsStringAsync
+        var memberAccessExpressionSyntax = Assert.IsType<MemberAccessExpressionSyntax>(invocationExpressionSyntax.Expression);
+
+        // response.Content
+        var innerMemberAccessExpressionSyntax = Assert.IsType<MemberAccessExpressionSyntax>(memberAccessExpressionSyntax.Expression);
+        var innerIdentifierNameSyntax = Assert.IsType<IdentifierNameSyntax>(innerMemberAccessExpressionSyntax.Expression);
+        var innerMethodIdentifierNameSyntax = Assert.IsType<IdentifierNameSyntax>(innerMemberAccessExpressionSyntax.Name);
+        var methodIdentifierNameSyntax = Assert.IsType<IdentifierNameSyntax>(memberAccessExpressionSyntax.Name);
+        Assert.Equal("response", innerIdentifierNameSyntax.Identifier.Value);
+        Assert.Equal("Content", innerMethodIdentifierNameSyntax.Identifier.Value);
+        Assert.Equal("ReadAsStringAsync", methodIdentifierNameSyntax.Identifier.Value);
     }
 
     // [Fact]
