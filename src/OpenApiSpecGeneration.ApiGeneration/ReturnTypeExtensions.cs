@@ -7,7 +7,7 @@ namespace OpenApiSpecGeneration
 {
     internal class ReturnTypeExtensions
     {
-        internal static TypeSyntax GetReturnTypeSyntaxWrapped(OpenApiResponses? responses)
+        internal static TypeSyntax GetReturnTypeSyntaxAsTask(OpenApiResponses? responses)
         {
             if (TryGetFirstReturnTypeSyntax(responses, out var typeSyntax))
             {

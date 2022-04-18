@@ -17,7 +17,7 @@ namespace OpenApiSpecGeneration.ApiGeneration.AutoFixture.Implementation
                     var parameters = CreateParameterList(argumentDefinitions);
                     var typeToGenerate = ReturnTypeExtensions.TryGetFirstReturnTypeSyntax(operation.Responses, out var rt)
                         ? rt : null;
-                    var returnType = ReturnTypeExtensions.GetReturnTypeSyntaxWrapped(operation.Responses);
+                    var returnType = ReturnTypeExtensions.GetReturnTypeSyntaxAsTask(operation.Responses);
                     var methodBody = MethodGenerator.CreateMethodBody(typeToGenerate, returnType);
                     var methodDeclaration = SyntaxFactory.MethodDeclaration(
                             returnType,

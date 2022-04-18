@@ -13,33 +13,20 @@ namespace OpenApiSpecGeneration.Interactor
             {
                 foreach (var (operationType, operation) in openApiPath.Operations)
                 {
+                    var interfaceName = CsharpNamingExtensions.PathToInteractorType(apiPath, operationType);
+
                     var argumentDefinitions = ArgumentDefinitionGenerator.Create(apiPath, operationType, operation.RequestBody, operation.Parameters).ToArray();
                     var parameters = CreateParameterList(argumentDefinitions);
-                    var returnType = ReturnTypeExtensions.GetReturnTypeSyntaxWrapped(operation.Responses);
+                    var returnType = ReturnTypeExtensions.GetReturnTypeSyntaxAsTask(operation.Responses);
                     var methodDeclaration = SyntaxFactory.MethodDeclaration(
                             returnType,
                             SyntaxFactory.Identifier("Execute"))
                         .WithParameterList(parameters)
                         .WithSemicolonToken(SyntaxFactory.Token(SyntaxKind.SemicolonToken));
 
-                    var methods = new[] { methodDeclaration };
-
-                    var interfaceName = CsharpNamingExtensions.PathToInteractorType(apiPath, operationType);
-
-                    var interfaceDeclaration = SyntaxFactory.InterfaceDeclaration(
-                        attributeLists: default,
-                        modifiers: SyntaxFactory.TokenList(SyntaxFactory.Token(SyntaxKind.PublicKeyword)),
-                        keyword: SyntaxFactory.Token(SyntaxKind.InterfaceKeyword),
-                        identifier: SyntaxFactory.Identifier(interfaceName),
-                        typeParameterList: default,
-                        baseList: null,
-                        constraintClauses: default,
-                        openBraceToken: SyntaxFactory.Token(SyntaxKind.OpenBraceToken),
-                        members: SyntaxFactory.List<MemberDeclarationSyntax>(methods),
-                        closeBraceToken: SyntaxFactory.Token(SyntaxKind.CloseBraceToken),
-                        semicolonToken: default);
-
-                    yield return interfaceDeclaration;
+                    yield return SyntaxFactory.InterfaceDeclaration(interfaceName)
+                        .WithModifiers(SyntaxFactory.TokenList(SyntaxFactory.Token(SyntaxKind.PublicKeyword)))
+                        .WithMembers(SyntaxFactory.SingletonList<MemberDeclarationSyntax>(methodDeclaration));
                 }
             }
         }
@@ -53,22 +40,14 @@ namespace OpenApiSpecGeneration.Interactor
             foreach (var openApiMethodParameter in openApiMethodParameters)
             {
                 var attributeList = SyntaxFactory.List<AttributeListSyntax>();
-                var parameter = SyntaxFactory.Parameter(
-                        attributeList,
-                        default,
-                        openApiMethodParameter.parameterTypeSyntax,
-                        SyntaxFactory.Identifier(openApiMethodParameter.name),
-                        default
-                    );
+                var parameter = SyntaxFactory.Parameter(SyntaxFactory.Identifier(openApiMethodParameter.name))
+                    .WithType(openApiMethodParameter.parameterTypeSyntax);
 
                 parameters.Add(parameter);
             }
 
-            var list = SyntaxFactory.SeparatedList<ParameterSyntax>(parameters);
             return SyntaxFactory.ParameterList(
-                SyntaxFactory.Token(SyntaxKind.OpenParenToken),
-                list,
-                SyntaxFactory.Token(SyntaxKind.CloseParenToken)
+                SyntaxFactory.SeparatedList<ParameterSyntax>(parameters)
             );
         }
     }
