@@ -12,6 +12,7 @@ namespace Example.Clients
         private readonly HttpClient _httpClient;
         public async Task<ClientResponse> Execute()
         {
+            var response = await _httpClient.SendAsync(request);
         }
     }
 }
