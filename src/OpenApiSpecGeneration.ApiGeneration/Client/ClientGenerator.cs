@@ -15,12 +15,12 @@ namespace OpenApiSpecGeneration.ApiGeneration.Client
                 {
                     var argumentDefinitions = ArgumentDefinitionGenerator.Create(apiPath, operationType, operation.RequestBody, operation.Parameters).ToArray();
                     var parameters = CreateParameterList(argumentDefinitions);
-                    var typeToGenerate = ReturnTypeExtensions.TryGetFirstReturnTypeSyntax(operation.Responses, out var rt)
+                    var returnType = ReturnTypeExtensions.TryGetFirstReturnTypeSyntax(operation.Responses, out var rt)
                         ? rt : null;
-                    var returnType = ReturnTypeExtensions.GetReturnTypeSyntaxAsTask(operation.Responses);
-                    var methodBody = MethodGenerator.CreateMethodBody(typeToGenerate, returnType);
+                    var clientResponseReturnType = GetReturnTypeAsClientResponse(returnType);
+                    var methodBody = MethodGenerator.CreateMethodBody(returnType);
                     var methodDeclaration = SyntaxFactory.MethodDeclaration(
-                            returnType,
+                            clientResponseReturnType,
                             SyntaxFactory.Identifier("Execute"))
                         .AddModifiers(
                             SyntaxFactory.Token(SyntaxKind.PublicKeyword),
@@ -40,6 +40,23 @@ namespace OpenApiSpecGeneration.ApiGeneration.Client
                     yield return classDeclaration;
                 }
             }
+        }
+
+        internal static TypeSyntax GetReturnTypeAsClientResponse(TypeSyntax? returnType)
+        {
+            var inner = returnType == null
+                ? SyntaxFactory.ParseTypeName("ClientResponse")
+                : SyntaxFactory.GenericName(SyntaxFactory.Identifier("ClientResponse"),
+                    SyntaxFactory.TypeArgumentList(
+                        SyntaxFactory.SingletonSeparatedList<TypeSyntax>(returnType)
+                    )
+                );
+
+            return SyntaxFactory.GenericName(SyntaxFactory.Identifier("Task"),
+                SyntaxFactory.TypeArgumentList(
+                    SyntaxFactory.SingletonSeparatedList<TypeSyntax>(inner)
+                )
+            );
         }
 
         private static ConstructorDeclarationSyntax CreateConstructor(string className)

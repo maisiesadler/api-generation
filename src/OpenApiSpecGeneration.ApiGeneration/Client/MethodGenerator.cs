@@ -5,7 +5,7 @@ namespace OpenApiSpecGeneration.ApiGeneration.Client
 {
     internal class MethodGenerator
     {
-        internal static BlockSyntax CreateMethodBody(TypeSyntax? typeToGenerate, TypeSyntax returnType)
+        internal static BlockSyntax CreateMethodBody(TypeSyntax? returnType)
         {
             return SyntaxFactory.Block();
         }

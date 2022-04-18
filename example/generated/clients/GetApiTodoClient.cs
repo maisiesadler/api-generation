@@ -10,7 +10,7 @@ namespace Example.Clients
         }
 
         private readonly HttpClient _httpClient;
-        public async Task<ToDoItem[]> Execute()
+        public async Task<ClientResponse<ToDoItem[]>> Execute()
         {
         }
     }

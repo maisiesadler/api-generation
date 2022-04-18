@@ -105,31 +105,82 @@ public class GenerateClientsTests
         Assert.Equal("httpClient", right.Identifier.Value);
     }
 
-    // [Fact]
-    // public void NoReturnTypeMethodSignatureIsCorrect()
-    // {
-    //     // Arrange
-    //     var apiTestPathItem = OpenApiMockBuilder.BuildPathItem()
-    //         .WithOperation(OperationType.Get);
+    [Fact]
+    public void NoReturnTypeMethodSignatureIsCorrect()
+    {
+        // Arrange
+        var apiTestPathItem = OpenApiMockBuilder.BuildPathItem()
+            .WithOperation(OperationType.Get);
 
-    //     var document = OpenApiMockBuilder.BuildDocument()
-    //         .WithPath("/api/test", apiTestPathItem);
+        var document = OpenApiMockBuilder.BuildDocument()
+            .WithPath("/api/test", apiTestPathItem);
 
-    //     // Act
-    //     var classDeclarationSyntaxes = ApiGenerator.GenerateImplementations(document);
+        // Act
+        var classDeclarationSyntaxes = ApiGenerator.GenerateClients(document);
 
-    //     // Assert
-    //     var classDeclarationSyntax = Assert.Single(classDeclarationSyntaxes);
+        // Assert
+        var classDeclarationSyntax = Assert.Single(classDeclarationSyntaxes);
 
-    //     var methodDeclarationSyntax = Assert.Single(classDeclarationSyntax.Members.GetMembersOfType<MethodDeclarationSyntax>());
-    //     Assert.Equal("Execute", methodDeclarationSyntax.Identifier.Value);
-    //     Assert.Equal(2, methodDeclarationSyntax.Modifiers.Count);
-    //     Assert.Equal("public", methodDeclarationSyntax.Modifiers[0].Value);
-    //     Assert.Equal("async", methodDeclarationSyntax.Modifiers[1].Value);
+        var methodDeclarationSyntax = Assert.Single(classDeclarationSyntax.Members.GetMembersOfType<MethodDeclarationSyntax>());
+        Assert.Equal("Execute", methodDeclarationSyntax.Identifier.Value);
+        Assert.Equal(2, methodDeclarationSyntax.Modifiers.Count);
+        Assert.Equal("public", methodDeclarationSyntax.Modifiers[0].Value);
+        Assert.Equal("async", methodDeclarationSyntax.Modifiers[1].Value);
 
-    //     var identifierNameSyntax = Assert.IsType<IdentifierNameSyntax>(methodDeclarationSyntax.ReturnType);
-    //     Assert.Equal("Task", identifierNameSyntax.Identifier.Value);
-    // }
+        var genericNameSyntax = Assert.IsType<GenericNameSyntax>(methodDeclarationSyntax.ReturnType);
+        Assert.Equal("Task", genericNameSyntax.Identifier.Value);
+        var argument = Assert.Single(genericNameSyntax.TypeArgumentList.Arguments);
+        var identifierNameSyntax = Assert.IsType<IdentifierNameSyntax>(argument);
+        Assert.Equal("ClientResponse", identifierNameSyntax.Identifier.Value);
+    }
+
+    [Fact]
+    public void ReturnTypeMethodSignatureIsCorrect()
+    {
+        // Arrange
+        var responseSchema = new OpenApiSchema
+        {
+            Type = "array",
+            Items = new OpenApiSchema
+            {
+                Reference = new OpenApiReference { Id = "ToDoItem", },
+            },
+        };
+
+        var response = OpenApiMockBuilder.BuildResponse("Success")
+             .AddContent("text/plain", responseSchema);
+
+        var apiTestPathItem = OpenApiMockBuilder.BuildPathItem()
+            .WithOperation(
+                OperationType.Get,
+                operation => operation.Responses.Add("200", response)
+            );
+
+        var document = OpenApiMockBuilder.BuildDocument()
+            .WithPath("/api/test", apiTestPathItem);
+
+        // Act
+        var classDeclarationSyntaxes = ApiGenerator.GenerateClients(document);
+
+        // Assert
+        var classDeclarationSyntax = Assert.Single(classDeclarationSyntaxes);
+
+        var methodDeclarationSyntax = Assert.Single(classDeclarationSyntax.Members.GetMembersOfType<MethodDeclarationSyntax>());
+        Assert.Equal("Execute", methodDeclarationSyntax.Identifier.Value);
+        Assert.Equal(2, methodDeclarationSyntax.Modifiers.Count);
+        Assert.Equal("public", methodDeclarationSyntax.Modifiers[0].Value);
+        Assert.Equal("async", methodDeclarationSyntax.Modifiers[1].Value);
+
+        var genericNameSyntax = Assert.IsType<GenericNameSyntax>(methodDeclarationSyntax.ReturnType);
+        Assert.Equal("Task", genericNameSyntax.Identifier.Value);
+        var argument = Assert.Single(genericNameSyntax.TypeArgumentList.Arguments);
+        var genericNameSyntax0 = Assert.IsType<GenericNameSyntax>(argument);
+        Assert.Equal("ClientResponse", genericNameSyntax0.Identifier.Value);
+        var argument0 = Assert.Single(genericNameSyntax0.TypeArgumentList.Arguments);
+        var arrayTypeSyntax = Assert.IsType<ArrayTypeSyntax>(argument0);
+        var identifierNameSyntax = Assert.IsType<IdentifierNameSyntax>(arrayTypeSyntax.ElementType);
+        Assert.Equal("ToDoItem", identifierNameSyntax.Identifier.Value);
+    }
 
     // [Fact]
     // public void ImplementationHasFixtureAsPrivateField()
@@ -162,51 +213,6 @@ public class GenerateClientsTests
     //     var identifierName = Assert.IsType<IdentifierNameSyntax>(objectCreationExpressionSyntax.Type);
     //     Assert.Equal("Fixture", identifierName.Identifier.ValueText);
     //     Assert.Equal("new", objectCreationExpressionSyntax.NewKeyword.ValueText);
-    // }
-
-    // [Fact]
-    // public void ReturnTypeMethodSignatureIsCorrect()
-    // {
-    //     // Arrange
-    //     var responseSchema = new OpenApiSchema
-    //     {
-    //         Type = "array",
-    //         Items = new OpenApiSchema
-    //         {
-    //             Reference = new OpenApiReference { Id = "ToDoItem", },
-    //         },
-    //     };
-
-    //     var response = OpenApiMockBuilder.BuildResponse("Success")
-    //          .AddContent("text/plain", responseSchema);
-
-    //     var apiTestPathItem = OpenApiMockBuilder.BuildPathItem()
-    //         .WithOperation(
-    //             OperationType.Get,
-    //             operation => operation.Responses.Add("200", response)
-    //         );
-
-    //     var document = OpenApiMockBuilder.BuildDocument()
-    //         .WithPath("/api/test", apiTestPathItem);
-
-    //     // Act
-    //     var classDeclarationSyntaxes = ApiGenerator.GenerateImplementations(document);
-
-    //     // Assert
-    //     var classDeclarationSyntax = Assert.Single(classDeclarationSyntaxes);
-
-    //     var methodDeclarationSyntax = Assert.Single(classDeclarationSyntax.Members.GetMembersOfType<MethodDeclarationSyntax>());
-    //     Assert.Equal("Execute", methodDeclarationSyntax.Identifier.Value);
-    //     Assert.Equal(2, methodDeclarationSyntax.Modifiers.Count);
-    //     Assert.Equal("public", methodDeclarationSyntax.Modifiers[0].Value);
-    //     Assert.Equal("async", methodDeclarationSyntax.Modifiers[1].Value);
-
-    //     var genericNameSyntax = Assert.IsType<GenericNameSyntax>(methodDeclarationSyntax.ReturnType);
-    //     Assert.Equal("Task", genericNameSyntax.Identifier.Value);
-    //     var argument = Assert.Single(genericNameSyntax.TypeArgumentList.Arguments);
-    //     var arrayTypeSyntax = Assert.IsType<ArrayTypeSyntax>(argument);
-    //     var identifierNameSyntax = Assert.IsType<IdentifierNameSyntax>(arrayTypeSyntax.ElementType);
-    //     Assert.Equal("ToDoItem", identifierNameSyntax.Identifier.Value);
     // }
 
     // [Fact]
