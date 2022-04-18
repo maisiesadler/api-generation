@@ -32,12 +32,27 @@ namespace OpenApiSpecGeneration.ApiGeneration.Client
                     var clientClassName = CsharpNamingExtensions.PathToClientType(apiPath, operationType);
 
                     var classDeclaration = SyntaxFactory.ClassDeclaration(SyntaxFactory.Identifier(clientClassName))
-                        .AddMembers(new[] { methodDeclaration })
+                        .AddMembers(CreateHttpClientField())
+                        .AddMembers(methodDeclaration)
                         .AddModifiers(SyntaxFactory.Token(SyntaxKind.PublicKeyword));
 
                     yield return classDeclaration;
                 }
             }
+        }
+
+        private static MemberDeclarationSyntax CreateHttpClientField()
+        {
+            var fieldTokens = SyntaxFactory.TokenList(
+                SyntaxFactory.Token(SyntaxKind.PrivateKeyword),
+                SyntaxFactory.Token(SyntaxKind.ReadOnlyKeyword)
+            );
+
+            var variableDeclaration = SyntaxFactory.VariableDeclaration(SyntaxFactory.ParseTypeName("HttpClient"))
+                .AddVariables(SyntaxFactory.VariableDeclarator("_httpClient"));
+
+            return SyntaxFactory.FieldDeclaration(variableDeclaration)
+                .WithModifiers(fieldTokens);
         }
 
         private static ParameterListSyntax CreateParameterList(IList<ArgumentDefinition> openApiParameters)

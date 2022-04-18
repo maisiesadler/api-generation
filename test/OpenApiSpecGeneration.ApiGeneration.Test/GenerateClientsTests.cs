@@ -31,6 +31,32 @@ public class GenerateClientsTests
         Assert.Null(classDeclarationSyntax.BaseList);
     }
 
+    [Fact]
+    public void HttpClientAsPrivateFields()
+    {
+        // Arrange
+        var apiTestPathItem = OpenApiMockBuilder.BuildPathItem()
+            .WithOperation(OperationType.Get);
+
+        var document = OpenApiMockBuilder.BuildDocument()
+            .WithPath("/api/test", apiTestPathItem);
+
+        // Act
+        var classDeclarationSyntaxes = ApiGenerator.GenerateClients(document);
+
+        // Assert
+        var classDeclarationSyntax = Assert.Single(classDeclarationSyntaxes);
+        var fieldDeclarationSyntax = Assert.Single(classDeclarationSyntax.Members.GetMembersOfType<FieldDeclarationSyntax>());
+        Assert.Equal(2, fieldDeclarationSyntax.Modifiers.Count);
+        Assert.Equal("private", fieldDeclarationSyntax.Modifiers[0].Value);
+        Assert.Equal("readonly", fieldDeclarationSyntax.Modifiers[1].Value);
+        var declarationType = Assert.IsType<IdentifierNameSyntax>(fieldDeclarationSyntax.Declaration.Type);
+        Assert.Equal("HttpClient", declarationType.Identifier.Value);
+        var variable = Assert.Single(fieldDeclarationSyntax.Declaration.Variables);
+        Assert.Equal("_httpClient", variable.Identifier.Value);
+        Assert.Equal(";", fieldDeclarationSyntax.SemicolonToken.Value);
+    }
+
     // [Fact]
     // public void NoReturnTypeMethodSignatureIsCorrect()
     // {
