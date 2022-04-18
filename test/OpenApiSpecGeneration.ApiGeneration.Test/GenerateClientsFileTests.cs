@@ -31,7 +31,7 @@ public class GenerateClientsFileTests
 
         // Assert
         var writableFile = Assert.Single(writableFiles);
-        Assert.Equal("/GetApiTestClient.cs", writableFile.fileLocation);
+        Assert.Equal("/clients/GetApiTestClient.cs", writableFile.fileLocation);
         Assert.Equal("namespace", writableFile.namespaceDeclarationSyntax.NamespaceKeyword.Value);
         var namespaceIdentifier = Assert.IsType<QualifiedNameSyntax>(writableFile.namespaceDeclarationSyntax.Name);
         var leftNamespaceIdentifier = Assert.IsType<IdentifierNameSyntax>(namespaceIdentifier.Left);

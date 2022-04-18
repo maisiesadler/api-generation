@@ -153,6 +153,9 @@ internal class GenerateFromOpenApiSpec
     {
         var directories = new List<string>();
 
+        if (settings.GenerateClients)
+            directories.Add("clients");
+
         if (settings.GenerateModels)
             directories.Add("models");
 

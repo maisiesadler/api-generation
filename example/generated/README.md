@@ -26,7 +26,7 @@
 - `GetApiTodoInteractor.cs`
 
 ## Generated Clients
-[/](./)
+[/clients](./clients)
 - `GetApiTodoClient.cs`
 - `GetApiTodoClient.cs`
 - `GetApiTodoClient.cs`

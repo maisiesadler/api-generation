@@ -36,7 +36,7 @@ namespace OpenApiSpecGeneration
                     var ns = SyntaxFactory.NamespaceDeclaration(SyntaxFactory.ParseName($"{@namespace}.Clients"))
                         .AddMembers(c);
 
-                    return new WritableFile($"/{c.Identifier.Value}.cs", usings, ns);
+                    return new WritableFile($"/clients/{c.Identifier.Value}.cs", usings, ns);
                 });
 
         public static IEnumerable<WritableFile> GenerateModels(string @namespace, OpenApiDocument document)
