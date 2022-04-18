@@ -12,6 +12,7 @@ namespace Example.Clients
         private readonly HttpClient _httpClient;
         public async Task<ClientResponse> Execute()
         {
+            var request = new HttpRequestMessage{Method = HttpMethod.Delete, };
             var response = await _httpClient.SendAsync(request);
         }
     }

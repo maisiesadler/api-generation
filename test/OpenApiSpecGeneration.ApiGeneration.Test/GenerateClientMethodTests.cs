@@ -24,10 +24,10 @@ public class GenerateClientMethodTests
         var classDeclarationSyntax = Assert.Single(classDeclarationSyntaxes);
         var methodDeclarationSyntax = Assert.Single(classDeclarationSyntax.Members.GetMembersOfType<MethodDeclarationSyntax>());
 
-        var methodBodyStatement = Assert.Single(methodDeclarationSyntax.Body!.Statements);
+        var methodBodyStatement = methodDeclarationSyntax.Body!.Statements[1];
 
         // var response = await _httpClient.SendAsync(request);
-        var localDeclarationStatementSyntax = Assert.IsType<LocalDeclarationStatementSyntax>(methodDeclarationSyntax.Body!.Statements[0]);
+        var localDeclarationStatementSyntax = Assert.IsType<LocalDeclarationStatementSyntax>(methodBodyStatement);
         Assert.Equal(";", localDeclarationStatementSyntax.SemicolonToken.Value);
         var variableDeclarationSyntax = Assert.IsType<VariableDeclarationSyntax>(localDeclarationStatementSyntax.Declaration);
         var typeIdentifier = Assert.IsType<IdentifierNameSyntax>(variableDeclarationSyntax.Type);
@@ -50,6 +50,58 @@ public class GenerateClientMethodTests
         var argument = Assert.Single(invocationExpressionSyntax.ArgumentList.Arguments);
         var argumentIdentifierNameSyntax = Assert.IsType<IdentifierNameSyntax>(argument.Expression);
         Assert.Equal("request", argumentIdentifierNameSyntax.Identifier.Value);
+    }
+
+    [Theory]
+    [InlineData(OperationType.Get, "Get")]
+    [InlineData(OperationType.Put, "Put")]
+    [InlineData(OperationType.Post, "Post")]
+    [InlineData(OperationType.Delete, "Delete")]
+    public void HttpRequestMessageHasCorrectMethod(OperationType operationType, string expectedMethodType)
+    {
+        // Arrange
+        var apiTestPathItem = OpenApiMockBuilder.BuildPathItem()
+            .WithOperation(operationType);
+
+        var document = OpenApiMockBuilder.BuildDocument()
+            .WithPath("/api/test", apiTestPathItem);
+
+        // Act
+        var classDeclarationSyntaxes = ApiGenerator.GenerateClients(document);
+
+        // Assert
+        var classDeclarationSyntax = Assert.Single(classDeclarationSyntaxes);
+        var methodDeclarationSyntax = Assert.Single(classDeclarationSyntax.Members.GetMembersOfType<MethodDeclarationSyntax>());
+
+        var methodBodyStatement = methodDeclarationSyntax.Body!.Statements[0];
+
+        // var request = new HttpRequestMessage
+        // {
+        //     Method = HttpMethod.Get,
+        // };
+        var localDeclarationStatementSyntax = Assert.IsType<LocalDeclarationStatementSyntax>(methodDeclarationSyntax.Body!.Statements[0]);
+        Assert.Equal(";", localDeclarationStatementSyntax.SemicolonToken.Value);
+        var variableDeclarationSyntax = Assert.IsType<VariableDeclarationSyntax>(localDeclarationStatementSyntax.Declaration);
+        var typeIdentifier = Assert.IsType<IdentifierNameSyntax>(variableDeclarationSyntax.Type);
+        Assert.Equal("var", typeIdentifier.Identifier.Value);
+        var variable = Assert.Single(variableDeclarationSyntax.Variables);
+        Assert.Equal("request", variable.Identifier.Value);
+
+        // EqualsValueClauseSyntax EqualsValueClause = new HttpRequestMessage{...}
+        Assert.NotNull(variable.Initializer);
+        Assert.Equal("=", variable.Initializer!.EqualsToken.Value);
+        var objectCreationExpressionSyntax = Assert.IsType<ObjectCreationExpressionSyntax>(variable.Initializer!.Value);
+        var initializerExpressionSyntax = Assert.IsType<InitializerExpressionSyntax>(objectCreationExpressionSyntax.Initializer);
+        var expression = Assert.Single(objectCreationExpressionSyntax.Initializer?.Expressions);
+        var assignmentExpressionSyntax = Assert.IsType<AssignmentExpressionSyntax>(expression);
+
+        var left = Assert.IsType<IdentifierNameSyntax>(assignmentExpressionSyntax.Left);
+        var right = Assert.IsType<MemberAccessExpressionSyntax>(assignmentExpressionSyntax.Right);
+        Assert.Equal("Method", left.Identifier.Value);
+        var identifierNameSyntax = Assert.IsType<IdentifierNameSyntax>(right.Expression);
+        var methodIdentifierNameSyntax = Assert.IsType<IdentifierNameSyntax>(right.Name);
+        Assert.Equal("HttpMethod", identifierNameSyntax.Identifier.Value);
+        Assert.Equal(expectedMethodType, methodIdentifierNameSyntax.Identifier.Value);
     }
 
     // [Fact]

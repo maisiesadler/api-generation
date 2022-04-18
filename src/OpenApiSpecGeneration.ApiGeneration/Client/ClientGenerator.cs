@@ -18,7 +18,7 @@ namespace OpenApiSpecGeneration.ApiGeneration.Client
                     var returnType = ReturnTypeExtensions.TryGetFirstReturnTypeSyntax(operation.Responses, out var rt)
                         ? rt : null;
                     var clientResponseReturnType = GetReturnTypeAsClientResponse(returnType);
-                    var methodBody = MethodGenerator.CreateMethodBody(returnType);
+                    var methodBody = MethodGenerator.CreateMethodBody(operationType, returnType);
                     var methodDeclaration = SyntaxFactory.MethodDeclaration(
                             clientResponseReturnType,
                             SyntaxFactory.Identifier("Execute"))

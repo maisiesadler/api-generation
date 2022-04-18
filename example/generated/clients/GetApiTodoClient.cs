@@ -12,6 +12,7 @@ namespace Example.Clients
         private readonly HttpClient _httpClient;
         public async Task<ClientResponse<ToDoItem[]>> Execute()
         {
+            var request = new HttpRequestMessage{Method = HttpMethod.Get, };
             var response = await _httpClient.SendAsync(request);
         }
     }
