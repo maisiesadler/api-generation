@@ -32,6 +32,7 @@ namespace OpenApiSpecGeneration.ApiGeneration.Client
                     var clientClassName = CsharpNamingExtensions.PathToClientType(apiPath, operationType);
 
                     var classDeclaration = SyntaxFactory.ClassDeclaration(SyntaxFactory.Identifier(clientClassName))
+                        .AddMembers(CreateConstructor(clientClassName))
                         .AddMembers(CreateHttpClientField())
                         .AddMembers(methodDeclaration)
                         .AddModifiers(SyntaxFactory.Token(SyntaxKind.PublicKeyword));
@@ -39,6 +40,27 @@ namespace OpenApiSpecGeneration.ApiGeneration.Client
                     yield return classDeclaration;
                 }
             }
+        }
+
+        private static ConstructorDeclarationSyntax CreateConstructor(string className)
+        {
+            var parameter = SyntaxFactory.Parameter(SyntaxFactory.Identifier("httpClient"))
+                .WithType(SyntaxFactory.ParseTypeName("HttpClient"));
+
+            var ctor = SyntaxFactory.ConstructorDeclaration(className)
+                .AddParameterListParameters(parameter)
+                .AddModifiers(SyntaxFactory.Token(SyntaxKind.PublicKeyword))
+                .WithBody(SyntaxFactory.Block(CreateAssignment("httpClient")));
+
+            return ctor;
+        }
+
+        private static StatementSyntax CreateAssignment(string propertyName)
+        {
+            var fieldIdentifier = SyntaxFactory.IdentifierName($"_{propertyName}");
+            var propertyIdentifier = SyntaxFactory.IdentifierName(propertyName);
+            var assignment = SyntaxFactory.AssignmentExpression(SyntaxKind.SimpleAssignmentExpression, fieldIdentifier, propertyIdentifier);
+            return SyntaxFactory.ExpressionStatement(assignment);
         }
 
         private static MemberDeclarationSyntax CreateHttpClientField()

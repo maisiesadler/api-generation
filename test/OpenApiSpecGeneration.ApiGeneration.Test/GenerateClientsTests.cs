@@ -57,6 +57,54 @@ public class GenerateClientsTests
         Assert.Equal(";", fieldDeclarationSyntax.SemicolonToken.Value);
     }
 
+
+    [Fact]
+    public void PublicConstructorHasHttpClientInjected()
+    {
+        // Arrange
+        var apiTestPathItem = OpenApiMockBuilder.BuildPathItem()
+            .WithOperation(OperationType.Get);
+
+        var document = OpenApiMockBuilder.BuildDocument()
+            .WithPath("/api/test", apiTestPathItem);
+
+        // Act
+        var classDeclarationSyntaxes = ApiGenerator.GenerateClients(document);
+
+        // Assert
+        var classDeclarationSyntax = Assert.Single(classDeclarationSyntaxes);
+        var constructorDeclarationSyntax = Assert.Single(classDeclarationSyntax.Members.GetMembersOfType<ConstructorDeclarationSyntax>());
+        var ctorParameter = Assert.Single(constructorDeclarationSyntax.ParameterList.Parameters);
+        Assert.Equal("httpClient", ctorParameter.Identifier.Value);
+        var parameterType = Assert.IsType<IdentifierNameSyntax>(ctorParameter.Type);
+        Assert.Equal("HttpClient", parameterType.Identifier.Value);
+    }
+
+    [Fact]
+    public void PublicConstructorSetsHttpClient()
+    {
+        // Arrange
+        var apiTestPathItem = OpenApiMockBuilder.BuildPathItem()
+            .WithOperation(OperationType.Get);
+
+        var document = OpenApiMockBuilder.BuildDocument()
+            .WithPath("/api/test", apiTestPathItem);
+
+        // Act
+        var classDeclarationSyntaxes = ApiGenerator.GenerateClients(document);
+
+        // Assert
+        var classDeclarationSyntax = Assert.Single(classDeclarationSyntaxes);
+        var constructorDeclarationSyntax = Assert.Single(classDeclarationSyntax.Members.GetMembersOfType<ConstructorDeclarationSyntax>());
+        var statementSyntax = Assert.Single(constructorDeclarationSyntax.Body!.Statements);
+        var expressionStatementSyntax = Assert.IsType<ExpressionStatementSyntax>(statementSyntax);
+        var assignmentExpressionSyntax = Assert.IsType<AssignmentExpressionSyntax>(expressionStatementSyntax.Expression);
+        var left = Assert.IsType<IdentifierNameSyntax>(assignmentExpressionSyntax.Left);
+        var right = Assert.IsType<IdentifierNameSyntax>(assignmentExpressionSyntax.Right);
+        Assert.Equal("_httpClient", left.Identifier.Value);
+        Assert.Equal("httpClient", right.Identifier.Value);
+    }
+
     // [Fact]
     // public void NoReturnTypeMethodSignatureIsCorrect()
     // {

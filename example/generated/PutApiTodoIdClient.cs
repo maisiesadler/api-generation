@@ -4,6 +4,11 @@ namespace Example.Clients
 {
     public class PutApiTodoIdClient
     {
+        public PutApiTodoIdClient(HttpClient httpClient)
+        {
+            _httpClient = httpClient;
+        }
+
         private readonly HttpClient _httpClient;
         public async Task Execute()
         {
