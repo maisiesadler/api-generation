@@ -20,13 +20,13 @@ namespace OpenApiSpecGeneration.Controller
 
                 foreach (var (operationType, operation) in openApiPath.Operations)
                 {
-                    var propertyType = CsharpNamingExtensions.PathToInteractorType(apiPath, operationType);
-                    var propertyName = CsharpNamingExtensions.InterfaceToPropertyName(propertyType);
+                    var interactorType = CsharpNamingExtensions.PathToInteractorType(apiPath, operationType);
+                    var interactorPropertyName = CsharpNamingExtensions.InterfaceToPropertyName(interactorType);
 
-                    classMethods.Add(MethodGenerator.CreateMethod(apiPath, operationType, operation, propertyType, propertyName));
-                    fields.Add(CreateField(propertyType, propertyName));
-                    assignments.Add(CreateAssignment(propertyName));
-                    parameters.Add(CreateConstructorParameter(propertyType, propertyName));
+                    classMethods.Add(MethodGenerator.CreateMethod(apiPath, operationType, operation, interactorType, interactorPropertyName));
+                    fields.Add(CreateField(interactorType, interactorPropertyName));
+                    assignments.Add(CreateAssignment(interactorPropertyName));
+                    parameters.Add(CreateConstructorParameter(interactorType, interactorPropertyName));
                 }
 
                 var ctor = CreateConstructor(normalisedName, parameters, assignments);
@@ -43,24 +43,18 @@ namespace OpenApiSpecGeneration.Controller
             }
         }
 
-        private static MemberDeclarationSyntax CreateField(string propertyType, string propertyName)
+        private static MemberDeclarationSyntax CreateField(string interactorType, string interactorPropertyName)
         {
             var fieldTokens = SyntaxFactory.TokenList(
                 SyntaxFactory.Token(SyntaxKind.PrivateKeyword),
                 SyntaxFactory.Token(SyntaxKind.ReadOnlyKeyword)
             );
 
-            var variableDeclaration = SyntaxFactory.VariableDeclaration(SyntaxFactory.ParseTypeName(propertyType))
-                .AddVariables(SyntaxFactory.VariableDeclarator($"_{propertyName}"));
+            var variableDeclaration = SyntaxFactory.VariableDeclaration(SyntaxFactory.ParseTypeName(interactorType))
+                .AddVariables(SyntaxFactory.VariableDeclarator($"_{interactorPropertyName}"));
 
-            var field = SyntaxFactory.FieldDeclaration(
-                default,
-                fieldTokens,
-                variableDeclaration,
-                SyntaxFactory.Token(SyntaxKind.SemicolonToken)
-            );
-
-            return field;
+            return SyntaxFactory.FieldDeclaration(variableDeclaration)
+                .WithModifiers(fieldTokens);
         }
 
         private static ConstructorDeclarationSyntax CreateConstructor(
@@ -76,23 +70,18 @@ namespace OpenApiSpecGeneration.Controller
             return ctor;
         }
 
-        private static StatementSyntax CreateAssignment(string propertyName)
+        private static StatementSyntax CreateAssignment(string interactorPropertyName)
         {
-            var fieldIdentifier = SyntaxFactory.IdentifierName($"_{propertyName}");
-            var propertyIdentifier = SyntaxFactory.IdentifierName(propertyName);
+            var fieldIdentifier = SyntaxFactory.IdentifierName($"_{interactorPropertyName}");
+            var propertyIdentifier = SyntaxFactory.IdentifierName(interactorPropertyName);
             var assignment = SyntaxFactory.AssignmentExpression(SyntaxKind.SimpleAssignmentExpression, fieldIdentifier, propertyIdentifier);
             return SyntaxFactory.ExpressionStatement(assignment);
         }
 
-        private static ParameterSyntax CreateConstructorParameter(string propertyType, string propertyName)
+        private static ParameterSyntax CreateConstructorParameter(string interactorType, string interactorPropertyName)
         {
-            return SyntaxFactory.Parameter(
-                default,
-                default,
-                SyntaxFactory.ParseTypeName(propertyType),
-                SyntaxFactory.Identifier(propertyName),
-                default
-            );
+            return SyntaxFactory.Parameter(SyntaxFactory.Identifier(interactorPropertyName))
+                .WithType(SyntaxFactory.ParseTypeName(interactorType));
         }
 
         private static AttributeListSyntax[] GetControllerAttributeList(string route)
