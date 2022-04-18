@@ -30,6 +30,11 @@ namespace OpenApiSpecGeneration
             return $"I{FirstLetterToUpper(operationType.ToString())}{PathToClassName(apiPath)}Interactor";
         }
 
+        internal static string PathToClientType(string apiPath, OperationType operationType)
+        {
+            return $"{FirstLetterToUpper(operationType.ToString())}{PathToClassName(apiPath)}Client";
+        }
+
         internal static string InterfaceToPropertyName(string interfaceTypeName)
         {
             if (interfaceTypeName.Length > 2 && interfaceTypeName[0] == 'I')

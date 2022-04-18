@@ -2,6 +2,7 @@ using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
 using Microsoft.OpenApi.Models;
+using OpenApiSpecGeneration.ApiGeneration.Client;
 using OpenApiSpecGeneration.Controller;
 using OpenApiSpecGeneration.Interactor;
 using OpenApiSpecGeneration.Model;
@@ -18,12 +19,25 @@ namespace OpenApiSpecGeneration
                     SyntaxFactory.UsingDirective(SyntaxFactory.IdentifierName($"Microsoft.AspNetCore.Mvc")),
                     SyntaxFactory.UsingDirective(SyntaxFactory.IdentifierName($"{@namespace}.Interactors")),
                     SyntaxFactory.UsingDirective(SyntaxFactory.IdentifierName($"{@namespace}.Models")),
-               });
+                });
                 var ns = SyntaxFactory.NamespaceDeclaration(SyntaxFactory.ParseName($"{@namespace}"))
                     .AddMembers(c);
 
                 return new WritableFile($"/{c.Identifier.Value}Controller.cs", usings, ns);
             });
+
+        public static IEnumerable<WritableFile> GenerateClients(string @namespace, OpenApiDocument document)
+            => ClientGenerator.Generate(document)
+                .Select(c =>
+                {
+                    var usings = SyntaxFactory.List<UsingDirectiveSyntax>(new[]{
+                        SyntaxFactory.UsingDirective(SyntaxFactory.IdentifierName($"{@namespace}.Models")),
+                    });
+                    var ns = SyntaxFactory.NamespaceDeclaration(SyntaxFactory.ParseName($"{@namespace}.Clients"))
+                        .AddMembers(c);
+
+                    return new WritableFile($"/{c.Identifier.Value}.cs", usings, ns);
+                });
 
         public static IEnumerable<WritableFile> GenerateModels(string @namespace, OpenApiDocument document)
             => ModelGenerator.GenerateModels(document)

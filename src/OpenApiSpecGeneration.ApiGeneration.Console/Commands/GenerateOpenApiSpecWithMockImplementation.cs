@@ -50,6 +50,7 @@ internal class GenerateOpenApiSpecWithMockImplementation : AsyncCommand<Generate
                 GenerateImplementations = true,
                 GenerateModels = true,
                 GenerateInteractors = true,
+                GenerateClients = true,
                 InputFileName = settings.InputFileName,
                 OutputDirectory = settings.OutputDirectory,
                 Namespace = settings.Namespace,

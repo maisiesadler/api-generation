@@ -1,7 +1,5 @@
 using System.ComponentModel;
 using System.Diagnostics.CodeAnalysis;
-using Microsoft.CodeAnalysis;
-using OpenApiSpecGeneration.Console.Commands.Helpers;
 using Spectre.Console;
 using Spectre.Console.Cli;
 

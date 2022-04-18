@@ -25,4 +25,12 @@
 - `GetApiTodoInteractor.cs`
 - `GetApiTodoInteractor.cs`
 
+## Generated Clients
+[/](./)
+- `GetApiTodoClient.cs`
+- `GetApiTodoClient.cs`
+- `GetApiTodoClient.cs`
+- `GetApiTodoClient.cs`
+- `GetApiTodoClient.cs`
+
 

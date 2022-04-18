@@ -20,6 +20,8 @@ public class GenerateFromOpenApiSpecSettings
 
     public bool GenerateImplementations { get; init; } = false;
 
+    public bool GenerateClients { get; init; } = false;
+
     public bool GenerateReadme { get; init; } = false;
 }
 
@@ -79,6 +81,12 @@ internal class GenerateFromOpenApiSpec
             {
                 var implementations = ApiGeneration.AutoFixture.FileGenerator.GenerateImplementation(settings.Namespace, openApiSpec).ToArray();
                 summaries.Add(new Summary("Implementations", implementations));
+            }
+
+            if (settings.GenerateImplementations)
+            {
+                var clients = FileGenerator.GenerateClients(settings.Namespace, openApiSpec).ToArray();
+                summaries.Add(new Summary("Clients", clients));
             }
 
             foreach (var (_, files) in summaries)
