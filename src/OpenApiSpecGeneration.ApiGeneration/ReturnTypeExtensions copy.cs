@@ -21,10 +21,7 @@ namespace OpenApiSpecGeneration
             return SyntaxFactory.ParseTypeName("Task");
         }
 
-        internal static bool HasReturnType(ReturnType returnType)
-            => TryGetReturnTypeSyntax(returnType, out var _);
-
-        private static bool TryGetReturnTypeSyntax(
+        internal static bool TryGetReturnTypeSyntax(
             ReturnType returnType,
             [NotNullWhen(true)] out TypeSyntax? typeSyntax)
         {

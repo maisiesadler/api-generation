@@ -1,6 +1,7 @@
 using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
 using Microsoft.OpenApi.Models;
+using OpenApiSpecGeneration.Definition;
 using OpenApiSpecGeneration.Generatable;
 
 namespace OpenApiSpecGeneration.ApiGeneration.AutoFixture.Implementation
@@ -9,15 +10,20 @@ namespace OpenApiSpecGeneration.ApiGeneration.AutoFixture.Implementation
     {
         internal static IEnumerable<ClassDeclarationSyntax> Generate(OpenApiDocument document)
         {
-            foreach (var (apiPath, openApiPath) in document.Paths)
+            var definition = DefinitionGenerator.GenerateDefinition(document);
+            return Generate(definition);
+        }
+
+        internal static IEnumerable<ClassDeclarationSyntax> Generate(Definition.Definition definition)
+        {
+            foreach (var route in definition.routes)
             {
-                foreach (var (operationType, operation) in openApiPath.Operations)
+                foreach (var operation in route.operations)
                 {
-                    var argumentDefinitions = ArgumentDefinitionGenerator.Create(apiPath, operationType, operation.RequestBody, operation.Parameters).ToArray();
-                    var parameters = CreateParameterList(argumentDefinitions);
-                    var typeToGenerate = ReturnTypeExtensions.TryGetFirstReturnTypeSyntax(operation.Responses, out var rt)
+                    var parameters = CreateParameterList(operation.arguments);
+                    var typeToGenerate = ReturnTypeExtensions_2.TryGetReturnTypeSyntax(operation.returnType, out var rt)
                         ? rt : null;
-                    var returnType = ReturnTypeExtensions.GetReturnTypeSyntaxAsTask(operation.Responses);
+                    var returnType = ReturnTypeExtensions_2.GetReturnTypeSyntaxAsTask(operation.returnType);
                     var methodBody = MethodGenerator.CreateMethodBody(typeToGenerate, returnType);
                     var methodDeclaration = SyntaxFactory.MethodDeclaration(
                             returnType,
@@ -29,7 +35,7 @@ namespace OpenApiSpecGeneration.ApiGeneration.AutoFixture.Implementation
                         .WithParameterList(parameters)
                         .WithBody(methodBody);
 
-                    var interfaceName = CsharpNamingExtensions.PathToInteractorType(apiPath, operationType);
+                    var interfaceName = CsharpNamingExtensions.PathToInteractorType(route.pathName, operation.type);
                     var className = interfaceName.Substring(1);
 
                     var classDeclaration = SyntaxFactory.ClassDeclaration(SyntaxFactory.Identifier(className))
