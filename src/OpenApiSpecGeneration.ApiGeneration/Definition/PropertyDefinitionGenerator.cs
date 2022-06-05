@@ -1,6 +1,6 @@
 using Microsoft.OpenApi.Models;
 
-namespace OpenApiSpecGeneration.Model;
+namespace OpenApiSpecGeneration.Definition;
 
 internal static class PropertyDefinitionGenerator
 {

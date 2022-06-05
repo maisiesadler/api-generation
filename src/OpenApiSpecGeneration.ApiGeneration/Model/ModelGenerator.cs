@@ -2,6 +2,7 @@ using System.Diagnostics.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
 using Microsoft.OpenApi.Models;
+using OpenApiSpecGeneration.Definition;
 
 namespace OpenApiSpecGeneration.Model
 {
@@ -9,28 +10,15 @@ namespace OpenApiSpecGeneration.Model
     {
         internal static IEnumerable<RecordDeclarationSyntax> GenerateModels(OpenApiDocument document)
         {
-            return GenerateRecords(document).ToArray();
+            var definition = DefinitionGenerator.GenerateDefinition(document);
+            return GenerateRecords(definition).ToArray();
         }
 
-        private static IEnumerable<RecordDeclarationSyntax> GenerateRecords(OpenApiDocument document)
+        private static IEnumerable<RecordDeclarationSyntax> GenerateRecords(Definition.Definition definition)
         {
-            foreach (var schemaDefinition in SchemaDefinitionGenerator.Execute(document))
+            foreach (var schemaDefinition in definition.schemas)
             {
-                foreach (var record in GenerateNestedRecords(schemaDefinition))
-                    yield return record;
-            }
-        }
-
-        private static IEnumerable<RecordDeclarationSyntax> GenerateNestedRecords(SchemaDefinition schemaDefinition)
-        {
-            var propertyDefinitions = PropertyDefinitionGenerator.Execute(schemaDefinition.name, schemaDefinition.schema.Properties).ToArray();
-            var record = GenerateRecord(schemaDefinition.name, propertyDefinitions);
-            yield return record;
-
-            foreach (var subTypeSchemaDefinition in GetSubTypes(schemaDefinition.name, propertyDefinitions))
-            {
-                foreach (var subTypeRecord in GenerateNestedRecords(subTypeSchemaDefinition))
-                    yield return subTypeRecord;
+                yield return GenerateRecord(schemaDefinition.name, schemaDefinition.properties);
             }
         }
 
@@ -49,24 +37,6 @@ namespace OpenApiSpecGeneration.Model
             }
 
             return ModelSyntaxGenerator.CreateRecord(schemaDefinitionName, properties.ToArray());
-        }
-
-        private static IEnumerable<SchemaDefinition> GetSubTypes(
-            string schemaDefinitionName,
-            PropertyDefinition[] propertyDefinitions)
-        {
-            foreach (var propertyDefinition in propertyDefinitions)
-            {
-                if (propertyDefinition.createObjectSubType)
-                {
-                    yield return new SchemaDefinition(propertyDefinition.potentialSubtypeName, propertyDefinition.property);
-                }
-
-                if (propertyDefinition.createArraySubType)
-                {
-                    yield return new SchemaDefinition(propertyDefinition.potentialSubtypeName, propertyDefinition.property.Items);
-                }
-            }
         }
 
         private static TypeSyntax GetTypeSyntax(

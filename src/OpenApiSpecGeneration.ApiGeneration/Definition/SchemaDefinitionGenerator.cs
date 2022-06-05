@@ -1,6 +1,6 @@
 using Microsoft.OpenApi.Models;
 
-namespace OpenApiSpecGeneration.Model;
+namespace OpenApiSpecGeneration.Definition;
 
 internal class SchemaDefinitionGenerator
 {
@@ -20,7 +20,8 @@ internal class SchemaDefinitionGenerator
 
         foreach (var (name, openApiComponentSchema) in document.Components.Schemas)
         {
-            yield return new SchemaDefinition(name, openApiComponentSchema);
+            foreach (var def in ToSchemaDefinition(name, openApiComponentSchema))
+                yield return def;
         }
     }
 
@@ -34,7 +35,8 @@ internal class SchemaDefinitionGenerator
             {
                 var name = CsharpNamingExtensions.PathEtcToClassName(
                     new[] { pathName, operationType.ToString(), contentType, "Request" });
-                yield return new SchemaDefinition(name, content.Schema);
+                foreach (var def in ToSchemaDefinition(name, content.Schema))
+                    yield return def;
             }
         }
     }
@@ -53,9 +55,41 @@ internal class SchemaDefinitionGenerator
                     {
                         var name = CsharpNamingExtensions.PathEtcToClassName(
                             new[] { pathName, operationType.ToString(), responseName, contentType, "Response" });
-                        yield return new SchemaDefinition(name, content.Schema);
+                        foreach (var def in ToSchemaDefinition(name, content.Schema))
+                            yield return def;
                     }
                 }
+            }
+        }
+    }
+
+    private static IEnumerable<SchemaDefinition> ToSchemaDefinition(string name, OpenApiSchema openApiSchema)
+    {
+        var properties = PropertyDefinitionGenerator.Execute(name, openApiSchema.Properties).ToArray();
+        yield return new SchemaDefinition(name, properties);
+
+        foreach (var definition in GetSubTypes(name, properties))
+        {
+            yield return definition;
+        }
+    }
+
+    private static IEnumerable<SchemaDefinition> GetSubTypes(
+        string schemaDefinitionName,
+        PropertyDefinition[] propertyDefinitions)
+    {
+        foreach (var propertyDefinition in propertyDefinitions)
+        {
+            if (propertyDefinition.createObjectSubType)
+            {
+                foreach (var def in ToSchemaDefinition(propertyDefinition.potentialSubtypeName, propertyDefinition.property))
+                    yield return def;
+            }
+
+            if (propertyDefinition.createArraySubType)
+            {
+                foreach (var def in ToSchemaDefinition(propertyDefinition.potentialSubtypeName, propertyDefinition.property.Items))
+                    yield return def;
             }
         }
     }
