@@ -1,19 +1,12 @@
 using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
-using Microsoft.OpenApi.Models;
 using OpenApiSpecGeneration.Definition;
 
 namespace OpenApiSpecGeneration.Controller
 {
     internal class ControllerGenerator
     {
-        internal static IEnumerable<ClassDeclarationSyntax> GenerateControllers(OpenApiDocument document)
-        {
-            var definition = DefinitionGenerator.GenerateDefinition(document);
-            return GenerateControllers(definition);
-        }
-
-        private static IEnumerable<ClassDeclarationSyntax> GenerateControllers(Definition.Definition definition)
+        internal static IEnumerable<ClassDeclarationSyntax> GenerateControllers(Definition.Definition definition)
         {
             var members = new List<ClassDeclarationSyntax>();
             foreach (var route in definition.routes)

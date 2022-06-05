@@ -17,8 +17,10 @@ public class GenerateControllerFileTests
         var document = OpenApiMockBuilder.BuildDocument()
             .WithPath("/api/test", apiTestPathItem);
 
+        var definition = Definition.DefinitionGenerator.GenerateDefinition(document);
+
         // Act
-        var writableFiles = FileGenerator.GenerateControllers("MyNamespace", document);
+        var writableFiles = FileGenerator.GenerateControllers("MyNamespace", definition);
 
         // Assert
         var writableFile = Assert.Single(writableFiles);

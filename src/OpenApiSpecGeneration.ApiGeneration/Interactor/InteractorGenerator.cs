@@ -8,13 +8,7 @@ namespace OpenApiSpecGeneration.Interactor
 {
     internal class InteractorGenerator
     {
-        internal static IEnumerable<InterfaceDeclarationSyntax> GenerateInteractors(OpenApiDocument document)
-        {
-            var definition = DefinitionGenerator.GenerateDefinition(document);
-            return GenerateInteractors(definition);
-        }
-
-        private static IEnumerable<InterfaceDeclarationSyntax> GenerateInteractors(Definition.Definition definition)
+        internal static IEnumerable<InterfaceDeclarationSyntax> GenerateInteractors(Definition.Definition definition)
         {
             foreach (var route in definition.routes)
             {

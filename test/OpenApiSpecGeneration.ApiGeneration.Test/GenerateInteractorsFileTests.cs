@@ -30,8 +30,10 @@ public class GenerateInteractorsFileTests
         var document = OpenApiMockBuilder.BuildDocument()
             .WithPath("/api/test", apiTestPathItem);
 
+        var definition = Definition.DefinitionGenerator.GenerateDefinition(document);
+
         // Act
-        var writableFiles = FileGenerator.GenerateInteractors("MyNamespace", document);
+        var writableFiles = FileGenerator.GenerateInteractors("MyNamespace", definition);
 
         // Assert
         var writableFile = Assert.Single(writableFiles);

@@ -27,8 +27,10 @@ public class GenerateModelsFileTests
         var document = OpenApiMockBuilder.BuildDocument()
             .WithComponentSchema("ToDoItem", responseSchema);
 
+        var definition = Definition.DefinitionGenerator.GenerateDefinition(document);
+
         // Act
-        var writableFiles = FileGenerator.GenerateModels("MyNamespace", document);
+        var writableFiles = FileGenerator.GenerateModels("MyNamespace", definition);
 
         // Assert
         var writableFile = Assert.Single(writableFiles);

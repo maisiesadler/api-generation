@@ -2,7 +2,7 @@ using Microsoft.OpenApi.Models;
 
 namespace OpenApiSpecGeneration.Definition;
 
-internal record PropertyDefinition(
+public record PropertyDefinition(
     string propertyName,
     string propertyType,
     OpenApiSchema property,

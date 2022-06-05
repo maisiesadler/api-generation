@@ -8,13 +8,7 @@ namespace OpenApiSpecGeneration.Model
 {
     internal class ModelGenerator
     {
-        internal static IEnumerable<RecordDeclarationSyntax> GenerateModels(OpenApiDocument document)
-        {
-            var definition = DefinitionGenerator.GenerateDefinition(document);
-            return GenerateRecords(definition).ToArray();
-        }
-
-        private static IEnumerable<RecordDeclarationSyntax> GenerateRecords(Definition.Definition definition)
+        internal static IEnumerable<RecordDeclarationSyntax> GenerateModels(Definition.Definition definition)
         {
             foreach (var schemaDefinition in definition.schemas)
             {
