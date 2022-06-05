@@ -1,7 +1,5 @@
-using System.Diagnostics.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
-using Microsoft.OpenApi.Models;
 using OpenApiSpecGeneration.Definition;
 
 namespace OpenApiSpecGeneration.Model
@@ -45,7 +43,7 @@ namespace OpenApiSpecGeneration.Model
             {
                 var elementType = propertyDefinition.createArraySubType
                     ? ParseTypeSyntax(propertyDefinition.potentialSubtypeName)
-                    : ParseTypeSyntax(propertyDefinition.property.Items?.Type ?? throw new InvalidOperationException("Array element does not have type"));
+                    : ParseTypeSyntax(propertyDefinition.subTypeName ?? throw new InvalidOperationException("Array element does not have type"));
 
                 return SyntaxFactory.ArrayType(elementType)
                     .WithRankSpecifiers(
@@ -55,9 +53,7 @@ namespace OpenApiSpecGeneration.Model
                                     SyntaxFactory.OmittedArraySizeExpression()))));
             }
 
-            return TryGetLocalReference(propertyDefinition.propertyType, propertyDefinition.property, out var localSyntax)
-                ? localSyntax
-                : ParseTypeSyntax(propertyDefinition.propertyType);
+            return ParseTypeSyntax(propertyDefinition.propertyType);
         }
 
         private static TypeSyntax ParseTypeSyntax(string propertyType)
@@ -66,18 +62,6 @@ namespace OpenApiSpecGeneration.Model
                 return predefinedTypeSyntax;
 
             return SyntaxFactory.ParseTypeName(propertyType);
-        }
-
-        private static bool TryGetLocalReference(string? propertyType, OpenApiSchema property, [NotNullWhen(true)] out TypeSyntax? localReference)
-        {
-            if (propertyType != "object" || property.Reference == null)
-            {
-                localReference = null;
-                return false;
-            }
-
-            localReference = SyntaxFactory.ParseTypeName(property.Reference.Id);
-            return true;
         }
     }
 }

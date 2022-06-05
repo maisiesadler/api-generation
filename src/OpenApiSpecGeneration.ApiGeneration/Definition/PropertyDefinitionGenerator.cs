@@ -4,7 +4,7 @@ namespace OpenApiSpecGeneration.Definition;
 
 internal static class PropertyDefinitionGenerator
 {
-    internal static IEnumerable<PropertyDefinition> Execute(
+    internal static IEnumerable<(PropertyDefinition propertyDefinition, OpenApiSchema schema)> Execute(
         string schemaDefinitionName,
         IDictionary<string, OpenApiSchema> properties)
     {
@@ -13,7 +13,7 @@ internal static class PropertyDefinitionGenerator
         foreach (var (propertyName, openApiProperty) in properties)
         {
             var type = openApiProperty.Type;
-            if (type == null)
+            if (openApiProperty.Reference?.Id != null)
                 type = openApiProperty.Reference.Id;
 
             if (type == null)
@@ -23,7 +23,8 @@ internal static class PropertyDefinitionGenerator
             var createObjectSubType = ShouldCreateObjectSubType(type, openApiProperty);
             var potentialSubtypeName = schemaDefinitionName + CsharpNamingExtensions.SnakeCaseToCamel(propertyName) + "SubType";
 
-            yield return new PropertyDefinition(propertyName, type, openApiProperty, createArraySubType, createObjectSubType, potentialSubtypeName);
+            var definition = new PropertyDefinition(propertyName, type, createArraySubType, createObjectSubType, potentialSubtypeName, openApiProperty.Items?.Type);
+            yield return (definition, openApiProperty);
         }
     }
 

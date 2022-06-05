@@ -73,7 +73,7 @@ internal class SchemaDefinitionGenerator
     private static IEnumerable<SchemaDefinition> ToSchemaDefinition(string name, OpenApiSchema openApiSchema)
     {
         var properties = PropertyDefinitionGenerator.Execute(name, openApiSchema.Properties).ToArray();
-        yield return new SchemaDefinition(name, properties);
+        yield return new SchemaDefinition(name, properties.Select(x => x.propertyDefinition).ToArray());
 
         foreach (var definition in GetSubTypes(name, properties))
         {
@@ -83,19 +83,19 @@ internal class SchemaDefinitionGenerator
 
     private static IEnumerable<SchemaDefinition> GetSubTypes(
         string schemaDefinitionName,
-        PropertyDefinition[] propertyDefinitions)
+        (PropertyDefinition propertyDefinition, OpenApiSchema schema)[] propertyDefinitions)
     {
-        foreach (var propertyDefinition in propertyDefinitions)
+        foreach (var (propertyDefinition, schema) in propertyDefinitions)
         {
             if (propertyDefinition.createObjectSubType)
             {
-                foreach (var def in ToSchemaDefinition(propertyDefinition.potentialSubtypeName, propertyDefinition.property))
+                foreach (var def in ToSchemaDefinition(propertyDefinition.potentialSubtypeName, schema))
                     yield return def;
             }
 
             if (propertyDefinition.createArraySubType)
             {
-                foreach (var def in ToSchemaDefinition(propertyDefinition.potentialSubtypeName, propertyDefinition.property.Items))
+                foreach (var def in ToSchemaDefinition(propertyDefinition.potentialSubtypeName, schema.Items))
                     yield return def;
             }
         }
