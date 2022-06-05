@@ -1,6 +1,5 @@
-using Microsoft.OpenApi.Models;
-using Example.Interactors;
 using Example.GeneratedImplementations;
+using Example.Interactors;
 
 var builder = WebApplication.CreateBuilder(args);
 
