@@ -83,7 +83,7 @@ internal class GenerateFromOpenApiSpec
                 summaries.Add(new Summary("Implementations", implementations));
             }
 
-            if (settings.GenerateImplementations)
+            if (settings.GenerateClients)
             {
                 var clients = FileGenerator.GenerateClients(settings.Namespace, openApiSpec).ToArray();
                 summaries.Add(new Summary("Clients", clients));

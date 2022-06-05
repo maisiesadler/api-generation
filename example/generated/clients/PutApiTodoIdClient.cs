@@ -15,6 +15,7 @@ namespace Example.Clients
             var request = new HttpRequestMessage{Method = HttpMethod.Put, };
             var response = await _httpClient.SendAsync(request);
             var content = await response.Content.ReadAsStringAsync();
+            return new ClientResponse(response.StatusCode, content);
         }
     }
 }

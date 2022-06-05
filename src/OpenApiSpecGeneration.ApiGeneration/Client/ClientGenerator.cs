@@ -18,9 +18,9 @@ namespace OpenApiSpecGeneration.ApiGeneration.Client
                     var returnType = ReturnTypeExtensions.TryGetFirstReturnTypeSyntax(operation.Responses, out var rt)
                         ? rt : null;
                     var clientResponseReturnType = GetReturnTypeAsClientResponse(returnType);
-                    var methodBody = MethodGenerator.CreateMethodBody(operationType, returnType);
+                    var methodBody = MethodGenerator.CreateMethodBody(operationType, clientResponseReturnType);
                     var methodDeclaration = SyntaxFactory.MethodDeclaration(
-                            clientResponseReturnType,
+                            AsTask(clientResponseReturnType),
                             SyntaxFactory.Identifier("Execute"))
                         .AddModifiers(
                             SyntaxFactory.Token(SyntaxKind.PublicKeyword),
@@ -44,17 +44,20 @@ namespace OpenApiSpecGeneration.ApiGeneration.Client
 
         internal static TypeSyntax GetReturnTypeAsClientResponse(TypeSyntax? returnType)
         {
-            var inner = returnType == null
+            return returnType == null
                 ? SyntaxFactory.ParseTypeName("ClientResponse")
                 : SyntaxFactory.GenericName(SyntaxFactory.Identifier("ClientResponse"),
                     SyntaxFactory.TypeArgumentList(
                         SyntaxFactory.SingletonSeparatedList<TypeSyntax>(returnType)
                     )
                 );
+        }
 
+        internal static TypeSyntax AsTask(TypeSyntax task)
+        {
             return SyntaxFactory.GenericName(SyntaxFactory.Identifier("Task"),
                 SyntaxFactory.TypeArgumentList(
-                    SyntaxFactory.SingletonSeparatedList<TypeSyntax>(inner)
+                    SyntaxFactory.SingletonSeparatedList<TypeSyntax>(task)
                 )
             );
         }

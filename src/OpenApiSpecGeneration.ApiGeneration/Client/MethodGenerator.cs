@@ -9,12 +9,13 @@ namespace OpenApiSpecGeneration.ApiGeneration.Client
     {
         internal static BlockSyntax CreateMethodBody(
             OperationType operationType,
-            TypeSyntax? returnType)
+            TypeSyntax clientResponseReturnType)
         {
             var statements = new List<StatementSyntax>();
             statements.Add(CreateHttpRequestMessage(operationType));
             statements.Add(CallHttpClient());
             statements.Add(ReadContent());
+            statements.Add(ReturnClientResponse(clientResponseReturnType));
             return SyntaxFactory.Block(statements);
         }
 
@@ -135,6 +136,28 @@ namespace OpenApiSpecGeneration.ApiGeneration.Client
                     SyntaxFactory.IdentifierName("var"),
                     SyntaxFactory.SingletonSeparatedList(variableDeclarator)
                 )
+            );
+        }
+
+        // return new ClientResponse<ToDoItem[]>(response.StatusCode, content);
+        private static StatementSyntax ReturnClientResponse(TypeSyntax clientResponseReturnType)
+        {
+            var objectCreationExpression = SyntaxFactory.ObjectCreationExpression(clientResponseReturnType)
+                .WithArgumentList(SyntaxFactory.ArgumentList(
+                    SyntaxFactory.SeparatedList<ArgumentSyntax>(
+                            new SyntaxNodeOrToken[]{
+                                SyntaxFactory.Argument(
+                                    SyntaxFactory.MemberAccessExpression(
+                                        SyntaxKind.SimpleMemberAccessExpression,
+                                        SyntaxFactory.IdentifierName("response"),
+                                        SyntaxFactory.IdentifierName("StatusCode"))),
+                                SyntaxFactory. Token(SyntaxKind.CommaToken),
+                                SyntaxFactory.Argument(SyntaxFactory.IdentifierName("content"))})));
+
+            return SyntaxFactory.ReturnStatement(
+                SyntaxFactory.Token(SyntaxKind.ReturnKeyword),
+                objectCreationExpression,
+                SyntaxFactory.Token(SyntaxKind.SemicolonToken)
             );
         }
     }

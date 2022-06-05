@@ -1,3 +1,5 @@
+using Microsoft.CodeAnalysis;
+using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
 using Microsoft.OpenApi.Models;
 using OpenApiSpecGeneration.ApiGeneration.OpenApiMocks;
@@ -30,10 +32,6 @@ public class GenerateClientMethodTests
 
         var methodBodyStatement = methodDeclarationSyntax.Body!.Statements[0];
 
-        // var request = new HttpRequestMessage
-        // {
-        //     Method = HttpMethod.Get,
-        // };
         var localDeclarationStatementSyntax = Assert.IsType<LocalDeclarationStatementSyntax>(methodDeclarationSyntax.Body!.Statements[0]);
         Assert.Equal(";", localDeclarationStatementSyntax.SemicolonToken.Value);
         var variableDeclarationSyntax = Assert.IsType<VariableDeclarationSyntax>(localDeclarationStatementSyntax.Declaration);
@@ -152,82 +150,113 @@ public class GenerateClientMethodTests
         Assert.Equal("ReadAsStringAsync", methodIdentifierNameSyntax.Identifier.Value);
     }
 
-    // [Fact]
-    // public void MethodBodyGeneratesReturnType()
-    // {
-    //     // Arrange
-    //     var responseSchema = new OpenApiSchema
-    //     {
-    //         Type = "object",
-    //         Items = new OpenApiSchema
-    //         {
-    //             Reference = new OpenApiReference { Id = "ToDoItem", },
-    //         },
-    //     };
+    [Fact]
+    public void GenericClientResponseIfReturnType()
+    {
+        // Arrange
+        var responseSchema = new OpenApiSchema
+        {
+            Type = "object",
+            Items = new OpenApiSchema
+            {
+                Reference = new OpenApiReference { Id = "ToDoItem", },
+            },
+        };
 
-    //     var response = OpenApiMockBuilder.BuildResponse("Success")
-    //          .AddContent("text/plain", responseSchema);
+        var response = OpenApiMockBuilder.BuildResponse("Success")
+             .AddContent("text/plain", responseSchema);
 
-    //     var apiTestPathItem = OpenApiMockBuilder.BuildPathItem()
-    //         .WithOperation(
-    //             OperationType.Get,
-    //             operation => operation.Responses.Add("200", response)
-    //         );
+        var apiTestPathItem = OpenApiMockBuilder.BuildPathItem()
+            .WithOperation(
+                OperationType.Get,
+                operation => operation.Responses.Add("200", response)
+            );
 
-    //     var document = OpenApiMockBuilder.BuildDocument()
-    //         .WithPath("/api/test", apiTestPathItem);
+        var document = OpenApiMockBuilder.BuildDocument()
+            .WithPath("/api/test", apiTestPathItem);
 
-    //     // Act
-    //     var classDeclarationSyntaxes = ApiGenerator.GenerateImplementations(document);
+        // Act
+        var classDeclarationSyntaxes = ApiGenerator.GenerateClients(document);
 
-    //     // Assert
-    //     var classDeclarationSyntax = Assert.Single(classDeclarationSyntaxes);
-    //     var methodDeclarationSyntax = Assert.Single(classDeclarationSyntax.Members.GetMembersOfType<MethodDeclarationSyntax>());
+        // Assert
+        var classDeclarationSyntax = Assert.Single(classDeclarationSyntaxes);
+        var methodDeclarationSyntax = Assert.Single(classDeclarationSyntax.Members.GetMembersOfType<MethodDeclarationSyntax>());
 
-    //     var methodBodyStatement = Assert.Single(methodDeclarationSyntax.Body!.Statements);
+        var methodBodyStatement = methodDeclarationSyntax.Body!.Statements[3];
 
-    //     // return _fixture.Create<ToDoItem>();
-    //     var returnStatementSyntax = Assert.IsType<ReturnStatementSyntax>(methodBodyStatement);
-    //     var invocationExpressionSyntax = Assert.IsType<InvocationExpressionSyntax>(returnStatementSyntax.Expression);
-    //     var memberAccessExpressionSyntax = Assert.IsType<MemberAccessExpressionSyntax>(invocationExpressionSyntax.Expression);
+        // return new ClientResponse<ToDoItem>(response.StatusCode, content);
+        var returnStatementSyntax = Assert.IsType<ReturnStatementSyntax>(methodBodyStatement);
+        var objectCreationExpressionSyntax = Assert.IsType<ObjectCreationExpressionSyntax>(returnStatementSyntax.Expression);
+        Assert.Equal("new", objectCreationExpressionSyntax.NewKeyword.ValueText);
 
-    //     // _fixture
-    //     var memberAccessIdentifierSyntax = Assert.IsType<IdentifierNameSyntax>(memberAccessExpressionSyntax.Expression);
-    //     Assert.Equal("_fixture", memberAccessIdentifierSyntax.Identifier.Value);
+        // ClientResponse<ToDoItem>
+        var genericNameSyntax = Assert.IsType<GenericNameSyntax>(objectCreationExpressionSyntax.Type);
+        var genericIdentifierNameSyntax = Assert.IsType<SyntaxToken>(genericNameSyntax.Identifier);
+        Assert.Equal("ClientResponse", genericIdentifierNameSyntax.Value);
+        var typeArgument = Assert.Single(genericNameSyntax.TypeArgumentList.Arguments);
+        var typeArgumentIdentifierNameSyntax = Assert.IsType<IdentifierNameSyntax>(typeArgument);
+        Assert.Equal("ToDoItem", typeArgumentIdentifierNameSyntax.Identifier.Value);
 
-    //     // Create<ToDoItem>
-    //     var genericNameSyntax = Assert.IsType<GenericNameSyntax>(methodDeclarationSyntax.ReturnType);
-    //     Assert.Equal("Task", genericNameSyntax.Identifier.Value);
-    //     var argument = Assert.Single(genericNameSyntax.TypeArgumentList.Arguments);
-    //     var identifierNameSyntax = Assert.IsType<IdentifierNameSyntax>(argument);
-    //     Assert.Equal("ToDoItem", identifierNameSyntax.Identifier.Value);
-    //     var memberAccessMethodGenericSyntax = Assert.IsType<GenericNameSyntax>(memberAccessExpressionSyntax.Name);
-    //     Assert.Equal("Create", memberAccessMethodGenericSyntax.Identifier.Value);
+        // response.StatusCode, content
+        Assert.Equal(2, objectCreationExpressionSyntax.ArgumentList?.Arguments.Count);
 
-    //     // ();
-    //     Assert.Empty(invocationExpressionSyntax.ArgumentList.Arguments);
-    //     Assert.Equal(";", returnStatementSyntax.SemicolonToken.Value);
-    // }
+        var firstArg = Assert.IsType<MemberAccessExpressionSyntax>(objectCreationExpressionSyntax.ArgumentList?.Arguments[0].Expression);
+        Assert.Equal(SyntaxKind.SimpleMemberAccessExpression, firstArg.Kind());
+        var firstArgIdentifierNameSyntax = Assert.IsType<IdentifierNameSyntax>(firstArg.Expression);
+        Assert.Equal("response", firstArgIdentifierNameSyntax.Identifier.ValueText);
+        Assert.Equal(".", firstArg.OperatorToken.Value);
+        Assert.Equal("StatusCode", firstArg.Name.Identifier.Value);
 
-    // [Fact]
-    // public void MethodBodyEmptyIfNoReturnType()
-    // {
-    //     // Arrange
-    //     var apiTestPathItem = OpenApiMockBuilder.BuildPathItem()
-    //         .WithOperation(OperationType.Get);
+        var secondArg = Assert.IsType<IdentifierNameSyntax>(objectCreationExpressionSyntax.ArgumentList?.Arguments[1].Expression);
+        Assert.Equal("content", secondArg.Identifier.ValueText);
+    }
 
-    //     var document = OpenApiMockBuilder.BuildDocument()
-    //         .WithPath("/api/test", apiTestPathItem);
+    [Fact]
+    public void NonGenericClientResponseIfNoReturnType()
+    {
+        // Arrange
+        var response = OpenApiMockBuilder.BuildResponse("Success");
 
-    //     // Act
-    //     var classDeclarationSyntaxes = ApiGenerator.GenerateImplementations(document);
+        var apiTestPathItem = OpenApiMockBuilder.BuildPathItem()
+            .WithOperation(
+                OperationType.Get,
+                operation => operation.Responses.Add("200", response)
+            );
 
-    //     // Assert
-    //     var classDeclarationSyntax = Assert.Single(classDeclarationSyntaxes);
-    //     var methodDeclarationSyntax = Assert.Single(classDeclarationSyntax.Members.GetMembersOfType<MethodDeclarationSyntax>());
+        var document = OpenApiMockBuilder.BuildDocument()
+            .WithPath("/api/test", apiTestPathItem);
 
-    //     Assert.Empty(methodDeclarationSyntax.Body!.Statements);
-    // }
+        // Act
+        var classDeclarationSyntaxes = ApiGenerator.GenerateClients(document);
+
+        // Assert
+        var classDeclarationSyntax = Assert.Single(classDeclarationSyntaxes);
+        var methodDeclarationSyntax = Assert.Single(classDeclarationSyntax.Members.GetMembersOfType<MethodDeclarationSyntax>());
+
+        var methodBodyStatement = methodDeclarationSyntax.Body!.Statements[3];
+
+        // return new ClientResponse<ToDoItem>(response.StatusCode, content);
+        var returnStatementSyntax = Assert.IsType<ReturnStatementSyntax>(methodBodyStatement);
+        var objectCreationExpressionSyntax = Assert.IsType<ObjectCreationExpressionSyntax>(returnStatementSyntax.Expression);
+        Assert.Equal("new", objectCreationExpressionSyntax.NewKeyword.ValueText);
+
+        // ClientResponse
+        var identifierNameSyntax = Assert.IsType<IdentifierNameSyntax>(objectCreationExpressionSyntax.Type);
+        Assert.Equal("ClientResponse", identifierNameSyntax.Identifier.Value);
+
+        // response.StatusCode, content
+        Assert.Equal(2, objectCreationExpressionSyntax.ArgumentList?.Arguments.Count);
+
+        var firstArg = Assert.IsType<MemberAccessExpressionSyntax>(objectCreationExpressionSyntax.ArgumentList?.Arguments[0].Expression);
+        Assert.Equal(SyntaxKind.SimpleMemberAccessExpression, firstArg.Kind());
+        var firstArgIdentifierNameSyntax = Assert.IsType<IdentifierNameSyntax>(firstArg.Expression);
+        Assert.Equal("response", firstArgIdentifierNameSyntax.Identifier.ValueText);
+        Assert.Equal(".", firstArg.OperatorToken.Value);
+        Assert.Equal("StatusCode", firstArg.Name.Identifier.Value);
+
+        var secondArg = Assert.IsType<IdentifierNameSyntax>(objectCreationExpressionSyntax.ArgumentList?.Arguments[1].Expression);
+        Assert.Equal("content", secondArg.Identifier.ValueText);
+    }
 
     // [Fact]
     // public void RequestBodyMethodSignatureIsCorrect()
