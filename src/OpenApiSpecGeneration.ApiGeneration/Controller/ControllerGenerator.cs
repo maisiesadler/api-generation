@@ -1,6 +1,7 @@
 using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
 using Microsoft.OpenApi.Models;
+using OpenApiSpecGeneration.Definition;
 
 namespace OpenApiSpecGeneration.Controller
 {
@@ -8,22 +9,28 @@ namespace OpenApiSpecGeneration.Controller
     {
         internal static IEnumerable<ClassDeclarationSyntax> GenerateControllers(OpenApiDocument document)
         {
+            var definition = DefinitionGenerator.GenerateDefinition(document);
+            return GenerateControllers(definition);
+        }
+
+        private static IEnumerable<ClassDeclarationSyntax> GenerateControllers(Definition.Definition definition)
+        {
             var members = new List<ClassDeclarationSyntax>();
-            foreach (var (apiPath, openApiPath) in document.Paths)
+            foreach (var route in definition.routes)
             {
-                var normalisedName = CsharpNamingExtensions.PathToClassName(apiPath);
+                var normalisedName = route.NormalisedName();
 
                 var classMethods = new List<MethodDeclarationSyntax>();
                 var assignments = new List<StatementSyntax>();
                 var parameters = new List<ParameterSyntax>();
                 var fields = new List<MemberDeclarationSyntax>();
 
-                foreach (var (operationType, operation) in openApiPath.Operations)
+                foreach (var operation in route.operations)
                 {
-                    var interactorType = CsharpNamingExtensions.PathToInteractorType(apiPath, operationType);
+                    var interactorType = CsharpNamingExtensions.PathToInteractorType(route.pathName, operation.type);
                     var interactorPropertyName = CsharpNamingExtensions.InterfaceToPropertyName(interactorType);
 
-                    classMethods.Add(MethodGenerator.CreateMethod(apiPath, operationType, operation, interactorType, interactorPropertyName));
+                    classMethods.Add(MethodGenerator.CreateMethod(operation, interactorPropertyName));
                     fields.Add(CreateField(interactorType, interactorPropertyName));
                     assignments.Add(CreateAssignment(interactorPropertyName));
                     parameters.Add(CreateConstructorParameter(interactorType, interactorPropertyName));
@@ -37,7 +44,7 @@ namespace OpenApiSpecGeneration.Controller
                     .AddMembers(ctor)
                     .AddMembers(classMethods.ToArray())
                     .AddModifiers(SyntaxFactory.Token(SyntaxKind.PublicKeyword))
-                    .AddAttributeLists(GetControllerAttributeList(apiPath));
+                    .AddAttributeLists(GetControllerAttributeList(route.pathName));
 
                 yield return @class;
             }
