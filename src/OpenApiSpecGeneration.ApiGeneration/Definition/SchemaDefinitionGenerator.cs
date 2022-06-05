@@ -6,22 +6,29 @@ internal class SchemaDefinitionGenerator
 {
     internal static IEnumerable<SchemaDefinition> Execute(OpenApiDocument document)
     {
-        foreach (var (pathName, openApiPathItem) in document.Paths)
+        if (document.Paths != null)
         {
-            foreach (var (operationType, operation) in openApiPathItem.Operations)
+            foreach (var (pathName, openApiPathItem) in document.Paths)
             {
-                foreach (var requestSchema in GetRequestSchemas(pathName, operationType, operation))
-                    yield return requestSchema;
+                if (openApiPathItem.Operations == null) continue;
+                foreach (var (operationType, operation) in openApiPathItem.Operations)
+                {
+                    foreach (var requestSchema in GetRequestSchemas(pathName, operationType, operation))
+                        yield return requestSchema;
 
-                foreach (var requestSchema in GetResponseSchemas(pathName, operationType, operation))
-                    yield return requestSchema;
+                    foreach (var requestSchema in GetResponseSchemas(pathName, operationType, operation))
+                        yield return requestSchema;
+                }
             }
         }
 
-        foreach (var (name, openApiComponentSchema) in document.Components.Schemas)
+        if (document.Components?.Schemas != null)
         {
-            foreach (var def in ToSchemaDefinition(name, openApiComponentSchema))
-                yield return def;
+            foreach (var (name, openApiComponentSchema) in document.Components.Schemas)
+            {
+                foreach (var def in ToSchemaDefinition(name, openApiComponentSchema))
+                    yield return def;
+            }
         }
     }
 
