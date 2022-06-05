@@ -5,7 +5,8 @@ namespace OpenApiSpecGeneration.Definition
 {
     internal record Definition(Route[] routes);
     internal record Route(string pathName, Operation[] operations);
-    internal record Operation(OperationType type, bool hasReturnType, ArgumentDefinition[] arguments);
+    internal record Operation(OperationType type, ArgumentDefinition[] arguments, ReturnType returnType);
+    internal record ReturnType(bool hasReturnType, bool isArray, string value);
 
     internal static class DefinitionExtensions
     {

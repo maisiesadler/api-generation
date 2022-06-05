@@ -10,10 +10,10 @@ namespace OpenApiSpecGeneration.Definition
             OperationType operationType,
             OpenApiOperation? operation)
         {
-            var hasReturnType = ReturnTypeExtensions.HasReturnType(operation?.Responses);
+            var returnType = ReturnTypeDefintionGenerator.GetReturnType(operation?.Responses);
             var argumentDefinitions = ArgumentDefinitionGenerator.Create(pathName, operationType, operation?.RequestBody, operation?.Parameters).ToArray();
 
-            return new Operation(operationType, hasReturnType, argumentDefinitions);
+            return new Operation(operationType, argumentDefinitions, returnType);
         }
     }
 }

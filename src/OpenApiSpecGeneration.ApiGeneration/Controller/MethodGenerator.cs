@@ -13,7 +13,7 @@ namespace OpenApiSpecGeneration.Controller
             Operation operation,
             string propertyName)
         {
-            var methodBody = CreateMethodBody(propertyName, operation.arguments, operation.hasReturnType);
+            var methodBody = CreateMethodBody(propertyName, operation.arguments, operation.returnType.hasReturnType);
             var parameterList = CreateParameterList(operation.arguments);
             return SyntaxFactory.MethodDeclaration(SyntaxFactory.ParseTypeName("Task<IActionResult>"), operation.type.ToString())
                 .AddModifiers(
