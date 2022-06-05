@@ -23,7 +23,7 @@ namespace OpenApiSpecGeneration.Interactor
                     var interfaceName = CsharpNamingExtensions.PathToInteractorType(route.pathName, operation.type);
 
                     var parameters = CreateParameterList(operation.arguments);
-                    var returnType = ReturnTypeExtensions_2.GetReturnTypeSyntaxAsTask(operation.returnType);
+                    var returnType = ReturnTypeExtensions.GetReturnTypeSyntaxAsTask(operation.returnType);
                     var methodDeclaration = SyntaxFactory.MethodDeclaration(
                             returnType,
                             SyntaxFactory.Identifier("Execute"))

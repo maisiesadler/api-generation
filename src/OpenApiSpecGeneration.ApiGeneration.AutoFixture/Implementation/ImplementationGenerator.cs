@@ -21,9 +21,9 @@ namespace OpenApiSpecGeneration.ApiGeneration.AutoFixture.Implementation
                 foreach (var operation in route.operations)
                 {
                     var parameters = CreateParameterList(operation.arguments);
-                    var typeToGenerate = ReturnTypeExtensions_2.TryGetReturnTypeSyntax(operation.returnType, out var rt)
+                    var typeToGenerate = ReturnTypeExtensions.TryGetReturnTypeSyntax(operation.returnType, out var rt)
                         ? rt : null;
-                    var returnType = ReturnTypeExtensions_2.GetReturnTypeSyntaxAsTask(operation.returnType);
+                    var returnType = ReturnTypeExtensions.GetReturnTypeSyntaxAsTask(operation.returnType);
                     var methodBody = MethodGenerator.CreateMethodBody(typeToGenerate, returnType);
                     var methodDeclaration = SyntaxFactory.MethodDeclaration(
                             returnType,
