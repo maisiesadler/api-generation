@@ -2,6 +2,7 @@ using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
 using Microsoft.OpenApi.Models;
+using OpenApiSpecGeneration.Definition;
 using OpenApiSpecGeneration.Generatable;
 
 namespace OpenApiSpecGeneration.Controller
@@ -9,17 +10,12 @@ namespace OpenApiSpecGeneration.Controller
     internal class MethodGenerator
     {
         internal static MethodDeclarationSyntax CreateMethod(
-            string pathName,
-            OperationType operationType,
-            OpenApiOperation? operation,
-            string propertyType,
+            Operation operation,
             string propertyName)
         {
-            var hasReturnType = ReturnTypeExtensions.HasReturnType(operation?.Responses);
-            var argumentDefinitions = ArgumentDefinitionGenerator.Create(pathName, operationType, operation?.RequestBody, operation?.Parameters).ToArray();
-            var methodBody = CreateMethodBody(propertyName, argumentDefinitions, hasReturnType);
-            var parameterList = CreateParameterList(argumentDefinitions);
-            return SyntaxFactory.MethodDeclaration(SyntaxFactory.ParseTypeName("Task<IActionResult>"), operationType.ToString())
+            var methodBody = CreateMethodBody(propertyName, operation.arguments, operation.returnType.hasReturnType);
+            var parameterList = CreateParameterList(operation.arguments);
+            return SyntaxFactory.MethodDeclaration(SyntaxFactory.ParseTypeName("Task<IActionResult>"), operation.type.ToString())
                 .AddModifiers(
                     SyntaxFactory.Token(SyntaxKind.PublicKeyword),
                     SyntaxFactory.Token(SyntaxKind.AsyncKeyword))
@@ -29,7 +25,7 @@ namespace OpenApiSpecGeneration.Controller
                     parameterList,
                     SyntaxFactory.Token(SyntaxKind.CloseParenToken)
                 ))
-                .AddAttributeLists(GetMethodAttributeList(operationType));
+                .AddAttributeLists(GetMethodAttributeList(operation.type));
         }
 
         private static BlockSyntax CreateMethodBody(string propertyName, ArgumentDefinition[] argumentDefinitions, bool hasReturnType)

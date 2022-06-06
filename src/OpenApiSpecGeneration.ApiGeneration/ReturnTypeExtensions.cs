@@ -1,15 +1,15 @@
 using System.Diagnostics.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
-using Microsoft.OpenApi.Models;
+using OpenApiSpecGeneration.Definition;
 
 namespace OpenApiSpecGeneration
 {
     internal class ReturnTypeExtensions
     {
-        internal static TypeSyntax GetReturnTypeSyntaxAsTask(OpenApiResponses? responses)
+        internal static TypeSyntax GetReturnTypeSyntaxAsTask(ReturnType returnType)
         {
-            if (TryGetFirstReturnTypeSyntax(responses, out var typeSyntax))
+            if (TryGetReturnTypeSyntax(returnType, out var typeSyntax))
             {
                 return SyntaxFactory.GenericName(SyntaxFactory.Identifier("Task"),
                     SyntaxFactory.TypeArgumentList(
@@ -21,47 +21,19 @@ namespace OpenApiSpecGeneration
             return SyntaxFactory.ParseTypeName("Task");
         }
 
-        internal static bool HasReturnType(OpenApiResponses? responses)
-            => responses != null && TryGetFirstReturnTypeSyntax(responses, out var _);
-
-        internal static bool TryGetFirstReturnTypeSyntax(
-            OpenApiResponses? responses,
+        internal static bool TryGetReturnTypeSyntax(
+            ReturnType returnType,
             [NotNullWhen(true)] out TypeSyntax? typeSyntax)
         {
-            typeSyntax = null;
-            return TryGetFirstReturnTypeSchema(responses, out var componentSchema)
-                && TryConvertComponent(componentSchema, out typeSyntax);
-        }
-
-        private static bool TryGetFirstReturnTypeSchema(
-            OpenApiResponses? responses,
-            [NotNullWhen(true)] out OpenApiSchema? responseSchema)
-        {
-            responseSchema = null;
-            if (responses?.Any() != true) return false;
-            var response = responses.First();
-            if (!response.Value.Content.Any()) return false;
-            var content = response.Value.Content.First();
-            responseSchema = content.Value.Schema;
-
-            return true;
-        }
-
-        private static bool TryConvertComponent(
-            OpenApiSchema schema,
-            [NotNullWhen(true)] out TypeSyntax? typeSyntax)
-        {
-            if (!TryGetRef(schema, out var component))
+            if (!returnType.hasReturnType)
             {
                 typeSyntax = null;
                 return false;
             }
 
-            var returnType = component.Split("/").Last();
-
-            if (schema.Type == "array")
+            if (returnType.isArray)
             {
-                typeSyntax = SyntaxFactory.ArrayType(SyntaxFactory.ParseTypeName(returnType))
+                typeSyntax = SyntaxFactory.ArrayType(SyntaxFactory.ParseTypeName(returnType.value))
                     .WithRankSpecifiers(
                         SyntaxFactory.SingletonList<ArrayRankSpecifierSyntax>(
                            SyntaxFactory.ArrayRankSpecifier(
@@ -71,26 +43,8 @@ namespace OpenApiSpecGeneration
                 return true;
             }
 
-            typeSyntax = SyntaxFactory.ParseTypeName(returnType);
+            typeSyntax = SyntaxFactory.ParseTypeName(returnType.value);
             return true;
-        }
-
-        private static bool TryGetRef(OpenApiSchema? schema, [NotNullWhen(true)] out string? @ref)
-        {
-            if (!string.IsNullOrWhiteSpace(schema?.Reference?.Id))
-            {
-                @ref = schema.Reference.Id;
-                return true;
-            }
-
-            if (!string.IsNullOrWhiteSpace(schema?.Items?.Reference?.Id))
-            {
-                @ref = schema.Items.Reference.Id;
-                return true;
-            }
-
-            @ref = null;
-            return false;
         }
     }
 }

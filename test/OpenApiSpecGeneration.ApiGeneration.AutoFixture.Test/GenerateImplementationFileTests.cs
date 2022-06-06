@@ -26,8 +26,10 @@ public class GenerateImplementationFileTests
             },
         };
 
+        var definition = Definition.DefinitionGenerator.GenerateDefinition(spec);
+
         // Act
-        var writableFiles = AutoFixture.FileGenerator.GenerateImplementation("MyNamespace", spec);
+        var writableFiles = AutoFixture.FileGenerator.GenerateImplementation("MyNamespace", definition);
 
         // Assert
         var writableFile = Assert.Single(writableFiles);

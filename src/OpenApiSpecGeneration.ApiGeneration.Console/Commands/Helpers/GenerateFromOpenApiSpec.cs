@@ -1,5 +1,6 @@
 using System.Text.RegularExpressions;
 using OpenApiSpecGeneration.Console.Commands.Helpers;
+using OpenApiSpecGeneration.Definition;
 using Spectre.Console;
 
 namespace OpenApiSpecGeneration.Console.Commands;
@@ -53,31 +54,31 @@ internal class GenerateFromOpenApiSpec
                 return 1;
             }
 
-            var openApiSpec = result.Value!;
+            var definition = DefinitionGenerator.GenerateDefinition(result.Value!);
 
             var summaries = new List<Summary>();
 
             if (settings.GenerateControllers)
             {
-                var controllers = FileGenerator.GenerateControllers(settings.Namespace, openApiSpec).ToArray();
+                var controllers = FileGenerator.GenerateControllers(settings.Namespace, definition).ToArray();
                 summaries.Add(new Summary("Controllers", controllers));
             }
 
             if (settings.GenerateModels)
             {
-                var models = FileGenerator.GenerateModels(settings.Namespace, openApiSpec).ToArray();
+                var models = FileGenerator.GenerateModels(settings.Namespace, definition).ToArray();
                 summaries.Add(new Summary("Models", models));
             }
 
             if (settings.GenerateInteractors)
             {
-                var interactors = FileGenerator.GenerateInteractors(settings.Namespace, openApiSpec).ToArray();
+                var interactors = FileGenerator.GenerateInteractors(settings.Namespace, definition).ToArray();
                 summaries.Add(new Summary("Interactors", interactors));
             }
 
             if (settings.GenerateImplementations)
             {
-                var implementations = ApiGeneration.AutoFixture.FileGenerator.GenerateImplementation(settings.Namespace, openApiSpec).ToArray();
+                var implementations = ApiGeneration.AutoFixture.FileGenerator.GenerateImplementation(settings.Namespace, definition).ToArray();
                 summaries.Add(new Summary("Implementations", implementations));
             }
 
