@@ -5,12 +5,18 @@ namespace OpenApiSpecGeneration.Definition
 {
     public record Definition(Route[] routes, SchemaDefinition[] schemas);
     public record Route(string pathName, Operation[] operations);
-    public record Operation(OperationType type, ArgumentDefinition[] arguments, ReturnType returnType);
+    public record Operation(string name, OperationType type, ArgumentDefinition[] arguments, ReturnType returnType);
     public record ReturnType(bool hasReturnType, bool isArray, string value);
 
     public static class DefinitionExtensions
     {
-        public static string NormalisedName(this Route route) => CsharpNamingExtensions.PathToClassName(route.pathName);
+        public static string NormalisedName(this Route route) => CsharpNamingExtensions.PathEtcToClassName(route.pathName);
+
+        public static string InteractorClass(this Operation operation) => $"{operation.name}Interactor";
+
+        public static string InteractorInterface(this Operation operation) => $"I{operation.name}Interactor";
+
+        public static string InteractorPropertyName(this Operation operation) => $"{char.ToLower(operation.name[0])}{operation.name.Substring(1)}Interactor";
     }
 
     public class DefinitionGenerator

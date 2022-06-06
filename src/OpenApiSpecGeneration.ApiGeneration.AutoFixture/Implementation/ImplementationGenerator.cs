@@ -35,11 +35,8 @@ namespace OpenApiSpecGeneration.ApiGeneration.AutoFixture.Implementation
                         .WithParameterList(parameters)
                         .WithBody(methodBody);
 
-                    var interfaceName = CsharpNamingExtensions.PathToInteractorType(route.pathName, operation.type);
-                    var className = interfaceName.Substring(1);
-
-                    var classDeclaration = SyntaxFactory.ClassDeclaration(SyntaxFactory.Identifier(className))
-                        .AddBaseListTypes(SyntaxFactory.SimpleBaseType(SyntaxFactory.IdentifierName(interfaceName)))
+                    var classDeclaration = SyntaxFactory.ClassDeclaration(SyntaxFactory.Identifier(operation.InteractorClass()))
+                        .AddBaseListTypes(SyntaxFactory.SimpleBaseType(SyntaxFactory.IdentifierName(operation.InteractorInterface())))
                         .AddMembers(new[] { CreateField() })
                         .AddMembers(new[] { methodDeclaration })
                         .AddModifiers(SyntaxFactory.Token(SyntaxKind.PublicKeyword));

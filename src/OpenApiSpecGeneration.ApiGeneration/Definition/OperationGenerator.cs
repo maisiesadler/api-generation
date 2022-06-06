@@ -13,7 +13,10 @@ namespace OpenApiSpecGeneration.Definition
             var returnType = ReturnTypeDefintionGenerator.GetReturnType(operation?.Responses);
             var argumentDefinitions = ArgumentDefinitionGenerator.Create(pathName, operationType, operation?.RequestBody, operation?.Parameters).ToArray();
 
-            return new Operation(operationType, argumentDefinitions, returnType);
+            return new Operation(OperationName(pathName, operationType), operationType, argumentDefinitions, returnType);
         }
+
+        private static string OperationName(string apiPath, OperationType operationType)
+            => CsharpNamingExtensions.PathEtcToClassName(new[] { operationType.ToString(), apiPath });
     }
 }

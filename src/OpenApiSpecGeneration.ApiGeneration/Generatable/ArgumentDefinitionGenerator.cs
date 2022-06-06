@@ -16,10 +16,9 @@ namespace OpenApiSpecGeneration.Generatable
             if (requestBody != null && firstContentType.HasValue)
             {
                 var attribute = SyntaxFactory.Attribute(SyntaxFactory.IdentifierName("FromBody"));
-                var name = "request";
                 var typeName = CsharpNamingExtensions.PathEtcToClassName(
                     new[] { pathName, operationType.ToString(), firstContentType.Value.Key, "Request" });
-                yield return new ArgumentDefinition(attribute, SyntaxFactory.ParseTypeName(typeName), name);
+                yield return new ArgumentDefinition(attribute, SyntaxFactory.ParseTypeName(typeName),  "request");
             }
 
             if (openApiMethodParameters != null)

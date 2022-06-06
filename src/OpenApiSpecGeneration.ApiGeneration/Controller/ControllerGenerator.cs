@@ -20,8 +20,8 @@ namespace OpenApiSpecGeneration.Controller
 
                 foreach (var operation in route.operations)
                 {
-                    var interactorType = CsharpNamingExtensions.PathToInteractorType(route.pathName, operation.type);
-                    var interactorPropertyName = CsharpNamingExtensions.InterfaceToPropertyName(interactorType);
+                    var interactorType = operation.InteractorInterface();
+                    var interactorPropertyName = operation.InteractorPropertyName();
 
                     classMethods.Add(MethodGenerator.CreateMethod(operation, interactorPropertyName));
                     fields.Add(CreateField(interactorType, interactorPropertyName));

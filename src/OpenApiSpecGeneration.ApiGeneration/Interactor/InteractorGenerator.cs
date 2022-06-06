@@ -14,8 +14,6 @@ namespace OpenApiSpecGeneration.Interactor
             {
                 foreach (var operation in route.operations)
                 {
-                    var interfaceName = CsharpNamingExtensions.PathToInteractorType(route.pathName, operation.type);
-
                     var parameters = CreateParameterList(operation.arguments);
                     var returnType = ReturnTypeExtensions.GetReturnTypeSyntaxAsTask(operation.returnType);
                     var methodDeclaration = SyntaxFactory.MethodDeclaration(
@@ -24,7 +22,7 @@ namespace OpenApiSpecGeneration.Interactor
                         .WithParameterList(parameters)
                         .WithSemicolonToken(SyntaxFactory.Token(SyntaxKind.SemicolonToken));
 
-                    yield return SyntaxFactory.InterfaceDeclaration(interfaceName)
+                    yield return SyntaxFactory.InterfaceDeclaration(operation.InteractorInterface())
                         .WithModifiers(SyntaxFactory.TokenList(SyntaxFactory.Token(SyntaxKind.PublicKeyword)))
                         .WithMembers(SyntaxFactory.SingletonList<MemberDeclarationSyntax>(methodDeclaration));
                 }
